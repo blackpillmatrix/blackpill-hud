@@ -343,22 +343,22 @@
       window.Telegram.WebApp.expand();
     }
 
-    const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id ? String(window.Telegram.WebApp.initDataUnsafe.user.id) : "guest";
     const urlParams = new URLSearchParams(window.location.search);
 
     let accessStatus = "expired";
     let subDaysLeft = 0;
+    let freeScansLeft = 0;
 
     if (urlParams.has('status')) {
       accessStatus = urlParams.get('status');
       if (accessStatus === 'sub') {
         subDaysLeft = parseInt(urlParams.get('days') || '7', 10);
+      } else if (accessStatus === 'free') {
+        freeScansLeft = parseInt(urlParams.get('left') || '1', 10);
       }
     } else {
-      const isFreeUsed = localStorage.getItem('bp_vision_used_' + tgUserId);
-      if (!isFreeUsed) {
-        accessStatus = "free";
-      }
+      accessStatus = "free";
+      freeScansLeft = 1;
     }
 
     function updateBadgeUI() {
@@ -367,8 +367,8 @@
         textEl.innerText = `💎 VISION PRO (${subDaysLeft} дн.)`;
         textEl.parentElement.style.borderColor = "rgba(0, 255, 102, 0.4)";
         textEl.parentElement.style.color = "var(--neon-green)";
-      } else if (accessStatus === 'free') {
-        textEl.innerText = `⚡️ 1 скан`;
+      } else if (accessStatus === 'free' && freeScansLeft > 0) {
+        textEl.innerText = `⚡️ ${freeScansLeft} сканов`;
         textEl.parentElement.style.borderColor = "rgba(0, 240, 255, 0.4)";
         textEl.parentElement.style.color = "var(--neon-cyan)";
       } else {
@@ -393,7 +393,7 @@
     }
 
     function startFlow() {
-      if (accessStatus === 'expired') {
+      if (accessStatus === 'expired' || (accessStatus === 'free' && freeScansLeft <= 0)) {
         openPaymentModal();
         return;
       }
@@ -401,7 +401,7 @@
     }
 
     function triggerPhotoPick() {
-      if (accessStatus === 'expired') {
+      if (accessStatus === 'expired' || (accessStatus === 'free' && freeScansLeft <= 0)) {
         openPaymentModal();
         return;
       }
@@ -465,8 +465,10 @@
       if (!file) return;
 
       if (accessStatus === 'free') {
-        accessStatus = 'expired';
-        localStorage.setItem('bp_vision_used_' + tgUserId, 'true');
+        freeScansLeft -= 1;
+        if (freeScansLeft <= 0) {
+          accessStatus = 'expired';
+        }
         updateBadgeUI();
       }
 
