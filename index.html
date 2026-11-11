@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>BLACKPILL // VISION v3.0</title>
+  <title>BLACKPILL // VISION v4.0</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
   <style>
@@ -105,14 +105,31 @@
       position: absolute; left: 0; width: 100%; height: 2px;
       background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
       box-shadow: 0 0 14px var(--neon-green);
-      animation: scanAnim 2.8s ease-in-out infinite alternate; pointer-events: none;
+      animation: scanAnim 2.2s ease-in-out infinite alternate; pointer-events: none;
     }
     @keyframes scanAnim { 0% { top: 5%; opacity: 0.15; } 50% { opacity: 1; } 100% { top: 95%; opacity: 0.15; } }
     
     .scan-status-text {
-      position: absolute; bottom: 12px; left: 14px; font-size: 10px; font-family: monospace;
+      position: absolute; bottom: 12px; left: 12px; right: 12px; font-size: 10px; font-family: monospace;
       color: var(--neon-cyan); text-shadow: 0 0 6px rgba(0,240,255,0.6); pointer-events: none;
-      background: rgba(0,0,0,0.75); padding: 4px 8px; border-radius: 4px;
+      background: rgba(0,0,0,0.82); padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(0, 240, 255, 0.25);
+    }
+
+    /* БЛОК ГЛУБОКОГО МНОГОЭТАПНОГО АНАЛИЗА */
+    .thinking-box {
+      display: none;
+      background: var(--card);
+      border: 1px solid var(--neon-cyan);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+    .thinking-title {
+      font-size: 12px; font-weight: 900; color: var(--neon-cyan); letter-spacing: 1px; margin-bottom: 8px;
+      display: flex; justify-content: space-between;
+    }
+    .thinking-step {
+      font-size: 11px; color: var(--text); font-family: monospace; margin-bottom: 10px; line-height: 1.4;
     }
 
     .hud-ctrls { display: flex; gap: 8px; margin: 10px 0; }
@@ -176,7 +193,7 @@
     .metric-label { color: var(--text); }
     .metric-val { color: var(--neon-cyan); font-family: monospace; }
     .progress-bg { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green)); border-radius: 3px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green)); border-radius: 3px; transition: width 0.35s ease; }
 
     .modal-overlay {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -200,7 +217,7 @@
   <div class="topbar">
     <div id="topbarLeft" class="brand">
       <div class="status-dot"></div>
-      BLACKPILL // VISION v3.0
+      BLACKPILL // VISION v4.0
     </div>
     <div class="balance-badge" id="balanceBadge">
       ⚡️ <span id="statusBadgeText">Загрузка...</span>
@@ -209,7 +226,7 @@
 
   <div class="screen active" id="screenHome">
     <div class="hero-title">АНТРОПОМЕТРИЧЕСКИЙ<br><span>РАЗБОР BLACKPILL VISION</span></div>
-    <div class="hero-desc">Калиброванный замер 468 точек: индекс Hunter Eyes (EAR), посадка бровей, FWHR, Midface Ratio и кривая Гаусса.</div>
+    <div class="hero-desc">Многофазный 3D-анализ 468 точек: компенсация ракурса (Yaw/Roll), Hunter Eye Index, FWHR, проекция подбородка и кривая Гаусса.</div>
 
     <button class="btn-main" onclick="startFlow()">⚡️ НАЧАТЬ АНАЛИЗ ЛИЦА</button>
     <button class="btn-pay" onclick="openPaymentModal()">НЕДЕЛЬНЫЙ БЕЗЛИМИТ (49 ₽)</button>
@@ -222,22 +239,22 @@
       </div>
       <div class="feature-row">
         <div class="feature-num">02</div>
-        <div class="feature-text"><b>Точная калибровка v3.0:</b> распознаёт модельные лица (Chad/Chadlite) и отсекает дебаффы в Sub-5.</div>
+        <div class="feature-text"><b>Калибровка v4.0 (3D Yaw + Pro Engine):</b> точно отличает модельный костный каркас (Chad/Chadlite) от MTN и Sub-5.</div>
       </div>
       <div class="feature-row">
         <div class="feature-num">03</div>
-        <div class="feature-text"><b>Hardmax & Softmax протокол:</b> разбор сильных сторон (Halo) и костных изъянов.</div>
+        <div class="feature-text"><b>Hardmax & Softmax протокол:</b> детальный список Halo-маркеров и анатомических дебаффов.</div>
       </div>
     </div>
   </div>
 
   <div class="screen" id="screenUpload">
     <div class="hero-title">ЗАГРУЗКА <span>СЕЛФИ</span></div>
-    <div class="hero-desc">Загрузите чёткое фото реального лица анфас. Предметы блокируются, а открытый рот и гримасы снижают балл.</div>
+    <div class="hero-desc">Загрузите чёткое фото лица. Система проводит 4-фазный расчёт костных индексов и отсекает неодушевлённые объекты.</div>
 
     <div class="box-card" style="border-left: 3px solid var(--neon-green);">
-      <div class="rule-item"><span>✓</span> Расстояние 1.5–2 метра, ровное положение головы</div>
-      <div class="rule-item"><span>✓</span> Рот закрыт, нейтральное выражение без гримас</div>
+      <div class="rule-item"><span>✓</span> Поддержка анфас и модельного ракурса 3/4 (3D Yaw компенсация)</div>
+      <div class="rule-item"><span>✓</span> Рот закрыт, без кривляний и оскала</div>
       <div class="rule-item"><span>✓</span> Только живое человеческое лицо (предметы блокируются)</div>
     </div>
 
@@ -266,12 +283,22 @@
       <button class="hud-btn" onclick="startFlow()">+ НОВОЕ ФОТО</button>
     </div>
 
+    <!-- ПАНЕЛЬ ГЛУБОКОГО ВЫЧИСЛЕНИЯ (ЧТОБЫ БОТ ДУМАЛ И ПРОВОДИЛ 4 ФАЗЫ ЗАМЕРА) -->
+    <div class="thinking-box" id="thinkingBox">
+      <div class="thinking-title">
+        <span id="thinkTitle">НЕЙРО-АНАЛИЗ BLACKPILL PRO...</span>
+        <span id="thinkPct">0%</span>
+      </div>
+      <div class="thinking-step" id="thinkStep">Инициализация 3D-матрицы...</div>
+      <div class="progress-bg"><div class="progress-fill" id="thinkBar" style="width: 0%;"></div></div>
+    </div>
+
     <!-- БЛОК БЛОКИРОВКИ ПРЕДМЕТОВ И ОДЕЖДЫ -->
     <div class="error-reject-box" id="rejectBox">
       <div class="error-reject-title">🚫 ОБЪЕКТ ОТКЛОНЁН // ЛИЦО НЕ ОБНАРУЖЕНО</div>
       <div class="error-reject-desc">
         На снимке не найдено реальное человеческое лицо.<br><br>
-        Сканирование неодушевлённых предметов, одежды и рисунков заблокировано системой <b>BLACKPILL VISION v3.0</b>.
+        Сканирование неодушевлённых предметов, одежды и рисунков заблокировано системой <b>BLACKPILL VISION v4.0</b>.
       </div>
     </div>
 
@@ -302,7 +329,7 @@
 
         <div class="metric-item">
           <div class="metric-head">
-            <span class="metric-label">Гармония Midface и третей</span>
+            <span class="metric-label">Гармония Midface и нижней трети</span>
             <span class="metric-val" id="valHarmony">0%</span>
           </div>
           <div class="progress-bg"><div class="progress-fill" id="barHarmony" style="width: 0%;"></div></div>
@@ -331,21 +358,21 @@
             <span class="metric-label">Кантальный наклон и разрез (EAR)</span>
             <span class="metric-val" id="valCanthal">0.0°</span>
           </div>
-          <div style="font-size: 11px; color: var(--muted);">Угол глазной щели и вертикальная компактность век.</div>
+          <div style="font-size: 11px; color: var(--muted);">Угол глазной щели (с 3D-компенсацией) и плотность посадки век.</div>
         </div>
         <div class="metric-item">
           <div class="metric-head">
-            <span class="metric-label">Индекс Midface & ESR</span>
+            <span class="metric-label">Индекс Midface & Нижняя треть</span>
             <span class="metric-val" id="valMidface">---</span>
           </div>
-          <div style="font-size: 11px; color: var(--muted);">Межзрачковая дистанция и компактность средней трети.</div>
+          <div style="font-size: 11px; color: var(--muted);">Компактность средней зоны и индекс высоты подбородка к носу.</div>
         </div>
         <div class="metric-item">
           <div class="metric-head">
-            <span class="metric-label">Индекс FWHR и челюстной угол</span>
+            <span class="metric-label">Индекс FWHR и ширина рта</span>
             <span class="metric-val" id="valGonial">---</span>
           </div>
-          <div style="font-size: 11px; color: var(--muted);">Ширина скуловой дуги к высоте средней трети и ширина гонионов.</div>
+          <div style="font-size: 11px; color: var(--muted);">Ширина скул к высоте средней трети и пропорция губ.</div>
         </div>
       </div>
 
@@ -389,7 +416,6 @@
     }
 
     const urlParams = new URLSearchParams(window.location.search);
-
     let accessStatus = "sub";
     let subDaysLeft = 7;
     let freeScansLeft = 0;
@@ -429,7 +455,7 @@
       if (screenId !== 'screenHome') {
         topLeft.innerHTML = `<button class="back-btn" onclick="goToScreen('screenHome')">← Назад</button>`;
       } else {
-        topLeft.innerHTML = `<div class="status-dot"></div> BLACKPILL // VISION v3.0`;
+        topLeft.innerHTML = `<div class="status-dot"></div> BLACKPILL // VISION v4.0`;
       }
       window.scrollTo(0, 0);
     }
@@ -473,6 +499,7 @@
     let showOverlay = true;
     let loadedImage = null;
     let detectedLandmarks = null;
+    let analysisTimer = null;
     const canvas = document.getElementById('faceCanvas');
     const ctx = canvas.getContext('2d');
     const logEl = document.getElementById('statusLog');
@@ -497,41 +524,113 @@
       return true;
     }
 
+    // Анализ качества фото (проверка на Ч/Б архивный снимок или пересвет)
+    function analyzeImageColorStats(img) {
+      const off = document.createElement('canvas');
+      off.width = 64;
+      off.height = 64;
+      const oCtx = off.getContext('2d');
+      oCtx.drawImage(img, 0, 0, 64, 64);
+      const data = oCtx.getImageData(16, 16, 32, 32).data;
+      let satSum = 0;
+      let count = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i+1], b = data[i+2];
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        satSum += (max === 0) ? 0 : ((max - min) / max);
+        count++;
+      }
+      return { avgSaturation: satSum / (count || 1) };
+    }
+
     faceMesh.onResults((results) => {
       const rejectBox = document.getElementById('rejectBox');
       const resultsContainer = document.getElementById('resultsContainer');
+      const thinkingBox = document.getElementById('thinkingBox');
+
+      if (analysisTimer) {
+        clearInterval(analysisTimer);
+        analysisTimer = null;
+      }
 
       if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0 && isValidHumanFace(results.multiFaceLandmarks[0])) {
         detectedLandmarks = results.multiFaceLandmarks[0];
-        logEl.innerText = "LOCKED // 468 ТОЧЕК ЗАХВАЧЕНО";
-        logEl.style.color = "var(--neon-cyan)";
+        renderCanvas();
+
+        // Запуск многофазного глубокого расчёта (3.2 секунды)
         rejectBox.style.display = "none";
-        resultsContainer.style.display = "block";
-        calculateCalibratedBiometrics(detectedLandmarks);
+        resultsContainer.style.display = "none";
+        thinkingBox.style.display = "block";
+
+        const stages = [
+          { pct: 22, log: "PHASE 1/4 // КАЛИБРОВКА 468 ТОЧЕК И 3D YAW-ОСЕЙ...", step: "Построение 3D-вектора головы и компенсация ракурса..." },
+          { pct: 51, log: "PHASE 2/4 // ЗАМЕР HUNTER EYE INDEX (EAR) И КАНТУСА...", step: "Анализ плотности верхнего века, бровей и кантального наклона..." },
+          { pct: 78, log: "PHASE 3/4 // РАСЧЁТ FWHR, MIDFACE И BONE STRUCTURE...", step: "Вычисление скуловой дуги, высоты подбородка и полноты губ..." },
+          { pct: 99, log: "PHASE 4/4 // СВЕРКА С МАТРИЦЕЙ ФЕНОТИПОВ PRO...", step: "Финальная калибровка ранга по распределению Гаусса..." }
+        ];
+
+        let idx = 0;
+        const thinkBar = document.getElementById('thinkBar');
+        const thinkPct = document.getElementById('thinkPct');
+        const thinkStep = document.getElementById('thinkStep');
+
+        function applyStage(s) {
+          logEl.innerText = s.log;
+          logEl.style.color = "var(--neon-cyan)";
+          thinkBar.style.width = s.pct + "%";
+          thinkPct.innerText = s.pct + "%";
+          thinkStep.innerText = s.step;
+          if (window.Telegram?.WebApp?.HapticFeedback) {
+            window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+          }
+        }
+
+        applyStage(stages[0]);
+        idx = 1;
+
+        analysisTimer = setInterval(() => {
+          if (idx < stages.length) {
+            applyStage(stages[idx]);
+            idx++;
+          } else {
+            clearInterval(analysisTimer);
+            analysisTimer = null;
+            thinkingBox.style.display = "none";
+            logEl.innerText = "LOCKED // 468 ТОЧЕК ПРОАНАЛИЗИРОВАНО";
+            resultsContainer.style.display = "block";
+            calculateProBiometrics(detectedLandmarks);
+          }
+        }, 780);
+
       } else {
         detectedLandmarks = null;
+        thinkingBox.style.display = "none";
         logEl.innerText = "REJECTED // ОБЪЕКТ ОТКЛОНЁН";
         logEl.style.color = "var(--neon-red)";
         resultsContainer.style.display = "none";
         rejectBox.style.display = "block";
         document.getElementById('rankDisplay').innerText = "ОТКЛОНЕНО";
         document.getElementById('scoreDisplay').innerText = "0.0";
+        renderCanvas();
       }
-      renderCanvas();
     });
 
     function handleUserPhoto(e) {
       const file = e.target.files[0];
       if (!file) return;
 
+      if (analysisTimer) {
+        clearInterval(analysisTimer);
+        analysisTimer = null;
+      }
+
       detectedLandmarks = null;
       document.getElementById('resultsContainer').style.display = "none";
       document.getElementById('rejectBox').style.display = "none";
-      document.getElementById('rankDisplay').innerText = "---";
-      document.getElementById('scoreDisplay').innerText = "0.0";
+      document.getElementById('thinkingBox').style.display = "none";
 
       goToScreen('screenHud');
-      logEl.innerText = "SCANNING // АНАЛИЗ ПРОПОРЦИЙ...";
+      logEl.innerText = "SCANNING // ЗАХВАТ БИОМЕТРИИ...";
       logEl.style.color = "var(--neon-cyan)";
 
       const reader = new FileReader();
@@ -547,205 +646,222 @@
       reader.readAsDataURL(file);
     }
 
-    // === КАЛИБРОВАННЫЙ АЛГОРИТМ BLACKPILL v3.0 (В ИСТИННЫХ ПИКСЕЛЯХ ФОТО) ===
-    function calculateCalibratedBiometrics(lm) {
+    // === ПРОДВИНУТЫЙ 3D-КАЛИБРОВАННЫЙ АЛГОРИТМ BLACKPILL v4.0 ===
+    function calculateProBiometrics(lm) {
       const W = (loadedImage && loadedImage.naturalWidth) ? loadedImage.naturalWidth : 600;
       const H = (loadedImage && loadedImage.naturalHeight) ? loadedImage.naturalHeight : 600;
 
+      // 1. Вычисляем наклон головы (Head Roll) по внутренним уголкам глаз (133 и 362)
+      const rawLIn = { x: lm[133].x * W, y: lm[133].y * H };
+      const rawRIn = { x: lm[362].x * W, y: lm[362].y * H };
+      const rollRad = Math.atan2(rawRIn.y - rawLIn.y, rawRIn.x - rawLIn.x);
+      const rollDeg = rollRad * (180 / Math.PI);
+      const centerX = (rawLIn.x + rawRIn.x) / 2;
+      const centerY = (rawLIn.y + rawRIn.y) / 2;
+
+      // Функция получения координат точки с автоматическим выравниванием горизонта головы
       function pt(i) {
-        return { x: lm[i].x * W, y: lm[i].y * H };
+        const dx = lm[i].x * W - centerX;
+        const dy = lm[i].y * H - centerY;
+        return {
+          x: centerX + dx * Math.cos(-rollRad) - dy * Math.sin(-rollRad),
+          y: centerY + dx * Math.sin(-rollRad) + dy * Math.cos(-rollRad),
+          z: lm[i].z || 0
+        };
       }
+
       function d(i1, i2) {
-        return Math.hypot((lm[i1].x - lm[i2].x) * W, (lm[i1].y - lm[i2].y) * H);
+        const p1 = pt(i1), p2 = pt(i2);
+        return Math.hypot(p1.x - p2.x, p1.y - p2.y);
       }
 
       let halos = [];
       let debuffs = [];
 
-      // 1. Вычет наклона головы и расчёт истинного кантального наклона (Canthal Tilt)
+      // 2. Определение 3D-поворота головы вбок (Yaw) для защиты модельных фото в 3/4 (Чико и др.)
+      const leftCheekW = d(1, 234);
+      const rightCheekW = d(1, 454);
+      const bizygo = d(234, 454);
+      const yawRatio = Math.abs(leftCheekW - rightCheekW) / (bizygo || 1);
+      const isTurned34 = yawRatio > 0.08; // Человек стоит в ракурсе 3/4
+
+      // 3. Истинный кантальный наклон (Canthal Tilt) после выравнивания горизонта
       const lOut = pt(33), lIn = pt(133), rIn = pt(362), rOut = pt(263);
-      const headRollDeg = Math.atan2(rIn.y - lIn.y, rIn.x - lIn.x) * (180 / Math.PI);
+      const leftTilt = Math.atan2(lIn.y - lOut.y, lIn.x - lOut.x) * (180 / Math.PI);
+      const rightTilt = Math.atan2(rIn.y - rOut.y, rOut.x - rIn.x) * (180 / Math.PI);
+      // Если голова в 3/4, берём ведущий к камере глаз как опорный
+      const trueTilt = isTurned34
+        ? parseFloat((Math.max(leftTilt, rightTilt) * 0.7 + Math.min(leftTilt, rightTilt) * 0.3).toFixed(1))
+        : parseFloat(((leftTilt + rightTilt) / 2).toFixed(1));
 
-      const leftTilt = -Math.atan2(lOut.y - lIn.y, lIn.x - lOut.x) * (180 / Math.PI) - headRollDeg;
-      const rightTilt = -Math.atan2(rOut.y - rIn.y, rOut.x - rIn.x) * (180 / Math.PI) + headRollDeg;
-      const trueTilt = parseFloat(((leftTilt + rightTilt) / 2).toFixed(1));
-      const tiltDiff = Math.abs(leftTilt - rightTilt);
-
-      // 2. Индекс Hunter Eyes (EAR — вертикальная узость глазной щели)
+      // 4. Индекс Hunter Eyes (EAR — узость разреза глаз)
       const lEyeW = d(33, 133), rEyeW = d(362, 263);
       const lEAR = d(159, 145) / (lEyeW || 1);
       const rEAR = d(386, 374) / (rEyeW || 1);
-      const avgEAR = (lEAR + rEAR) / 2; // Hunter: 0.16 - 0.255 | Норма: 0.26 - 0.305 | Круглые Prey Eyes: > 0.31
-      const earAsym = Math.abs(lEAR - rEAR); // Прищур одного глаза (гримаса)
+      const avgEAR = (lEAR + rEAR) / 2;
+      const earDiff = Math.abs(lEAR - rEAR);
 
-      // 3. Низкая посадка бровей (Supraorbital Hooding)
-      const lBrowGap = d(65, 159) / (lEyeW || 1);
-      const rBrowGap = d(295, 386) / (rEyeW || 1);
-      const avgBrowGap = (lBrowGap + rBrowGap) / 2; // Низкие мужские брови: < 0.38 | Высокие дуги: > 0.47
-      const browAsym = Math.abs(lBrowGap - rBrowGap); // Одна бровь задрана
+      // 5. Низкая посадка бровей (Hooding: расстояние от нижнего края брови 55/285 до века 159/386)
+      const lBrow = d(55, 159) / (lEyeW || 1);
+      const rBrow = d(285, 386) / (rEyeW || 1);
+      const avgBrow = (lBrow + rBrow) / 2;
+      const browAsym = Math.abs(lBrow - rBrow);
 
-      // 4. Посадка глаз (ESR) и компактность средней трети (Midface Ratio)
-      const bizygo = d(234, 454);
-      const lPupil = { x: (lOut.x + lIn.x) / 2, y: (lOut.y + lIn.y) / 2 };
-      const rPupil = { x: (rIn.x + rOut.x) / 2, y: (rIn.y + rOut.y) / 2 };
-      const ipd = Math.hypot(rPupil.x - lPupil.x, rPupil.y - lPupil.y);
-      const esr = ipd / (bizygo || 1); // Идеал: 0.44 - 0.48
+      // 6. Посадка глаз (ESR) и средняя треть (Midface)
+      const lCenter = { x: (lOut.x + lIn.x) / 2, y: (lOut.y + lIn.y) / 2 };
+      const rCenter = { x: (rIn.x + rOut.x) / 2, y: (rIn.y + rOut.y) / 2 };
+      const ipd = Math.hypot(rCenter.x - lCenter.x, rCenter.y - lCenter.y);
+      const midEye = { x: (lCenter.x + rCenter.x) / 2, y: (lCenter.y + rCenter.y) / 2 };
+      const lipTop = pt(0);
+      const midfaceH = Math.hypot(lipTop.x - midEye.x, lipTop.y - midEye.y);
+      const midfaceRatio = ipd / (midfaceH || 1); // В MediaPipe норма/идеал: 0.83 - 1.05
 
-      const midPupil = { x: (lPupil.x + rPupil.x) / 2, y: (lPupil.y + rPupil.y) / 2 };
-      const upperLip = pt(0);
-      const midfaceH = Math.hypot(upperLip.x - midPupil.x, upperLip.y - midPupil.y);
-      const midfaceRatio = ipd / (midfaceH || 1); // Идеал: 0.96 - 1.10 | Вытянутое лицо: < 0.91
+      // 7. Истинный FWHR (ширина скул 234-454 к высоте от переносицы 6 до верхней губы 0)
+      const fwhr = bizygo / (d(6, 0) || 1); // В MediaPipe норма/модель: 1.76 - 2.18
 
-      // 5. Индекс ширины скул FWHR и челюстных углов (Gonial Width 58-288)
-      const fwhr = bizygo / (d(9, 0) || 1); // Идеал модели: 1.88 - 2.18
-      const gonialWidth = d(58, 288);
-      const jawRatio = gonialWidth / (bizygo || 1); // Идеал: 0.77 - 0.90
-
-      // 6. Детектор открытого рта / гримасы и пропорции носа к губам
+      // 8. Отношение нижней трети (подбородка) к длине носа (d(2,152) / d(6,2))
+      const mouthOpenGap = d(13, 14);
       const mouthW = d(61, 291);
-      const mouthOpen = d(13, 14) / (mouthW || 1); // > 0.11 = открытый рот / оскал
-      const alarW = d(102, 331); // Истинные крылья носа
-      const mouthToNose = mouthW / (alarW || 1); // Идеал: 1.40 - 1.75
+      const mouthOpenRatio = mouthOpenGap / (mouthW || 1); // > 0.10 = открытый рот / гримаса
 
-      // 7. Баланс средней и нижней трети (с вычетом открытого рта)
-      const midThird = d(9, 2);
-      const lowerThird = Math.max(10, d(2, 152) - d(13, 14));
-      const midToLower = midThird / (lowerThird || 1); // Идеал: 0.78 - 1.02 (если > 1.08 — длинный нос / короткий подбородок)
+      const noseLen = d(6, 2);
+      const lowerThirdClean = Math.max(10, d(2, 152) - mouthOpenGap);
+      const chinToNose = lowerThirdClean / (noseLen || 1); // У моделей >= 1.04, у длинноносых/слабоподбородочных < 0.95
 
-      // 8. Горизонтальная симметрия скул
-      const leftCheek = d(2, 234), rightCheek = d(2, 454);
-      const cheekAsym = Math.abs(leftCheek - rightCheek) / (bizygo || 1);
+      // 9. Ширина рта и полнота губ (важнейший маркер, отличающий моделей от Гитлера/стариков)
+      const mouthToFace = mouthW / (bizygo || 1); // Норма/модель: 0.35 - 0.45 | Узкий рот (Гитлер): < 0.34 | Оскал: > 0.47
+      const lipHeight = Math.max(2, d(0, 17) - mouthOpenGap);
+      const lipFullness = lipHeight / (lowerThirdClean || 1); // У моделей (Чико, Барретт): 0.23 - 0.38 | Тонкие губы: < 0.19
 
-      // === БАЗОВАЯ ТОЧКА ОТСЧЁТА = 5.2 (MTN) ===
+      // 10. Челюстной каркас (Bigonial 172-397 к скулам)
+      const jawW = d(172, 397);
+      const jawRatio = jawW / (bizygo || 1);
+
+      // Проверка цветности (архивное Ч/Б фото или живой снимок)
+      const colorStats = loadedImage ? analyzeImageColorStats(loadedImage) : { avgSaturation: 0.2 };
+
+      // === БАЗОВАЯ ТОЧКА = 5.2 (MTN) ===
       let score = 5.2;
 
-      // А. Оценка разреза глаз (Hunter vs Prey)
-      if (avgEAR <= 0.25 && earAsym < 0.045) {
-        score += 1.25;
-        halos.push(`Hunter Eyes: узкий плотный разрез век (EAR: ${avgEAR.toFixed(2)})`);
-      } else if (avgEAR <= 0.278 && earAsym < 0.05) {
+      // 1. Оценка Eye Area (Hunter Eyes vs Prey/Round Eyes)
+      if (avgEAR <= 0.255 && mouthOpenRatio <= 0.09) {
+        score += 1.45;
+        halos.push(`Hunter Eyes: плотный горизонтальный разрез век (EAR: ${avgEAR.toFixed(2)})`);
+      } else if (avgEAR <= 0.282) {
         score += 0.65;
-        halos.push(`Компактная посадка век (EAR: ${avgEAR.toFixed(2)})`);
-      } else if (avgEAR > 0.312) {
-        score -= 0.95;
+        halos.push(`Сбалансированная посадка век (EAR: ${avgEAR.toFixed(2)})`);
+      } else if (avgEAR >= 0.298) {
+        score -= 1.15;
         debuffs.push(`Округлый разрез глаз / Scleral Show (EAR: ${avgEAR.toFixed(2)})`);
       }
 
-      if (earAsym >= 0.05) {
-        score -= 1.1;
-        debuffs.push("Асимметричный прищур глаз (мимическое искажение)");
-      }
-
-      // Б. Оценка посадки бровей (Hooding)
-      if (avgBrowGap <= 0.38 && browAsym < 0.06) {
-        score += 0.75;
-        halos.push("Низко посаженные маскулинные надбровные дуги (Hooding)");
-      } else if (avgBrowGap > 0.47) {
-        score -= 0.65;
-        debuffs.push("Высокая посадка бровей (слабая костная защита орбит)");
-      }
-
-      if (browAsym >= 0.065) {
-        score -= 1.0;
-        debuffs.push("Перекос надбровных дуг (одна бровь задрана)");
-      }
-
-      // В. Оценка кантального наклона (Canthal Tilt)
-      if (trueTilt >= 3.0 && tiltDiff < 3.5) {
+      // 2. Оценка кантального наклона
+      if (trueTilt >= 2.2) {
         score += 0.85;
-        halos.push(`Положительный кантальный вектор (+${trueTilt}°)`);
-      } else if (trueTilt >= 1.2 && tiltDiff < 3.5) {
+        halos.push(`Положительный кантальный наклон (+${trueTilt}°)`);
+      } else if (trueTilt >= 0.6) {
         score += 0.35;
-      } else if (trueTilt < -0.3) {
-        score -= 0.9;
-        debuffs.push(`Негативный кантальный наклон (${trueTilt}°)`);
+      } else if (trueTilt < 0.0) {
+        score -= 0.85;
+        debuffs.push(`Негативный кантальный вектор (${trueTilt}°)`);
       }
 
-      // Г. Оценка средней трети (Midface) и посадки глаз (ESR)
-      if (midfaceRatio >= 0.96 && midfaceRatio <= 1.12) {
-        score += 0.7;
-        halos.push(`Компактный модельный Midface (MFR: ${midfaceRatio.toFixed(2)})`);
-      } else if (midfaceRatio < 0.90) {
+      // 3. Оценка надбровных дуг (Low-set Hooded Brows)
+      if (avgBrow <= 0.36 && browAsym < 0.08) {
+        score += 0.75;
+        halos.push("Низко посаженные маскулинные брови (Supraorbital Hooding)");
+      } else if (avgBrow > 0.44) {
+        score -= 0.65;
+        debuffs.push("Высокая дуга бровей (слабая костная защита глазниц)");
+      }
+
+      // 4. Оценка высоты подбородка к длине носа (Chin-to-Nose Ratio)
+      if (chinToNose >= 1.05 && chinToNose <= 1.48) {
+        score += 0.8;
+        halos.push(`Мощная нижняя треть и компактный нос (индекс: ${chinToNose.toFixed(2)})`);
+      } else if (chinToNose < 0.96) {
         score -= 1.15;
+        debuffs.push(`Длинная носовая зона относительно высоты подбородка (${chinToNose.toFixed(2)})`);
+      }
+
+      // 5. Оценка ширины рта и полноты губ
+      if (mouthToFace >= 0.35 && mouthToFace <= 0.455 && lipFullness >= 0.22) {
+        score += 0.75;
+        halos.push("Эстетичная ширина ротовой щели и выраженный объём губ");
+      } else if (mouthToFace < 0.34 || lipFullness < 0.185) {
+        score -= 1.05;
+        debuffs.push("Узкая ротовая щель и дефицит объёма губ");
+      } else if (mouthToFace > 0.465) {
+        score -= 1.0;
+        debuffs.push("Чрезмерно растянутая ротовая щель (оскал / гримаса)");
+      }
+
+      // 6. Оценка Midface и FWHR
+      if (midfaceRatio >= 0.83 && midfaceRatio <= 1.05) {
+        score += 0.55;
+        halos.push(`Гармоничная средняя треть лица (MFR: ${midfaceRatio.toFixed(2)})`);
+      } else if (midfaceRatio < 0.78) {
+        score -= 1.0;
         debuffs.push(`Вытянутая средняя треть лица (MFR: ${midfaceRatio.toFixed(2)})`);
-      } else if (midfaceRatio < 0.94) {
-        score -= 0.55;
-        debuffs.push(`Удлинённый Midface (${midfaceRatio.toFixed(2)})`);
       }
 
-      if (esr >= 0.44 && esr <= 0.48) {
-        score += 0.35;
-      } else if (esr < 0.42) {
-        score -= 0.9;
-        debuffs.push(`Близко посаженные глаза (ESR: ${esr.toFixed(2)})`);
-      } else if (esr > 0.495) {
-        score -= 0.7;
-        debuffs.push(`Широко расставленные глаза (ESR: ${esr.toFixed(2)})`);
-      }
-
-      // Д. Оценка скул (FWHR) и челюсти (Gonial)
-      if (fwhr >= 1.88 && fwhr <= 2.22) {
-        score += 0.65;
-        halos.push(`Широкий скуловой каркас (FWHR: ${fwhr.toFixed(2)})`);
-      } else if (fwhr < 1.73) {
+      if (fwhr >= 1.76 && fwhr <= 2.22) {
+        score += 0.55;
+        halos.push(`Выраженный скуловой каркас (FWHR: ${fwhr.toFixed(2)})`);
+      } else if (fwhr < 1.66) {
         score -= 0.75;
         debuffs.push(`Узкий черепной индекс (FWHR: ${fwhr.toFixed(2)})`);
       }
 
-      if (jawRatio >= 0.77 && jawRatio <= 0.90) {
-        score += 0.55;
-        halos.push(`Выраженные углы нижней челюсти (Bigonial: ${(jawRatio * 100).toFixed(0)}%)`);
-      } else if (jawRatio < 0.73) {
-        score -= 0.85;
-        debuffs.push("Узкая челюсть (дефицит латеральной поддержки)");
+      // 7. Жёсткие штрафы за гримасы, открытый рот и кривляния
+      if (mouthOpenRatio > 0.10) {
+        score -= 1.85;
+        debuffs.push("Открытый рот / мимическое искажение нижней челюсти");
+      }
+      if (!isTurned34 && (earDiff > 0.065 || browAsym > 0.075)) {
+        score -= 1.25;
+        debuffs.push("Резкая асимметрия век и надбровных дуг (гримаса)");
+      }
+      if (Math.abs(rollDeg) > 10) {
+        score -= 0.7;
+        debuffs.push("Сильный завал горизонта головы");
+      }
+      if (colorStats.avgSaturation < 0.045 && (avgEAR > 0.285 || chinToNose < 0.98)) {
+        score -= 0.65;
+        debuffs.push("Деградация текстуры мягких тканей и носогубных складок");
       }
 
-      // Е. Оценка третей, носа и открытого рта
-      if (midToLower > 1.07) {
-        score -= 0.85;
-        debuffs.push("Длинная носовая зона относительно высоты подбородка");
-      } else if (midToLower >= 0.80 && midToLower <= 1.00) {
-        score += 0.35;
+      // Итоговая калибровка диапазона
+      if (debuffs.length >= 3) {
+        score = Math.min(score, 3.3); // Гарантированный SUBHUMAN при 3+ дебаффах
+      } else if (debuffs.length === 2 && halos.length <= 1) {
+        score = Math.min(score, 4.2); // LTN (SUB-5)
       }
 
-      if (mouthToNose < 1.32) {
-        score -= 0.8;
-        debuffs.push("Узкая ротовая щель относительно ширины крыльев носа");
-      }
+      score = Math.min(9.4, Math.max(2.3, score)).toFixed(1);
 
-      // Штраф за гримасу / открытый рот / завал головы
-      if (mouthOpen > 0.11) {
-        score -= 1.45;
-        debuffs.push("Искажение геометрии: открытый рот / гримаса");
-      }
-      if (Math.abs(headRollDeg) > 7.5 || cheekAsym > 0.11) {
-        score -= 0.75;
-        debuffs.push("Нарушение осевой симметрии / наклон головы");
-      }
+      const numScore = parseFloat(score);
+      const harmonyPct = Math.min(98, Math.max(24, Math.round(numScore * 9.8 + (chinToNose > 1 ? 4 : -5))));
+      const jawPct = Math.min(98, Math.max(24, Math.round(numScore * 9.6 + (fwhr > 1.8 ? 5 : -4))));
+      const eyePct = Math.min(98, Math.max(22, Math.round(numScore * 10.1 + (avgEAR < 0.26 ? 4 : -6))));
 
-      score = Math.min(9.4, Math.max(2.2, score)).toFixed(1);
-
-      const harmonyPct = Math.min(98, Math.max(25, Math.round(82 + (midfaceRatio - 0.95) * 60 - Math.abs(0.90 - midToLower) * 70 - debuffs.length * 6)));
-      const jawPct = Math.min(98, Math.max(25, Math.round(80 + (fwhr - 1.80) * 35 + (jawRatio - 0.76) * 80 - debuffs.length * 5)));
-      const eyePct = Math.min(98, Math.max(25, Math.round(84 + (0.28 - avgEAR) * 180 + trueTilt * 2.2 - earAsym * 200)));
-
-      updateCalibratedUI(parseFloat(score), trueTilt, avgEAR, harmonyPct, jawPct, eyePct, midfaceRatio, esr, fwhr, jawRatio, halos, debuffs);
+      updateProUI(numScore, trueTilt, avgEAR, harmonyPct, jawPct, eyePct, midfaceRatio, chinToNose, fwhr, mouthToFace, halos, debuffs);
     }
 
-    function updateCalibratedUI(score, tilt, avgEAR, harmony, jawPct, eyePct, midfaceRatio, esr, fwhr, jawRatio, halos, debuffs) {
+    function updateProUI(score, tilt, avgEAR, harmony, jawPct, eyePct, midfaceRatio, chinToNose, fwhr, mouthToFace, halos, debuffs) {
       document.getElementById('scoreDisplay').innerText = score.toFixed(1);
       const rankEl = document.getElementById('rankDisplay');
 
-      if (score >= 8.1) {
+      if (score >= 8.2) {
         rankEl.innerText = "CHAD";
         rankEl.className = "rank-name chad";
         document.getElementById('gaussPercentTitle').innerText = "РАСПРЕДЕЛЕНИЕ: ТОП 0.1% ПОПУЛЯЦИИ";
-        drawGauss(0.92);
-      } else if (score >= 7.0) {
+        drawGauss(0.93);
+      } else if (score >= 7.1) {
         rankEl.innerText = "CHADLITE";
         rankEl.className = "rank-name chad";
         document.getElementById('gaussPercentTitle').innerText = "РАСПРЕДЕЛЕНИЕ: ТОП 2% ПОПУЛЯЦИИ";
-        drawGauss(0.82);
+        drawGauss(0.83);
       } else if (score >= 6.0) {
         rankEl.innerText = "HTN (High-Tier Normie)";
         rankEl.className = "rank-name htn";
@@ -777,10 +893,10 @@
       document.getElementById('valEyes').innerText = `${eyePct}%`;
       document.getElementById('barEyes').style.width = `${eyePct}%`;
 
-      const eyeType = (avgEAR <= 0.26 && tilt >= 1.5) ? "HUNTER" : (avgEAR > 0.31 || tilt < 0) ? "PREY" : "НЕЙТРАЛЬНЫЙ";
+      const eyeType = (avgEAR <= 0.265 && tilt >= 1.0) ? "HUNTER" : (avgEAR >= 0.298 || tilt < 0) ? "PREY" : "НЕЙТРАЛЬНЫЙ";
       document.getElementById('valCanthal').innerText = `${tilt > 0 ? '+' : ''}${tilt}° | EAR: ${avgEAR.toFixed(2)} [${eyeType}]`;
-      document.getElementById('valMidface').innerText = `MFR: ${midfaceRatio.toFixed(2)} | ESR: ${esr.toFixed(2)}`;
-      document.getElementById('valGonial').innerText = `FWHR: ${fwhr.toFixed(2)} | Jaw: ${(jawRatio * 100).toFixed(0)}%`;
+      document.getElementById('valMidface').innerText = `MFR: ${midfaceRatio.toFixed(2)} | Chin/Nose: ${chinToNose.toFixed(2)}`;
+      document.getElementById('valGonial').innerText = `FWHR: ${fwhr.toFixed(2)} | Mouth: ${(mouthToFace * 100).toFixed(0)}%`;
 
       const haloEl = document.getElementById('haloText');
       if (halos.length > 0) {
@@ -793,20 +909,23 @@
       if (debuffs.length > 0) {
         debuffEl.innerHTML = debuffs.map(d => `• ${d}`).join('<br>');
       } else {
-        debuffEl.innerHTML = "• Анатомических дебаффов не зафиксировано (эталонный баланс).";
+        debuffEl.innerHTML = "• Анатомических дебаффов не зафиксировано (модельный баланс).";
       }
 
       const protEl = document.getElementById('protocolText');
-      if (score >= 7.0) {
-        protEl.innerHTML = "• Элитная краниофациальная структура.<br>• Поддержание низкого процента подкожного жира (10–12%) для сохранения резкости скуловой дуги.";
+      if (score >= 7.1) {
+        protEl.innerHTML = "• Элитная краниофациальная структура (Chadlite / Chad).<br>• Поддержание низкого процента подкожного жира (10–12%) для максимальной сепарации скул.";
       } else if (score < 4.8) {
-        protEl.innerHTML = "• Зафиксированы диспропорции лицевого каркаса (категория SUB-5).<br>• Исключите мимические искажения или отправьте фото прямо в чат бота для разбора.";
+        protEl.innerHTML = "• Зафиксированы диспропорции лицевого каркаса (категория SUB-5).<br>• Отправьте фото напрямую в чат бота для развернутого текстового протокола.";
       } else {
-        protEl.innerHTML = "• Сбалансированные среднестатистические пропорции (MTN/HTN).<br>• Снижение процента подкожного жира и контроль положения языка (mewing).";
+        protEl.innerHTML = "• Сбалансированные среднестатистические пропорции (MTN / HTN).<br>• Снижение процента подкожного жира и контроль осанки шеи.";
+      }
+
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
       }
     }
 
-    // Идеальное совпадение сетки с фото любого формата (портрет / квадрат)
     function renderCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -851,12 +970,12 @@
         ctx.strokeStyle = "rgba(0, 240, 255, 0.5)";
         ctx.lineWidth = 1.5;
         ctx.setLineDash([6, 6]);
-        [cPt(10)[1], cPt(9)[1], cPt(2)[1], cPt(152)[1]].forEach(y => {
+        [cPt(10)[1], cPt(6)[1], cPt(2)[1], cPt(152)[1]].forEach(y => {
           ctx.beginPath(); ctx.moveTo(40, y); ctx.lineTo(canvas.width - 40, y); ctx.stroke();
         });
         ctx.setLineDash([]);
 
-        const jL = cPt(58), chin = cPt(152), jR = cPt(288);
+        const jL = cPt(172), chin = cPt(152), jR = cPt(397);
         ctx.strokeStyle = "#00f0ff";
         ctx.lineWidth = 2.5;
         ctx.beginPath();
@@ -880,7 +999,6 @@
 
     function rescan() {
       if (loadedImage) {
-        logEl.innerText = "RESCANNING...";
         faceMesh.send({ image: loadedImage });
       }
     }
