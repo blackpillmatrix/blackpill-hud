@@ -5,81 +5,78 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>BLACKPILL // BIOMETRIC HUD</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Векторный трекер лица MediaPipe -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
   <style>
     :root {
-      --bg: #05070a;
-      --card: #0b1118;
-      --border: #1a2634;
+      --bg: #030507;
+      --card: #090e15;
+      --border: #162231;
       --neon-green: #00ff66;
       --neon-cyan: #00f0ff;
       --neon-red: #ff2a5f;
       --neon-gold: #ffaa00;
       --text: #e2f1ff;
-      --muted: #5e7a96;
+      --muted: #57708a;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; }
     body { background: var(--bg); color: var(--text); padding-bottom: 30px; overflow-x: hidden; }
-    
-    /* CRT Scanline overlay */
+
     .crt::after {
-      content: " ";
-      display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+      content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%);
       background-size: 100% 4px; pointer-events: none; z-index: 100;
     }
 
-    /* HEADER */
     .header {
       padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px solid var(--border); background: rgba(11, 17, 24, 0.85); backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border); background: rgba(9, 14, 21, 0.88); backdrop-filter: blur(8px);
       position: sticky; top: 0; z-index: 50;
     }
     .brand { font-size: 13px; font-weight: 900; letter-spacing: 2px; color: var(--neon-cyan); display: flex; align-items: center; gap: 6px; }
     .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
     .system-tag { font-size: 10px; color: var(--muted); border: 1px solid var(--border); padding: 3px 6px; border-radius: 4px; }
 
-    /* SCANNER VIEWPORT */
     .viewport-wrap { padding: 14px; }
     .hud-box {
       position: relative; width: 100%; aspect-ratio: 1/1; border-radius: 12px;
-      background: #020406; border: 1px solid var(--border); overflow: hidden;
+      background: #010305; border: 1px solid var(--border); overflow: hidden;
       display: flex; align-items: center; justify-content: center;
     }
-    canvas { width: 100%; height: 100%; display: block; }
-    
-    /* HUD Corner Brackets */
+    canvas { width: 100%; height: 100%; display: block; object-fit: contain; }
+
     .corner { position: absolute; width: 14px; height: 14px; border: 2px solid var(--neon-cyan); pointer-events: none; }
     .c-tl { top: 8px; left: 8px; border-right: none; border-bottom: none; }
     .c-tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
     .c-bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
     .c-br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
 
-    /* Laser Scanner Beam */
     .laser-beam {
       position: absolute; left: 0; width: 100%; height: 2px;
       background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
       box-shadow: 0 0 14px var(--neon-green);
-      animation: scanAnim 3s ease-in-out infinite alternate; pointer-events: none;
+      animation: scanAnim 2.8s ease-in-out infinite alternate; pointer-events: none;
     }
     @keyframes scanAnim {
-      0% { top: 5%; opacity: 0.2; }
+      0% { top: 5%; opacity: 0.15; }
       50% { opacity: 1; }
-      100% { top: 95%; opacity: 0.2; }
+      100% { top: 95%; opacity: 0.15; }
     }
 
-    /* CONTROLS UNDER HUD */
-    .hud-ctrls {
-      display: flex; gap: 8px; margin-top: 10px;
+    .scan-status-text {
+      position: absolute; bottom: 12px; left: 14px; font-size: 10px; font-family: monospace;
+      color: var(--neon-cyan); text-shadow: 0 0 6px rgba(0,240,255,0.6); pointer-events: none;
     }
+
+    .hud-ctrls { display: flex; gap: 8px; margin-top: 10px; }
     .hud-btn {
       flex: 1; background: var(--card); border: 1px solid var(--border); color: var(--text);
-      padding: 9px 0; border-radius: 8px; font-size: 11px; font-weight: 700; letter-spacing: 1px;
+      padding: 10px 0; border-radius: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
       cursor: pointer; text-align: center; transition: 0.2s;
     }
     .hud-btn:active { background: var(--neon-cyan); color: #000; }
     .hud-btn.active { border-color: var(--neon-green); color: var(--neon-green); }
 
-    /* TABS */
     .tabs { display: flex; margin: 10px 14px; border-bottom: 1px solid var(--border); }
     .tab {
       flex: 1; text-align: center; padding: 10px 0; font-size: 11px; font-weight: 800;
@@ -87,11 +84,9 @@
     }
     .tab.active { color: var(--neon-cyan); border-bottom: 2px solid var(--neon-cyan); }
 
-    /* TAB CONTENT */
     .tab-pane { display: none; padding: 0 14px; }
     .tab-pane.active { display: block; }
 
-    /* SCORE CARD */
     .score-card {
       background: var(--card); border: 1px solid var(--border); border-radius: 12px;
       padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
@@ -99,14 +94,23 @@
     .rank-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
     .rank-name { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: 1px; margin-top: 4px; }
     .rank-name.chad { color: var(--neon-green); text-shadow: 0 0 14px rgba(0,255,102,0.4); }
+    .rank-name.htn { color: var(--neon-cyan); }
+    .rank-name.mtn { color: var(--neon-gold); }
+
     .score-badge {
       background: rgba(0, 240, 255, 0.08); border: 1px solid var(--neon-cyan);
       border-radius: 10px; padding: 10px 14px; text-align: center;
     }
-    .score-num { font-size: 22px; font-weight: 900; color: var(--neon-cyan); }
+    .score-num { font-size: 24px; font-weight: 900; color: var(--neon-cyan); }
     .score-sub { font-size: 9px; color: var(--muted); margin-top: 2px; }
 
-    /* METRIC ROW */
+    .chart-box {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px; margin-bottom: 12px;
+    }
+    .chart-head { font-size: 11px; font-weight: 800; color: var(--muted); letter-spacing: 1px; margin-bottom: 10px; }
+    .gauss-canvas { width: 100%; height: 90px; }
+
     .metric-item {
       background: var(--card); border: 1px solid var(--border); border-radius: 10px;
       padding: 12px 14px; margin-bottom: 8px;
@@ -117,267 +121,355 @@
     .progress-bg { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
     .progress-fill { height: 100%; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green)); border-radius: 3px; }
 
-    /* GAUSS CURVE CONTAINER */
-    .chart-box {
-      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-      padding: 14px; margin-bottom: 12px;
-    }
-    .chart-head { font-size: 11px; font-weight: 800; color: var(--muted); letter-spacing: 1px; margin-bottom: 10px; }
-    .gauss-canvas { width: 100%; height: 90px; }
-
-    /* HIDDEN FILE INPUT */
     #fileInput { display: none; }
   </style>
 </head>
 <body class="crt">
 
-  <!-- HEADER -->
   <div class="header">
     <div class="brand">
       <div class="status-dot"></div>
       BLACKPILL // HUD
     </div>
-    <div class="system-tag">v3.8 FLASH</div>
+    <div class="system-tag">AI-MESH 468</div>
   </div>
 
-  <!-- HUD VIEWPORT -->
   <div class="viewport-wrap">
-    <div class="hud-box" id="hudContainer">
-      <canvas id="faceCanvas" width="400" height="400"></canvas>
+    <div class="hud-box">
+      <canvas id="faceCanvas" width="600" height="600"></canvas>
       <div class="corner c-tl"></div>
       <div class="corner c-tr"></div>
       <div class="corner c-bl"></div>
       <div class="corner c-br"></div>
       <div class="laser-beam"></div>
+      <div class="scan-status-text" id="statusLog">READY // ОЖИДАНИЕ СНИМКА</div>
     </div>
 
-    <!-- HUD TOGGLES -->
     <div class="hud-ctrls">
-      <button class="hud-btn" onclick="triggerScan()">⚡️ ПЕРЕСКАНИРОВАТЬ</button>
-      <button class="hud-btn active" id="toggleGridBtn" onclick="toggleOverlay()">СЕТКА ВЫКЛ</button>
-      <label class="hud-btn" for="fileInput">+ СВОЁ ФОТО</label>
+      <button class="hud-btn" onclick="rescan()">⚡️ ПЕРЕСКАНИРОВАТЬ</button>
+      <button class="hud-btn active" id="toggleGridBtn" onclick="toggleOverlay()">СЕТКА ВКЛ</button>
+      <button class="hud-btn" onclick="document.getElementById('fileInput').click()">+ СВОЁ ФОТО</button>
       <input type="file" id="fileInput" accept="image/*" onchange="handleUserPhoto(event)">
     </div>
   </div>
 
-  <!-- NAVIGATION TABS -->
   <div class="tabs">
     <div class="tab active" onclick="switchTab(0)">[01] ОБЗОР</div>
     <div class="tab" onclick="switchTab(1)">[02] МЕТРИКИ</div>
     <div class="tab" onclick="switchTab(2)">[03] ПРОТОКОЛ</div>
   </div>
 
-  <!-- TAB 1: OVERVIEW -->
   <div class="tab-pane active" id="pane0">
     <div class="score-card">
       <div>
         <div class="rank-title">Классификация фенотипа</div>
-        <div class="rank-name chad">CHADLITE</div>
+        <div class="rank-name chad" id="rankDisplay">CHAD</div>
       </div>
       <div class="score-badge">
-        <div class="score-num">8.4</div>
+        <div class="score-num" id="scoreDisplay">9.2</div>
         <div class="score-sub">ИЗ 10.0</div>
       </div>
     </div>
 
-    <!-- GAUSS CURVE -->
     <div class="chart-box">
-      <div class="chart-head">РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (ТОП 2.1%)</div>
+      <div class="chart-head" id="gaussPercentTitle">РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (ТОП 0.8%)</div>
       <canvas id="gaussChart" class="gauss-canvas" width="340" height="90"></canvas>
     </div>
 
-    <!-- 4 CORE PILLARS -->
     <div class="metric-item">
       <div class="metric-head">
-        <span class="metric-label">Гармония пропорций</span>
-        <span class="metric-val">88%</span>
+        <span class="metric-label">Гармония третей</span>
+        <span class="metric-val" id="valHarmony">94%</span>
       </div>
-      <div class="progress-bg"><div class="progress-fill" style="width: 88%;"></div></div>
+      <div class="progress-bg"><div class="progress-fill" id="barHarmony" style="width: 94%;"></div></div>
     </div>
 
     <div class="metric-item">
       <div class="metric-head">
-        <span class="metric-label">Угловатость челюсти (Angular)</span>
-        <span class="metric-val">96%</span>
+        <span class="metric-label">Угловатость челюсти</span>
+        <span class="metric-val" id="valAngular">97%</span>
       </div>
-      <div class="progress-bg"><div class="progress-fill" style="width: 96%; background: var(--neon-green);"></div></div>
+      <div class="progress-bg"><div class="progress-fill" id="barAngular" style="width: 97%;"></div></div>
     </div>
 
     <div class="metric-item">
       <div class="metric-head">
         <span class="metric-label">Диморфизм черт</span>
-        <span class="metric-val">90%</span>
+        <span class="metric-val" id="valDimorph">95%</span>
       </div>
-      <div class="progress-bg"><div class="progress-fill" style="width: 90%;"></div></div>
+      <div class="progress-bg"><div class="progress-fill" id="barDimorph" style="width: 95%;"></div></div>
     </div>
 
     <div class="metric-item">
       <div class="metric-head">
-        <span class="metric-label">Зона глаз (Hunter Index)</span>
-        <span class="metric-val">89%</span>
+        <span class="metric-label">Eye Area (Hunter Index)</span>
+        <span class="metric-val" id="valEyes">96%</span>
       </div>
-      <div class="progress-bg"><div class="progress-fill" style="width: 89%;"></div></div>
+      <div class="progress-bg"><div class="progress-fill" id="barEyes" style="width: 96%;"></div></div>
     </div>
   </div>
 
-  <!-- TAB 2: GEOMETRIC METRICS -->
   <div class="tab-pane" id="pane1">
     <div class="metric-item">
       <div class="metric-head">
-        <span class="metric-label">Кантальный наклон глаз</span>
-        <span class="metric-val">+6.2° [ПОЛОЖИТЕЛЬНЫЙ]</span>
+        <span class="metric-label">Кантальный наклон</span>
+        <span class="metric-val" id="valCanthal">+7.4° [HUNTER]</span>
       </div>
-      <div style="font-size: 11px; color: var(--muted);">Внешний уголок глаза выше внутреннего. Полное отсутствие усталого взгляда.</div>
+      <div style="font-size: 11px; color: var(--muted);" id="descCanthal">Положительный вектор, идеальная посадка глазных щелей.</div>
     </div>
 
     <div class="metric-item">
       <div class="metric-head">
-        <span class="metric-label">Угол челюсти (Gonial Angle)</span>
-        <span class="metric-val">118° [ЭТАЛОН]</span>
+        <span class="metric-label">Угол челюсти (Gonial)</span>
+        <span class="metric-val" id="valGonial">116° [ЭТАЛОН]</span>
       </div>
-      <div style="font-size: 11px; color: var(--muted);">Норма для маскулинного фенотипа: 115°–122°. Высокая латеральная проекция.</div>
+      <div style="font-size: 11px; color: var(--muted);">Высокая проекция рамки нижней челюсти, глубокий подбородочный выступ.</div>
     </div>
 
     <div class="metric-item">
       <div class="metric-head">
-        <span class="metric-label">Соотношение третей</span>
-        <span class="metric-val">1 : 0.98 : 1.02</span>
+        <span class="metric-label">Баланс лица (FWHR)</span>
+        <span class="metric-val" id="valFwhr">1.94 [ВЫСОКИЙ]</span>
       </div>
-      <div style="font-size: 11px; color: var(--muted);">Компактная средняя треть лица, выраженный угол подбородка.</div>
+      <div style="font-size: 11px; color: var(--muted);">Компактная средняя треть, выраженная бизигоматическая ширина.</div>
     </div>
   </div>
 
-  <!-- TAB 3: PROTOCOL / FIXES -->
   <div class="tab-pane" id="pane2">
     <div class="metric-item" style="border-left: 3px solid var(--neon-green);">
-      <div style="font-size: 12px; font-weight: 800; color: var(--neon-green); margin-bottom: 4px;">HALO-ФАКТОРЫ</div>
-      <div style="font-size: 11px; color: var(--text); line-height: 1.5;">
-        • Элитная костная проекция скуловых дуг (Zygos).<br>
-        • Hunter Eyes: глубокая посадка глазницы, минимальное обнажение верхнего века (Hooding).
+      <div style="font-size: 12px; font-weight: 800; color: var(--neon-green); margin-bottom: 4px;">КЛЮЧЕВЫЕ HALO-ТОЧКИ</div>
+      <div style="font-size: 11px; color: var(--text); line-height: 1.5;" id="haloText">
+        • Превосходный кантальный наклон глаз и развитый подбородок.<br>
+        • Высокая проекция скуловых костей (Zygomatic arches).
       </div>
     </div>
 
     <div class="metric-item" style="border-left: 3px solid var(--neon-gold); margin-top: 10px;">
-      <div style="font-size: 12px; font-weight: 800; color: var(--neon-gold); margin-bottom: 4px;">ДИРЕКТИВЫ ОПТИМИЗАЦИИ</div>
-      <div style="font-size: 11px; color: var(--text); line-height: 1.5;">
-        • Текстура волос: убрать избыточный латеральный объем по бокам, визуально подчеркнув ширину нижней челюсти.<br>
-        • Баланс эпидермиса: сыворотка с витамином C и увлажнение для ровного матового тона T-зоны.
+      <div style="font-size: 12px; font-weight: 800; color: var(--neon-gold); margin-bottom: 4px;">РЕКОМЕНДАЦИИ ПО ОПТИМИЗАЦИИ</div>
+      <div style="font-size: 11px; color: var(--text); line-height: 1.5;" id="debuffText">
+        • Поддержание низкого процента подкожного жира (10-12%) для максимальной очерченности челюсти.<br>
+        • Текстурированные стрижки без скрывания лобной и височной зоны.
       </div>
     </div>
   </div>
 
   <script>
-    // Инициализация Telegram WebApp API
-    if (window.Telegram && window.Telegram.WebApp) {
+    if (window.Telegram?.WebApp) {
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
     }
 
     let showOverlay = true;
-    let customImg = null;
+    let loadedImage = null;
+    let detectedLandmarks = null;
     const canvas = document.getElementById('faceCanvas');
     const ctx = canvas.getContext('2d');
+    const logEl = document.getElementById('statusLog');
 
-    // Отрисовка киберпанк лица + сетки
-    function renderHUD() {
-      ctx.clearRect(0, 0, 400, 400);
+    // Настройка нейросети MediaPipe FaceMesh
+    const faceMesh = new FaceMesh({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+    });
 
-      if (customImg) {
-        ctx.drawImage(customImg, 0, 0, 400, 400);
+    faceMesh.setOptions({
+      maxNumFaces: 1,
+      refineLandmarks: true,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+
+    faceMesh.onResults((results) => {
+      if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+        detectedLandmarks = results.multiFaceLandmarks[0];
+        logEl.innerText = "LOCKED // 468 ТОЧЕК НАЙДЕНО";
+        calculateBiometrics(detectedLandmarks);
       } else {
-        // Фоновый контур лица по умолчанию
-        ctx.fillStyle = "#0c131a";
-        ctx.fillRect(0, 0, 400, 400);
-
-        // Стилизованный череп / лицо
-        ctx.strokeStyle = "#1e2d3d";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.ellipse(200, 190, 85, 125, 0, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Челюсть
-        ctx.beginPath();
-        ctx.moveTo(130, 200); ctx.lineTo(150, 290); ctx.lineTo(200, 310);
-        ctx.lineTo(250, 290); ctx.lineTo(270, 200);
-        ctx.stroke();
+        detectedLandmarks = null;
+        logEl.innerText = "WARNING // ЛИЦО НЕ НАЙДЕНО";
       }
-
-      if (showOverlay) {
-        // Линии третей лица
-        ctx.strokeStyle = "rgba(0, 240, 255, 0.4)";
-        ctx.setLineDash([4, 4]);
-        [100, 185, 250, 310].forEach(y => {
-          ctx.beginPath(); ctx.moveTo(40, y); ctx.lineTo(360, y); ctx.stroke();
-        });
-        ctx.setLineDash([]);
-
-        // Векторы кантального наклона глаз (Hunter Tilt)
-        ctx.lineWidth = 2;
-        // Левый глаз
-        ctx.strokeStyle = "rgba(0, 255, 102, 0.9)";
-        ctx.beginPath(); ctx.moveTo(145, 182); ctx.lineTo(185, 188); ctx.stroke();
-        // Правый глаз
-        ctx.beginPath(); ctx.moveTo(215, 188); ctx.lineTo(255, 182); ctx.stroke();
-
-        // Эталонная горизонталь (пунктир)
-        ctx.strokeStyle = "rgba(255, 42, 95, 0.6)";
-        ctx.beginPath(); ctx.moveTo(140, 188); ctx.lineTo(190, 188); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(210, 188); ctx.lineTo(260, 188); ctx.stroke();
-
-        // Точки
-        ctx.fillStyle = "#00f0ff";
-        [[145,182], [185,188], [215,188], [255,182], [200,310], [150,290], [250,290]].forEach(pt => {
-          ctx.beginPath(); ctx.arc(pt[0], pt[1], 3.5, 0, Math.PI * 2); ctx.fill();
-        });
-
-        // Текстовые замеры на Canvas
-        ctx.fillStyle = "#00ff66";
-        ctx.font = "bold 10px monospace";
-        ctx.fillText("CANTHAL: +6.2°", 145, 170);
-        ctx.fillText("GONIAL: 118°", 255, 295);
-      }
-    }
-
-    function toggleOverlay() {
-      showOverlay = !showOverlay;
-      document.getElementById('toggleGridBtn').innerText = showOverlay ? "СЕТКА ВЫКЛ" : "СЕТКА ВКЛ";
-      renderHUD();
-    }
-
-    function triggerScan() {
-      const beam = document.querySelector('.laser-beam');
-      beam.style.animation = 'none';
-      setTimeout(() => { beam.style.animation = 'scanAnim 1.5s ease-in-out infinite alternate'; }, 10);
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-      }
-      renderHUD();
-    }
+      renderCanvas();
+    });
 
     function handleUserPhoto(e) {
       const file = e.target.files[0];
       if (!file) return;
+
+      logEl.innerText = "SCANNING // АНАЛИЗ ГЕОМЕТРИИ...";
       const reader = new FileReader();
       reader.onload = function(evt) {
         const img = new Image();
-        img.onload = function() {
-          customImg = img;
-          renderHUD();
+        img.onload = async function() {
+          loadedImage = img;
+          renderCanvas();
+          await faceMesh.send({ image: img });
         };
         img.src = evt.target.result;
       };
       reader.readAsDataURL(file);
     }
 
-    // Переключение вкладок
+    // Расчет реальных геометрических параметров
+    function calculateBiometrics(lm) {
+      const w = canvas.width, h = canvas.height;
+
+      // Точки глаз (левый: 33 внешний, 133 внутренний; правый: 263 внешний, 362 внутренний)
+      const lOut = { x: lm[33].x * w, y: lm[33].y * h };
+      const lIn  = { x: lm[133].x * w, y: lm[133].y * h };
+      const rIn  = { x: lm[362].x * w, y: lm[362].y * h };
+      const rOut = { x: lm[263].x * w, y: lm[263].y * h };
+
+      // Расчет кантального наклона в градусах
+      const leftTilt = -Math.atan2(lOut.y - lIn.y, lIn.x - lOut.x) * (180 / Math.PI);
+      const rightTilt = -Math.atan2(rOut.y - rIn.y, rOut.x - rIn.x) * (180 / Math.PI);
+      const avgTilt = ((leftTilt + rightTilt) / 2).toFixed(1);
+
+      // Пропорции третей
+      const forehead = lm[10].y * h;
+      const brow     = lm[9].y * h;
+      const noseBase = lm[2].y * h;
+      const chin     = lm[152].y * h;
+
+      const upperThird = Math.max(10, brow - forehead);
+      const midThird   = Math.max(10, noseBase - brow);
+      const lowerThird = Math.max(10, chin - noseBase);
+      const harmonyScore = Math.min(99, Math.max(70, Math.round(100 - (Math.abs(midThird - lowerThird) / lowerThird) * 50)));
+
+      // Подсчет итогового балла
+      let baseScore = 7.5;
+      if (avgTilt > 4) baseScore += 1.2;
+      else if (avgTilt > 1) baseScore += 0.6;
+      else if (avgTilt < -2) baseScore -= 1.0;
+
+      if (harmonyScore > 88) baseScore += 0.8;
+      baseScore = Math.min(9.7, Math.max(4.8, baseScore)).toFixed(1);
+
+      updateUI(baseScore, avgTilt, harmonyScore);
+    }
+
+    function updateUI(score, tilt, harmony) {
+      document.getElementById('scoreDisplay').innerText = score;
+      const rankEl = document.getElementById('rankDisplay');
+
+      if (score >= 9.0) {
+        rankEl.innerText = "CHAD";
+        rankEl.className = "rank-name chad";
+        document.getElementById('gaussPercentTitle').innerText = "РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (ТОП 0.5%)";
+        drawGauss(0.85);
+      } else if (score >= 8.0) {
+        rankEl.innerText = "CHADLITE";
+        rankEl.className = "rank-name chad";
+        document.getElementById('gaussPercentTitle').innerText = "РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (ТОП 2.8%)";
+        drawGauss(0.78);
+      } else if (score >= 7.0) {
+        rankEl.innerText = "HTN (High-Tier Normie)";
+        rankEl.className = "rank-name htn";
+        document.getElementById('gaussPercentTitle').innerText = "РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (ТОП 12%)";
+        drawGauss(0.68);
+      } else {
+        rankEl.innerText = "MTN (Mid-Tier Normie)";
+        rankEl.className = "rank-name mtn";
+        document.getElementById('gaussPercentTitle').innerText = "РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (ТОП 45%)";
+        drawGauss(0.50);
+      }
+
+      document.getElementById('valCanthal').innerText = `${tilt > 0 ? '+' : ''}${tilt}° [${tilt > 2 ? 'HUNTER' : tilt >= 0 ? 'НЕЙТРАЛЬНЫЙ' : 'PREY'}]`;
+      document.getElementById('valHarmony').innerText = `${harmony}%`;
+      document.getElementById('barHarmony').style.width = `${harmony}%`;
+
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      }
+    }
+
+    function renderCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (loadedImage) {
+        // Подгоняем фото под квадрат с сохранением пропорций
+        const hRatio = canvas.width / loadedImage.width;
+        const vRatio = canvas.height / loadedImage.height;
+        const ratio  = Math.max(hRatio, vRatio);
+        const centerShift_x = (canvas.width - loadedImage.width * ratio) / 2;
+        const centerShift_y = (canvas.height - loadedImage.height * ratio) / 2;
+        ctx.drawImage(loadedImage, 0, 0, loadedImage.width, loadedImage.height,
+                      centerShift_x, centerShift_y, loadedImage.width * ratio, loadedImage.height * ratio);
+      } else {
+        ctx.fillStyle = "#06090e";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      // Отрисовка адаптивных линий поверх реальных точек
+      if (showOverlay && detectedLandmarks) {
+        const w = canvas.width, h = canvas.height;
+        const lm = detectedLandmarks;
+
+        // Векторы кантального наклона глаз
+        const lOut = [lm[33].x * w, lm[33].y * h];
+        const lIn  = [lm[133].x * w, lm[133].y * h];
+        const rIn  = [lm[362].x * w, lm[362].y * h];
+        const rOut = [lm[263].x * w, lm[263].y * h];
+
+        // Горизонтали сравнения
+        ctx.strokeStyle = "rgba(255, 42, 95, 0.7)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(lOut[0] - 15, lIn[1]); ctx.lineTo(lIn[0] + 15, lIn[1]);
+        ctx.moveTo(rIn[0] - 15, rIn[1]); ctx.lineTo(rOut[0] + 15, rIn[1]);
+        ctx.stroke();
+
+        // Реальный наклон глаз
+        ctx.strokeStyle = "#00ff66";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(lOut[0], lOut[1]); ctx.lineTo(lIn[0], lIn[1]);
+        ctx.moveTo(rIn[0], rIn[1]); ctx.lineTo(rOut[0], rOut[1]);
+        ctx.stroke();
+
+        // Горизонтали третей лица
+        ctx.strokeStyle = "rgba(0, 240, 255, 0.5)";
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 6]);
+        [lm[10].y * h, lm[9].y * h, lm[2].y * h, lm[152].y * h].forEach(y => {
+          ctx.beginPath(); ctx.moveTo(40, y); ctx.lineTo(w - 40, y); ctx.stroke();
+        });
+        ctx.setLineDash([]);
+
+        // Контур нижней челюсти (Jawline)
+        ctx.strokeStyle = "#00f0ff";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(lm[172].x * w, lm[172].y * h);
+        ctx.lineTo(lm[152].x * w, lm[152].y * h);
+        ctx.lineTo(lm[397].x * w, lm[397].y * h);
+        ctx.stroke();
+
+        // Неоновые контрольные точки
+        ctx.fillStyle = "#00ff66";
+        [lOut, lIn, rIn, rOut, [lm[152].x * w, lm[152].y * h], [lm[172].x * w, lm[172].y * h], [lm[397].x * w, lm[397].y * h]].forEach(pt => {
+          ctx.beginPath(); ctx.arc(pt[0], pt[1], 4.5, 0, Math.PI * 2); ctx.fill();
+        });
+      }
+    }
+
+    function toggleOverlay() {
+      showOverlay = !showOverlay;
+      document.getElementById('toggleGridBtn').innerText = showOverlay ? "СЕТКА ВКЛ" : "СЕТКА ВЫКЛ";
+      renderCanvas();
+    }
+
+    function rescan() {
+      if (loadedImage) {
+        logEl.innerText = "RESCANNING...";
+        faceMesh.send({ image: loadedImage });
+      }
+    }
+
     function switchTab(idx) {
       document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
       document.querySelectorAll('.tab-pane').forEach((p, i) => p.classList.toggle('active', i === idx));
     }
 
-    // Отрисовка графика нормального распределения Гаусса
-    function drawGauss() {
+    function drawGauss(userPercent = 0.8) {
       const gCanvas = document.getElementById('gaussChart');
       const gCtx = gCanvas.getContext('2d');
       const w = gCanvas.width, h = gCanvas.height;
@@ -390,14 +482,13 @@
         let y = (h - 10) - (Math.exp(-0.5 * normX * normX) * (h - 20));
         gCtx.lineTo(x, y);
       }
-      gCtx.strokeStyle = "#1f3246";
+      gCtx.strokeStyle = "#162536";
       gCtx.lineWidth = 2;
       gCtx.stroke();
 
-      // Заливка топового процента справа
-      gCtx.fillStyle = "rgba(0, 255, 102, 0.2)";
+      gCtx.fillStyle = "rgba(0, 255, 102, 0.25)";
       gCtx.beginPath();
-      let startX = w * 0.76;
+      let startX = w * userPercent;
       gCtx.moveTo(startX, h - 5);
       for (let x = startX; x <= w; x++) {
         let normX = (x - w / 2) / 45;
@@ -407,7 +498,6 @@
       gCtx.lineTo(w, h - 5);
       gCtx.fill();
 
-      // Маркер позиции пользователя
       gCtx.strokeStyle = "#00ff66";
       gCtx.beginPath();
       gCtx.moveTo(startX, 10);
@@ -416,11 +506,10 @@
 
       gCtx.fillStyle = "#00ff66";
       gCtx.font = "bold 9px monospace";
-      gCtx.fillText("YOU (8.4)", startX - 22, 10);
+      gCtx.fillText("YOU", startX - 10, 10);
     }
 
-    renderHUD();
-    drawGauss();
+    drawGauss(0.85);
   </script>
 </body>
 </html>
