@@ -5,64 +5,141 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>BLACKPILL // BIOMETRIC HUD</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Векторный трекер лица MediaPipe -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
   <style>
     :root {
       --bg: #030507;
-      --card: #090e15;
-      --border: #162231;
+      --card: #080d14;
+      --card-hover: #0d1520;
+      --border: #152230;
+      --border-glow: rgba(0, 255, 102, 0.25);
       --neon-green: #00ff66;
       --neon-cyan: #00f0ff;
       --neon-red: #ff2a5f;
       --neon-gold: #ffaa00;
       --text: #e2f1ff;
-      --muted: #57708a;
+      --muted: #5e7a96;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; }
     body { background: var(--bg); color: var(--text); padding-bottom: 30px; overflow-x: hidden; }
 
     .crt::after {
       content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%);
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%);
       background-size: 100% 4px; pointer-events: none; z-index: 100;
     }
 
-    .header {
+    /* TOPBAR */
+    .topbar {
       padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px solid var(--border); background: rgba(9, 14, 21, 0.88); backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border); background: rgba(8, 13, 20, 0.92); backdrop-filter: blur(10px);
       position: sticky; top: 0; z-index: 50;
     }
-    .brand { font-size: 13px; font-weight: 900; letter-spacing: 2px; color: var(--neon-cyan); display: flex; align-items: center; gap: 6px; }
+    .brand-group { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 900; letter-spacing: 1.5px; color: var(--neon-cyan); }
     .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
-    .system-tag { font-size: 10px; color: var(--muted); border: 1px solid var(--border); padding: 3px 6px; border-radius: 4px; }
+    .balance-badge {
+      font-size: 11px; font-weight: 700; color: var(--neon-green); background: rgba(0, 255, 102, 0.08);
+      border: 1px solid rgba(0, 255, 102, 0.3); padding: 4px 10px; border-radius: 20px; display: flex; align-items: center; gap: 6px;
+    }
+    .back-btn { background: none; border: none; color: var(--neon-cyan); font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: bold; }
 
-    .viewport-wrap { padding: 14px; }
+    /* SCREENS CONTAINER */
+    .screen { display: none; padding: 16px; animation: fadeIn 0.25s ease; }
+    .screen.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* SCREEN 1: HUB */
+    .hero-title { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; line-height: 1.2; margin-top: 8px; }
+    .hero-title span { color: var(--neon-green); text-shadow: 0 0 16px rgba(0, 255, 102, 0.35); }
+    .hero-desc { font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+
+    /* ACTION GRID (4 кнопки) */
+    .action-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 18px 0; }
+    .action-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 4px; text-align: center; cursor: pointer; transition: 0.2s;
+    }
+    .action-card:active { transform: scale(0.96); border-color: var(--neon-cyan); }
+    .action-icon { font-size: 20px; margin-bottom: 6px; }
+    .action-label { font-size: 10px; font-weight: 800; color: var(--text); letter-spacing: 0.5px; }
+
+    /* CTA BUTTONS */
+    .btn-main {
+      width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--neon-green);
+      color: #000; font-size: 13px; font-weight: 900; letter-spacing: 1px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;
+      box-shadow: 0 0 20px rgba(0, 255, 102, 0.3); transition: 0.2s;
+    }
+    .btn-main:active { transform: scale(0.98); opacity: 0.9; }
+    .btn-outline {
+      width: 100%; padding: 13px; border-radius: 12px; background: transparent;
+      border: 1px solid var(--border); color: var(--text); font-size: 12px; font-weight: 800;
+      cursor: pointer; text-align: center; transition: 0.2s; margin-bottom: 18px;
+    }
+    .btn-outline:active { border-color: var(--neon-cyan); background: rgba(0, 240, 255, 0.05); }
+
+    /* FEATURE LIST */
+    .box-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px; margin-bottom: 14px;
+    }
+    .box-header { font-size: 12px; font-weight: 900; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 14px; }
+    .feature-row { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; }
+    .feature-row:last-child { margin-bottom: 0; }
+    .feature-num { font-size: 11px; font-weight: 900; color: var(--neon-cyan); background: rgba(0, 240, 255, 0.1); border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px; }
+    .feature-text { font-size: 12px; line-height: 1.45; color: var(--text); }
+    .feature-text b { color: #fff; }
+
+    /* STATS ROW */
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .stat-badge {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px; text-align: center;
+    }
+    .stat-val { font-size: 22px; font-weight: 900; }
+    .stat-sub { font-size: 10px; color: var(--muted); margin-top: 4px; line-height: 1.3; }
+
+    /* SELECTION CARDS (Пол / Раса) */
+    .select-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px; margin-bottom: 10px; cursor: pointer; transition: 0.2s;
+      display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 800;
+    }
+    .select-card:active { border-color: var(--neon-green); background: var(--card-hover); }
+    .select-card.selected { border-color: var(--neon-green); box-shadow: 0 0 12px rgba(0, 255, 102, 0.2); }
+
+    /* RULES LIST */
+    .rule-item { display: flex; gap: 10px; font-size: 12px; line-height: 1.45; margin-bottom: 10px; color: var(--text); }
+    .rule-item.ok span { color: var(--neon-green); font-weight: bold; }
+    .rule-item.bad span { color: var(--neon-red); font-weight: bold; }
+
+    /* UPLOAD DROPZONE */
+    .upload-zone {
+      border: 2px dashed var(--border); border-radius: 14px; padding: 40px 20px;
+      text-align: center; cursor: pointer; transition: 0.2s; background: rgba(8, 13, 20, 0.4);
+    }
+    .upload-zone:active { border-color: var(--neon-cyan); background: rgba(0, 240, 255, 0.03); }
+    .upload-icon { font-size: 34px; margin-bottom: 10px; color: var(--neon-cyan); }
+
+    /* HUD SCANNER VIEW */
     .hud-box {
-      position: relative; width: 100%; aspect-ratio: 1/1; border-radius: 12px;
+      position: relative; width: 100%; aspect-ratio: 1/1; border-radius: 14px;
       background: #010305; border: 1px solid var(--border); overflow: hidden;
       display: flex; align-items: center; justify-content: center;
     }
     canvas { width: 100%; height: 100%; display: block; object-fit: contain; }
-
     .corner { position: absolute; width: 14px; height: 14px; border: 2px solid var(--neon-cyan); pointer-events: none; }
     .c-tl { top: 8px; left: 8px; border-right: none; border-bottom: none; }
     .c-tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
     .c-bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
     .c-br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
-
     .laser-beam {
       position: absolute; left: 0; width: 100%; height: 2px;
       background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
       box-shadow: 0 0 14px var(--neon-green);
       animation: scanAnim 2.8s ease-in-out infinite alternate; pointer-events: none;
     }
-    @keyframes scanAnim {
-      0% { top: 5%; opacity: 0.15; }
-      50% { opacity: 1; }
-      100% { top: 95%; opacity: 0.15; }
-    }
-
+    @keyframes scanAnim { 0% { top: 5%; opacity: 0.15; } 50% { opacity: 1; } 100% { top: 95%; opacity: 0.15; } }
     .scan-status-text {
       position: absolute; bottom: 12px; left: 14px; font-size: 10px; font-family: monospace;
       color: var(--neon-cyan); text-shadow: 0 0 6px rgba(0,240,255,0.6); pointer-events: none;
@@ -71,28 +148,26 @@
     .hud-ctrls { display: flex; gap: 8px; margin-top: 10px; }
     .hud-btn {
       flex: 1; background: var(--card); border: 1px solid var(--border); color: var(--text);
-      padding: 10px 0; border-radius: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
-      cursor: pointer; text-align: center; transition: 0.2s;
+      padding: 10px 0; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; text-align: center;
     }
-    .hud-btn:active { background: var(--neon-cyan); color: #000; }
     .hud-btn.active { border-color: var(--neon-green); color: var(--neon-green); }
 
-    .tabs { display: flex; margin: 10px 14px; border-bottom: 1px solid var(--border); }
+    /* TABS В ОТЧЁТЕ */
+    .tabs { display: flex; margin: 14px 0 12px 0; border-bottom: 1px solid var(--border); }
     .tab {
       flex: 1; text-align: center; padding: 10px 0; font-size: 11px; font-weight: 800;
       color: var(--muted); cursor: pointer; letter-spacing: 1px;
     }
     .tab.active { color: var(--neon-cyan); border-bottom: 2px solid var(--neon-cyan); }
-
-    .tab-pane { display: none; padding: 0 14px; }
+    .tab-pane { display: none; }
     .tab-pane.active { display: block; }
 
     .score-card {
       background: var(--card); border: 1px solid var(--border); border-radius: 12px;
       padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
     }
-    .rank-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-    .rank-name { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: 1px; margin-top: 4px; }
+    .rank-title { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .rank-name { font-size: 26px; font-weight: 900; letter-spacing: 1px; margin-top: 4px; }
     .rank-name.chad { color: var(--neon-green); text-shadow: 0 0 14px rgba(0,255,102,0.4); }
     .rank-name.htn { color: var(--neon-cyan); }
     .rank-name.mtn { color: var(--neon-gold); }
@@ -104,11 +179,6 @@
     .score-num { font-size: 24px; font-weight: 900; color: var(--neon-cyan); }
     .score-sub { font-size: 9px; color: var(--muted); margin-top: 2px; }
 
-    .chart-box {
-      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-      padding: 14px; margin-bottom: 12px;
-    }
-    .chart-head { font-size: 11px; font-weight: 800; color: var(--muted); letter-spacing: 1px; margin-bottom: 10px; }
     .gauss-canvas { width: 100%; height: 90px; }
 
     .metric-item {
@@ -126,15 +196,154 @@
 </head>
 <body class="crt">
 
-  <div class="header">
-    <div class="brand">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div id="topbarLeft" class="brand-group">
       <div class="status-dot"></div>
       BLACKPILL // HUD
     </div>
-    <div class="system-tag">AI-MESH 468</div>
+    <div class="balance-badge" id="balanceBadge">
+      ⚡️ <span id="scansLeftCount">1 скан</span>
+    </div>
   </div>
 
-  <div class="viewport-wrap">
+  <!-- ================= SCREEN 1: HUB ================= -->
+  <div class="screen active" id="screenHub">
+    <div class="hero-title">АНТРОПОМЕТРИЧЕСКИЙ<br><span>НЕЙРОРАЗБОР</span></div>
+    <div class="hero-desc">Прецизионный замер 468 точек лицевой структуры и сопоставление с эталонными биометрическими стандартами.</div>
+
+    <!-- 4 действия -->
+    <div class="action-grid">
+      <div class="action-card" onclick="goToScreen('screenHud')">
+        <div class="action-icon">📊</div>
+        <div class="action-label">РЕЙТЫ</div>
+      </div>
+      <div class="action-card" onclick="goToScreen('screenGuide')">
+        <div class="action-icon">📐</div>
+        <div class="action-label">МОРФЕР</div>
+      </div>
+      <div class="action-card" onclick="goToScreen('screenGuide')">
+        <div class="action-icon">📑</div>
+        <div class="action-label">ГАЙД</div>
+      </div>
+      <div class="action-card" onclick="alert('ИИ-консультант доступен после полного скана')">
+        <div class="action-icon">👁</div>
+        <div class="action-label">ИИ-АССТ</div>
+      </div>
+    </div>
+
+    <!-- Главные кнопки -->
+    <button class="btn-main" onclick="goToScreen('screenGuide')">⚡️ НАЧАТЬ АНАЛИЗ ЛИЦА</button>
+    <button class="btn-outline" onclick="buyScans()">ПОПОЛНИТЬ БАЛАНС (50 ₽)</button>
+
+    <!-- Что входит в анализ -->
+    <div class="box-card">
+      <div class="box-header">Что входит в протокол сканирования</div>
+      <div class="feature-row">
+        <div class="feature-num">01</div>
+        <div class="feature-text"><b>Более 120 замеров геометрии:</b> кантальный наклон, трети лица, FWHR, диморфизм и посадка глазниц.</div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-num">02</div>
+        <div class="feature-text"><b>Кривая Гаусса:</b> определение твоего процентиля редкости в мужской популяции.</div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-num">03</div>
+        <div class="feature-text"><b>Индивидуальный Hardmax/Softmax протокол:</b> директивы по исправлению слабых зон.</div>
+      </div>
+    </div>
+
+    <!-- Метрики доверия -->
+    <div class="stats-row">
+      <div class="stat-badge">
+        <div class="stat-val" style="color: var(--neon-green);">9.4<span style="font-size: 13px; color: var(--muted);">/10</span></div>
+        <div class="stat-sub">Точность детекции костной структуры</div>
+      </div>
+      <div class="stat-badge">
+        <div class="stat-val" style="color: var(--neon-cyan);">5.8<span style="font-size: 13px; color: var(--muted);">/10</span></div>
+        <div class="stat-sub">Средний балл популяции (MTN)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SCREEN 2: ИНСТРУКЦИЯ ================= -->
+  <div class="screen" id="screenGuide">
+    <div class="hero-title">КАЛИБРОВКА <span>СЕНСОРА</span></div>
+    <div class="hero-desc">Точность вычисления углов зависит от оптических искажений объектива.</div>
+
+    <div class="box-card" style="margin-top: 14px; border-left: 3px solid var(--neon-green);">
+      <div class="box-header" style="color: var(--neon-green);">✓ ЭТАЛОННЫЙ СНИМОК</div>
+      <div class="rule-item ok"><span>•</span> Дистанция 1.5–2 метра, зум 2× (устраняет бочкообразное искажение носа).</div>
+      <div class="rule-item ok"><span>•</span> Нейтральная мимика, расслабленные губы, прямой взгляд в объектив.</div>
+      <div class="rule-item ok"><span>•</span> Лоб и уши полностью открыты от волос.</div>
+      <div class="rule-item ok"><span>•</span> Ровный дневной рассеянный свет без жестких теней на скулах.</div>
+    </div>
+
+    <div class="box-card" style="border-left: 3px solid var(--neon-red);">
+      <div class="box-header" style="color: var(--neon-red);">✕ ДЕФЕКТЫ СЪЕМКИ</div>
+      <div class="rule-item bad"><span>•</span> Фронтальная камера вплотную (1× растягивает среднюю треть лица).</div>
+      <div class="rule-item bad"><span>•</span> Наклон головы вперед/назад (сбивает кантальный угол).</div>
+      <div class="rule-item bad"><span>•</span> Очки, челка или прищур.</div>
+    </div>
+
+    <button class="btn-main" onclick="goToScreen('screenGender')">ПРОДОЛЖИТЬ →</button>
+  </div>
+
+  <!-- ================= SCREEN 3: ВЫБОР ПОЛА ================= -->
+  <div class="screen" id="screenGender">
+    <div class="hero-title">ПОЛОВОЙ <span>ДИМОРФИЗМ</span></div>
+    <div class="hero-desc">Параметры челюстного угла и надбровных дуг калибруются индивидуально.</div>
+
+    <div style="margin: 20px 0;">
+      <div class="select-card" onclick="selectGender('Мужской')">
+        <span>Мужской фенотип</span>
+        <span style="color: var(--neon-cyan);">→</span>
+      </div>
+      <div class="select-card" onclick="selectGender('Женский')">
+        <span>Женский фенотип</span>
+        <span style="color: var(--neon-cyan);">→</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SCREEN 4: ВЫБОР РАСЫ ================= -->
+  <div class="screen" id="screenRace">
+    <div class="hero-title">АНАТОМИЧЕСКИЙ <span>ТИП</span></div>
+    <div class="hero-desc">Выберите базовую морфологию черепа для точной нормализации пропорций.</div>
+
+    <div style="margin: 20px 0;">
+      <div class="select-card" onclick="selectRace('Европеоидный')">
+        <span>Европеоидный</span>
+        <span style="color: var(--neon-green);">✓</span>
+      </div>
+      <div class="select-card" onclick="selectRace('Монголоидный / Азиатский')">
+        <span>Монголоидный / Азиатский</span>
+        <span style="color: var(--neon-green);">✓</span>
+      </div>
+      <div class="select-card" onclick="selectRace('Негроидный')">
+        <span>Негроидный</span>
+        <span style="color: var(--neon-green);">✓</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SCREEN 5: ЗАГРУЗКА ФОТО ================= -->
+  <div class="screen" id="screenUpload">
+    <div class="hero-title">СНИМОК <span>АНФАС</span></div>
+    <div class="hero-desc">Держите телефон ровно на уровне глаз. Загрузите файл из галереи или сделайте снимок.</div>
+
+    <div style="margin: 24px 0;">
+      <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">📷</div>
+        <div style="font-size: 13px; font-weight: 800; color: #fff;">НАЖМИ ДЛЯ ВЫБОРА ФОТО</div>
+        <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">JPG, PNG высокого разрешения</div>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" onchange="handleUserPhoto(event)">
+    </div>
+  </div>
+
+  <!-- ================= SCREEN 6: HUD И РЕЗУЛЬТАТ ================= -->
+  <div class="screen" id="screenHud">
     <div class="hud-box">
       <canvas id="faceCanvas" width="600" height="600"></canvas>
       <div class="corner c-tl"></div>
@@ -146,109 +355,90 @@
     </div>
 
     <div class="hud-ctrls">
-      <button class="hud-btn" onclick="rescan()">⚡️ ПЕРЕСКАНИРОВАТЬ</button>
+      <button class="hud-btn" onclick="rescan()">⚡️ СКАН</button>
       <button class="hud-btn active" id="toggleGridBtn" onclick="toggleOverlay()">СЕТКА ВКЛ</button>
-      <button class="hud-btn" onclick="document.getElementById('fileInput').click()">+ СВОЁ ФОТО</button>
-      <input type="file" id="fileInput" accept="image/*" onchange="handleUserPhoto(event)">
+      <button class="hud-btn" onclick="goToScreen('screenUpload')">+ НОВОЕ ФОТО</button>
     </div>
-  </div>
 
-  <div class="tabs">
-    <div class="tab active" onclick="switchTab(0)">[01] ОБЗОР</div>
-    <div class="tab" onclick="switchTab(1)">[02] МЕТРИКИ</div>
-    <div class="tab" onclick="switchTab(2)">[03] ПРОТОКОЛ</div>
-  </div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(0)">[01] ОБЗОР</div>
+      <div class="tab" onclick="switchTab(1)">[02] МЕТРИКИ</div>
+      <div class="tab" onclick="switchTab(2)">[03] ПРОТОКОЛ</div>
+    </div>
 
-  <div class="tab-pane active" id="pane0">
-    <div class="score-card">
-      <div>
-        <div class="rank-title">Классификация фенотипа</div>
-        <div class="rank-name chad" id="rankDisplay">CHAD</div>
+    <div class="tab-pane active" id="pane0">
+      <div class="score-card">
+        <div>
+          <div class="rank-title">Классификация фенотипа</div>
+          <div class="rank-name chad" id="rankDisplay">CHAD</div>
+        </div>
+        <div class="score-badge">
+          <div class="score-num" id="scoreDisplay">9.2</div>
+          <div class="score-sub">ИЗ 10.0</div>
+        </div>
       </div>
-      <div class="score-badge">
-        <div class="score-num" id="scoreDisplay">9.2</div>
-        <div class="score-sub">ИЗ 10.0</div>
+
+      <div class="box-card">
+        <div class="box-header" id="gaussPercentTitle">РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (ТОП 0.8%)</div>
+        <canvas id="gaussChart" class="gauss-canvas" width="340" height="90"></canvas>
       </div>
-    </div>
 
-    <div class="chart-box">
-      <div class="chart-head" id="gaussPercentTitle">РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (ТОП 0.8%)</div>
-      <canvas id="gaussChart" class="gauss-canvas" width="340" height="90"></canvas>
-    </div>
-
-    <div class="metric-item">
-      <div class="metric-head">
-        <span class="metric-label">Гармония третей</span>
-        <span class="metric-val" id="valHarmony">94%</span>
+      <div class="metric-item">
+        <div class="metric-head">
+          <span class="metric-label">Гармония третей</span>
+          <span class="metric-val" id="valHarmony">94%</span>
+        </div>
+        <div class="progress-bg"><div class="progress-fill" id="barHarmony" style="width: 94%;"></div></div>
       </div>
-      <div class="progress-bg"><div class="progress-fill" id="barHarmony" style="width: 94%;"></div></div>
-    </div>
 
-    <div class="metric-item">
-      <div class="metric-head">
-        <span class="metric-label">Угловатость челюсти</span>
-        <span class="metric-val" id="valAngular">97%</span>
+      <div class="metric-item">
+        <div class="metric-head">
+          <span class="metric-label">Угловатость челюсти</span>
+          <span class="metric-val" id="valAngular">97%</span>
+        </div>
+        <div class="progress-bg"><div class="progress-fill" id="barAngular" style="width: 97%;"></div></div>
       </div>
-      <div class="progress-bg"><div class="progress-fill" id="barAngular" style="width: 97%;"></div></div>
-    </div>
 
-    <div class="metric-item">
-      <div class="metric-head">
-        <span class="metric-label">Диморфизм черт</span>
-        <span class="metric-val" id="valDimorph">95%</span>
-      </div>
-      <div class="progress-bg"><div class="progress-fill" id="barDimorph" style="width: 95%;"></div></div>
-    </div>
-
-    <div class="metric-item">
-      <div class="metric-head">
-        <span class="metric-label">Eye Area (Hunter Index)</span>
-        <span class="metric-val" id="valEyes">96%</span>
-      </div>
-      <div class="progress-bg"><div class="progress-fill" id="barEyes" style="width: 96%;"></div></div>
-    </div>
-  </div>
-
-  <div class="tab-pane" id="pane1">
-    <div class="metric-item">
-      <div class="metric-head">
-        <span class="metric-label">Кантальный наклон</span>
-        <span class="metric-val" id="valCanthal">+7.4° [HUNTER]</span>
-      </div>
-      <div style="font-size: 11px; color: var(--muted);" id="descCanthal">Положительный вектор, идеальная посадка глазных щелей.</div>
-    </div>
-
-    <div class="metric-item">
-      <div class="metric-head">
-        <span class="metric-label">Угол челюсти (Gonial)</span>
-        <span class="metric-val" id="valGonial">116° [ЭТАЛОН]</span>
-      </div>
-      <div style="font-size: 11px; color: var(--muted);">Высокая проекция рамки нижней челюсти, глубокий подбородочный выступ.</div>
-    </div>
-
-    <div class="metric-item">
-      <div class="metric-head">
-        <span class="metric-label">Баланс лица (FWHR)</span>
-        <span class="metric-val" id="valFwhr">1.94 [ВЫСОКИЙ]</span>
-      </div>
-      <div style="font-size: 11px; color: var(--muted);">Компактная средняя треть, выраженная бизигоматическая ширина.</div>
-    </div>
-  </div>
-
-  <div class="tab-pane" id="pane2">
-    <div class="metric-item" style="border-left: 3px solid var(--neon-green);">
-      <div style="font-size: 12px; font-weight: 800; color: var(--neon-green); margin-bottom: 4px;">КЛЮЧЕВЫЕ HALO-ТОЧКИ</div>
-      <div style="font-size: 11px; color: var(--text); line-height: 1.5;" id="haloText">
-        • Превосходный кантальный наклон глаз и развитый подбородок.<br>
-        • Высокая проекция скуловых костей (Zygomatic arches).
+      <div class="metric-item">
+        <div class="metric-head">
+          <span class="metric-label">Eye Area (Hunter Index)</span>
+          <span class="metric-val" id="valEyes">96%</span>
+        </div>
+        <div class="progress-bg"><div class="progress-fill" id="barEyes" style="width: 96%;"></div></div>
       </div>
     </div>
 
-    <div class="metric-item" style="border-left: 3px solid var(--neon-gold); margin-top: 10px;">
-      <div style="font-size: 12px; font-weight: 800; color: var(--neon-gold); margin-bottom: 4px;">РЕКОМЕНДАЦИИ ПО ОПТИМИЗАЦИИ</div>
-      <div style="font-size: 11px; color: var(--text); line-height: 1.5;" id="debuffText">
-        • Поддержание низкого процента подкожного жира (10-12%) для максимальной очерченности челюсти.<br>
-        • Текстурированные стрижки без скрывания лобной и височной зоны.
+    <div class="tab-pane" id="pane1">
+      <div class="metric-item">
+        <div class="metric-head">
+          <span class="metric-label">Кантальный наклон</span>
+          <span class="metric-val" id="valCanthal">+7.4° [HUNTER]</span>
+        </div>
+        <div style="font-size: 11px; color: var(--muted);">Положительный вектор, идеальная посадка глазных щелей.</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-head">
+          <span class="metric-label">Угол челюсти (Gonial)</span>
+          <span class="metric-val" id="valGonial">116° [ЭТАЛОН]</span>
+        </div>
+        <div style="font-size: 11px; color: var(--muted);">Высокая латеральная проекция нижней челюсти.</div>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="pane2">
+      <div class="metric-item" style="border-left: 3px solid var(--neon-green);">
+        <div style="font-size: 12px; font-weight: 800; color: var(--neon-green); margin-bottom: 4px;">HALO-ФАКТОРЫ</div>
+        <div style="font-size: 11px; color: var(--text); line-height: 1.5;">
+          • Положительный кантальный наклон и выраженные скуловые дуги (Zygos).<br>
+          • Hunter Eyes: глубокая посадка глазницы, выраженный капот верхнего века.
+        </div>
+      </div>
+      <div class="metric-item" style="border-left: 3px solid var(--neon-gold); margin-top: 10px;">
+        <div style="font-size: 12px; font-weight: 800; color: var(--neon-gold); margin-bottom: 4px;">ПРОТОКОЛ ОПТИМИЗАЦИИ</div>
+        <div style="font-size: 11px; color: var(--text); line-height: 1.5;">
+          • Удержание процента жира 10–12% для максимальной резкости подчелюстного угла.<br>
+          • Поддержание правильного положения языка к нёбу (mewing) для тонуса подъязычной зоны.
+        </div>
       </div>
     </div>
   </div>
@@ -259,6 +449,58 @@
       window.Telegram.WebApp.expand();
     }
 
+    // Состояние пользователя
+    let userGender = "Мужской";
+    let userRace = "Европеоидный";
+    let historyStack = ['screenHub'];
+
+    function goToScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+      historyStack.push(screenId);
+
+      const topLeft = document.getElementById('topbarLeft');
+      if (screenId !== 'screenHub') {
+        topLeft.innerHTML = `<button class="back-btn" onclick="goBack()">← Назад</button>`;
+      } else {
+        topLeft.innerHTML = `<div class="status-dot"></div> BLACKPILL // HUD`;
+      }
+
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+      }
+      window.scrollTo(0, 0);
+    }
+
+    function goBack() {
+      if (historyStack.length > 1) {
+        historyStack.pop();
+        const prevScreen = historyStack[historyStack.length - 1];
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(prevScreen).classList.add('active');
+
+        const topLeft = document.getElementById('topbarLeft');
+        if (prevScreen === 'screenHub') {
+          topLeft.innerHTML = `<div class="status-dot"></div> BLACKPILL // HUD`;
+        }
+      }
+    }
+
+    function selectGender(gender) {
+      userGender = gender;
+      goToScreen('screenRace');
+    }
+
+    function selectRace(race) {
+      userRace = race;
+      goToScreen('screenUpload');
+    }
+
+    function buyScans() {
+      alert("Для пополнения баланса перейди в чат с ботом и выбери тариф за 50 ₽.");
+    }
+
+    /* ================= ЛОГИКА MEDIAPIPE ================= */
     let showOverlay = true;
     let loadedImage = null;
     let detectedLandmarks = null;
@@ -266,7 +508,6 @@
     const ctx = canvas.getContext('2d');
     const logEl = document.getElementById('statusLog');
 
-    // Настройка нейросети MediaPipe FaceMesh
     const faceMesh = new FaceMesh({
       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
     });
@@ -294,7 +535,9 @@
       const file = e.target.files[0];
       if (!file) return;
 
+      goToScreen('screenHud');
       logEl.innerText = "SCANNING // АНАЛИЗ ГЕОМЕТРИИ...";
+      
       const reader = new FileReader();
       reader.onload = function(evt) {
         const img = new Image();
@@ -308,33 +551,26 @@
       reader.readAsDataURL(file);
     }
 
-    // Расчет реальных геометрических параметров
     function calculateBiometrics(lm) {
       const w = canvas.width, h = canvas.height;
-
-      // Точки глаз (левый: 33 внешний, 133 внутренний; правый: 263 внешний, 362 внутренний)
       const lOut = { x: lm[33].x * w, y: lm[33].y * h };
       const lIn  = { x: lm[133].x * w, y: lm[133].y * h };
       const rIn  = { x: lm[362].x * w, y: lm[362].y * h };
       const rOut = { x: lm[263].x * w, y: lm[263].y * h };
 
-      // Расчет кантального наклона в градусах
       const leftTilt = -Math.atan2(lOut.y - lIn.y, lIn.x - lOut.x) * (180 / Math.PI);
       const rightTilt = -Math.atan2(rOut.y - rIn.y, rOut.x - rIn.x) * (180 / Math.PI);
       const avgTilt = ((leftTilt + rightTilt) / 2).toFixed(1);
 
-      // Пропорции третей
       const forehead = lm[10].y * h;
       const brow     = lm[9].y * h;
       const noseBase = lm[2].y * h;
       const chin     = lm[152].y * h;
 
-      const upperThird = Math.max(10, brow - forehead);
       const midThird   = Math.max(10, noseBase - brow);
       const lowerThird = Math.max(10, chin - noseBase);
       const harmonyScore = Math.min(99, Math.max(70, Math.round(100 - (Math.abs(midThird - lowerThird) / lowerThird) * 50)));
 
-      // Подсчет итогового балла
       let baseScore = 7.5;
       if (avgTilt > 4) baseScore += 1.2;
       else if (avgTilt > 1) baseScore += 0.6;
@@ -385,7 +621,6 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       if (loadedImage) {
-        // Подгоняем фото под квадрат с сохранением пропорций
         const hRatio = canvas.width / loadedImage.width;
         const vRatio = canvas.height / loadedImage.height;
         const ratio  = Math.max(hRatio, vRatio);
@@ -398,18 +633,15 @@
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
 
-      // Отрисовка адаптивных линий поверх реальных точек
       if (showOverlay && detectedLandmarks) {
         const w = canvas.width, h = canvas.height;
         const lm = detectedLandmarks;
 
-        // Векторы кантального наклона глаз
         const lOut = [lm[33].x * w, lm[33].y * h];
         const lIn  = [lm[133].x * w, lm[133].y * h];
         const rIn  = [lm[362].x * w, lm[362].y * h];
         const rOut = [lm[263].x * w, lm[263].y * h];
 
-        // Горизонтали сравнения
         ctx.strokeStyle = "rgba(255, 42, 95, 0.7)";
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -417,7 +649,6 @@
         ctx.moveTo(rIn[0] - 15, rIn[1]); ctx.lineTo(rOut[0] + 15, rIn[1]);
         ctx.stroke();
 
-        // Реальный наклон глаз
         ctx.strokeStyle = "#00ff66";
         ctx.lineWidth = 3;
         ctx.beginPath();
@@ -425,7 +656,6 @@
         ctx.moveTo(rIn[0], rIn[1]); ctx.lineTo(rOut[0], rOut[1]);
         ctx.stroke();
 
-        // Горизонтали третей лица
         ctx.strokeStyle = "rgba(0, 240, 255, 0.5)";
         ctx.lineWidth = 1.5;
         ctx.setLineDash([6, 6]);
@@ -434,7 +664,6 @@
         });
         ctx.setLineDash([]);
 
-        // Контур нижней челюсти (Jawline)
         ctx.strokeStyle = "#00f0ff";
         ctx.lineWidth = 2.5;
         ctx.beginPath();
@@ -443,7 +672,6 @@
         ctx.lineTo(lm[397].x * w, lm[397].y * h);
         ctx.stroke();
 
-        // Неоновые контрольные точки
         ctx.fillStyle = "#00ff66";
         [lOut, lIn, rIn, rOut, [lm[152].x * w, lm[152].y * h], [lm[172].x * w, lm[172].y * h], [lm[397].x * w, lm[397].y * h]].forEach(pt => {
           ctx.beginPath(); ctx.arc(pt[0], pt[1], 4.5, 0, Math.PI * 2); ctx.fill();
