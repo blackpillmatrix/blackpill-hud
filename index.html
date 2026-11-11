@@ -10,9 +10,7 @@
     :root {
       --bg: #030507;
       --card: #080d14;
-      --card-hover: #0d1520;
       --border: #152230;
-      --border-glow: rgba(0, 255, 102, 0.25);
       --neon-green: #00ff66;
       --neon-cyan: #00f0ff;
       --neon-red: #ff2a5f;
@@ -21,7 +19,7 @@
       --muted: #5e7a96;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; }
-    body { background: var(--bg); color: var(--text); padding-bottom: 30px; overflow-x: hidden; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 25px; overflow-x: hidden; }
 
     .crt::after {
       content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
@@ -29,99 +27,70 @@
       background-size: 100% 4px; pointer-events: none; z-index: 100;
     }
 
-    /* TOPBAR */
+    /* ШАПКА */
     .topbar {
       padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px solid var(--border); background: rgba(8, 13, 20, 0.92); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border); background: rgba(8, 13, 20, 0.94); backdrop-filter: blur(10px);
       position: sticky; top: 0; z-index: 50;
     }
-    .brand-group { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 900; letter-spacing: 1.5px; color: var(--neon-cyan); }
+    .brand { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 900; letter-spacing: 1.5px; color: var(--neon-cyan); }
     .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
     .balance-badge {
       font-size: 11px; font-weight: 700; color: var(--neon-green); background: rgba(0, 255, 102, 0.08);
       border: 1px solid rgba(0, 255, 102, 0.3); padding: 4px 10px; border-radius: 20px; display: flex; align-items: center; gap: 6px;
     }
-    .back-btn { background: none; border: none; color: var(--neon-cyan); font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: bold; }
+    .back-btn { background: none; border: none; color: var(--neon-cyan); font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: bold; }
 
-    /* SCREENS CONTAINER */
+    /* ЭКРАНЫ */
     .screen { display: none; padding: 16px; animation: fadeIn 0.25s ease; }
     .screen.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* SCREEN 1: HUB */
-    .hero-title { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; line-height: 1.2; margin-top: 8px; }
+    /* ТЕКСТЫ И КНОПКИ */
+    .hero-title { font-size: 25px; font-weight: 900; letter-spacing: -0.5px; line-height: 1.2; margin-top: 6px; }
     .hero-title span { color: var(--neon-green); text-shadow: 0 0 16px rgba(0, 255, 102, 0.35); }
-    .hero-desc { font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+    .hero-desc { font-size: 13px; color: var(--muted); margin: 8px 0 20px 0; line-height: 1.5; }
 
-    /* ACTION GRID (4 кнопки) */
-    .action-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 18px 0; }
-    .action-card {
-      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-      padding: 12px 4px; text-align: center; cursor: pointer; transition: 0.2s;
-    }
-    .action-card:active { transform: scale(0.96); border-color: var(--neon-cyan); }
-    .action-icon { font-size: 20px; margin-bottom: 6px; }
-    .action-label { font-size: 10px; font-weight: 800; color: var(--text); letter-spacing: 0.5px; }
-
-    /* CTA BUTTONS */
     .btn-main {
-      width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--neon-green);
+      width: 100%; padding: 16px; border-radius: 12px; border: none; background: var(--neon-green);
       color: #000; font-size: 13px; font-weight: 900; letter-spacing: 1px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;
+      display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px;
       box-shadow: 0 0 20px rgba(0, 255, 102, 0.3); transition: 0.2s;
     }
     .btn-main:active { transform: scale(0.98); opacity: 0.9; }
-    .btn-outline {
-      width: 100%; padding: 13px; border-radius: 12px; background: transparent;
-      border: 1px solid var(--border); color: var(--text); font-size: 12px; font-weight: 800;
-      cursor: pointer; text-align: center; transition: 0.2s; margin-bottom: 18px;
-    }
-    .btn-outline:active { border-color: var(--neon-cyan); background: rgba(0, 240, 255, 0.05); }
 
-    /* FEATURE LIST */
+    .btn-pay {
+      width: 100%; padding: 14px; border-radius: 12px; background: rgba(0, 240, 255, 0.06);
+      border: 1px solid var(--neon-cyan); color: var(--neon-cyan); font-size: 12px; font-weight: 800;
+      letter-spacing: 0.5px; cursor: pointer; text-align: center; transition: 0.2s; margin-bottom: 22px;
+    }
+    .btn-pay:active { background: var(--neon-cyan); color: #000; }
+
     .box-card {
       background: var(--card); border: 1px solid var(--border); border-radius: 14px;
       padding: 16px; margin-bottom: 14px;
     }
-    .box-header { font-size: 12px; font-weight: 900; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 14px; }
-    .feature-row { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; }
+    .box-header { font-size: 11px; font-weight: 900; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; }
+    
+    .feature-row { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
     .feature-row:last-child { margin-bottom: 0; }
     .feature-num { font-size: 11px; font-weight: 900; color: var(--neon-cyan); background: rgba(0, 240, 255, 0.1); border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px; }
     .feature-text { font-size: 12px; line-height: 1.45; color: var(--text); }
     .feature-text b { color: #fff; }
 
-    /* STATS ROW */
-    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .stat-badge {
-      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-      padding: 14px; text-align: center;
-    }
-    .stat-val { font-size: 22px; font-weight: 900; }
-    .stat-sub { font-size: 10px; color: var(--muted); margin-top: 4px; line-height: 1.3; }
+    .rule-item { display: flex; gap: 8px; font-size: 12px; line-height: 1.45; margin-bottom: 8px; color: var(--text); }
+    .rule-item span { color: var(--neon-green); font-weight: bold; }
 
-    /* SELECTION CARDS (Пол / Раса) */
-    .select-card {
-      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-      padding: 16px; margin-bottom: 10px; cursor: pointer; transition: 0.2s;
-      display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 800;
-    }
-    .select-card:active { border-color: var(--neon-green); background: var(--card-hover); }
-    .select-card.selected { border-color: var(--neon-green); box-shadow: 0 0 12px rgba(0, 255, 102, 0.2); }
-
-    /* RULES LIST */
-    .rule-item { display: flex; gap: 10px; font-size: 12px; line-height: 1.45; margin-bottom: 10px; color: var(--text); }
-    .rule-item.ok span { color: var(--neon-green); font-weight: bold; }
-    .rule-item.bad span { color: var(--neon-red); font-weight: bold; }
-
-    /* UPLOAD DROPZONE */
+    /* ЗАГРУЗКА */
     .upload-zone {
-      border: 2px dashed var(--border); border-radius: 14px; padding: 40px 20px;
-      text-align: center; cursor: pointer; transition: 0.2s; background: rgba(8, 13, 20, 0.4);
+      border: 2px dashed var(--border); border-radius: 14px; padding: 44px 20px;
+      text-align: center; cursor: pointer; transition: 0.2s; background: rgba(8, 13, 20, 0.5);
+      margin: 18px 0;
     }
-    .upload-zone:active { border-color: var(--neon-cyan); background: rgba(0, 240, 255, 0.03); }
-    .upload-icon { font-size: 34px; margin-bottom: 10px; color: var(--neon-cyan); }
+    .upload-zone:active { border-color: var(--neon-green); background: rgba(0, 255, 102, 0.04); }
+    .upload-icon { font-size: 36px; margin-bottom: 10px; }
 
-    /* HUD SCANNER VIEW */
+    /* ХОЛСТ HUD */
     .hud-box {
       position: relative; width: 100%; aspect-ratio: 1/1; border-radius: 14px;
       background: #010305; border: 1px solid var(--border); overflow: hidden;
@@ -133,6 +102,7 @@
     .c-tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
     .c-bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
     .c-br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+    
     .laser-beam {
       position: absolute; left: 0; width: 100%; height: 2px;
       background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
@@ -140,20 +110,20 @@
       animation: scanAnim 2.8s ease-in-out infinite alternate; pointer-events: none;
     }
     @keyframes scanAnim { 0% { top: 5%; opacity: 0.15; } 50% { opacity: 1; } 100% { top: 95%; opacity: 0.15; } }
+    
     .scan-status-text {
       position: absolute; bottom: 12px; left: 14px; font-size: 10px; font-family: monospace;
       color: var(--neon-cyan); text-shadow: 0 0 6px rgba(0,240,255,0.6); pointer-events: none;
     }
 
-    .hud-ctrls { display: flex; gap: 8px; margin-top: 10px; }
+    .hud-ctrls { display: flex; gap: 8px; margin: 10px 0; }
     .hud-btn {
       flex: 1; background: var(--card); border: 1px solid var(--border); color: var(--text);
       padding: 10px 0; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; text-align: center;
     }
     .hud-btn.active { border-color: var(--neon-green); color: var(--neon-green); }
 
-    /* TABS В ОТЧЁТЕ */
-    .tabs { display: flex; margin: 14px 0 12px 0; border-bottom: 1px solid var(--border); }
+    .tabs { display: flex; margin: 10px 0; border-bottom: 1px solid var(--border); }
     .tab {
       flex: 1; text-align: center; padding: 10px 0; font-size: 11px; font-weight: 800;
       color: var(--muted); cursor: pointer; letter-spacing: 1px;
@@ -191,158 +161,84 @@
     .progress-bg { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
     .progress-fill { height: 100%; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green)); border-radius: 3px; }
 
+    /* МОДАЛЬНОЕ ОКНО ОПЛАТЫ */
+    .modal-overlay {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.82); backdrop-filter: blur(6px); z-index: 200;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-card {
+      background: var(--card); border: 1px solid var(--neon-green); border-radius: 16px;
+      padding: 24px 20px; width: 100%; max-width: 360px; text-align: center;
+      box-shadow: 0 0 30px rgba(0, 255, 102, 0.25);
+    }
+    .modal-title { font-size: 18px; font-weight: 900; margin-bottom: 8px; color: #fff; }
+    .modal-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 20px; }
+    .modal-price { font-size: 32px; font-weight: 900; color: var(--neon-green); margin-bottom: 16px; }
+
     #fileInput { display: none; }
   </style>
 </head>
 <body class="crt">
 
-  <!-- TOPBAR -->
+  <!-- ШАПКА -->
   <div class="topbar">
-    <div id="topbarLeft" class="brand-group">
+    <div id="topbarLeft" class="brand">
       <div class="status-dot"></div>
       BLACKPILL // HUD
     </div>
     <div class="balance-badge" id="balanceBadge">
-      ⚡️ <span id="scansLeftCount">1 скан</span>
+      ⚡️ <span id="scansLeftText">1 скан</span>
     </div>
   </div>
 
-  <!-- ================= SCREEN 1: HUB ================= -->
-  <div class="screen active" id="screenHub">
+  <!-- ЭКРАН 1: ГЛАВНЫЙ -->
+  <div class="screen active" id="screenHome">
     <div class="hero-title">АНТРОПОМЕТРИЧЕСКИЙ<br><span>НЕЙРОРАЗБОР</span></div>
-    <div class="hero-desc">Прецизионный замер 468 точек лицевой структуры и сопоставление с эталонными биометрическими стандартами.</div>
+    <div class="hero-desc">Прецизионный замер 468 точек лица, кантального наклона глаз, челюстного угла и нормального распределения Гаусса.</div>
 
-    <!-- 4 действия -->
-    <div class="action-grid">
-      <div class="action-card" onclick="goToScreen('screenHud')">
-        <div class="action-icon">📊</div>
-        <div class="action-label">РЕЙТЫ</div>
-      </div>
-      <div class="action-card" onclick="goToScreen('screenGuide')">
-        <div class="action-icon">📐</div>
-        <div class="action-label">МОРФЕР</div>
-      </div>
-      <div class="action-card" onclick="goToScreen('screenGuide')">
-        <div class="action-icon">📑</div>
-        <div class="action-label">ГАЙД</div>
-      </div>
-      <div class="action-card" onclick="alert('ИИ-консультант доступен после полного скана')">
-        <div class="action-icon">👁</div>
-        <div class="action-label">ИИ-АССТ</div>
-      </div>
-    </div>
+    <!-- ДВЕ ГЛАВНЫЕ КНОПКИ -->
+    <button class="btn-main" onclick="startFlow()">⚡️ НАЧАТЬ АНАЛИЗ ЛИЦА</button>
+    <button class="btn-pay" onclick="openPaymentModal()">ПОПОЛНИТЬ БАЛАНС (49 ₽)</button>
 
-    <!-- Главные кнопки -->
-    <button class="btn-main" onclick="goToScreen('screenGuide')">⚡️ НАЧАТЬ АНАЛИЗ ЛИЦА</button>
-    <button class="btn-outline" onclick="buyScans()">ПОПОЛНИТЬ БАЛАНС (50 ₽)</button>
-
-    <!-- Что входит в анализ -->
+    <!-- ЧТО ВХОДИТ В АНАЛИЗ -->
     <div class="box-card">
       <div class="box-header">Что входит в протокол сканирования</div>
       <div class="feature-row">
         <div class="feature-num">01</div>
-        <div class="feature-text"><b>Более 120 замеров геометрии:</b> кантальный наклон, трети лица, FWHR, диморфизм и посадка глазниц.</div>
+        <div class="feature-text"><b>Более 120 замеров анатомии:</b> кантальный наклон глаз, симметрия третей, посадка глазниц и угол челюсти.</div>
       </div>
       <div class="feature-row">
         <div class="feature-num">02</div>
-        <div class="feature-text"><b>Кривая Гаусса:</b> определение твоего процентиля редкости в мужской популяции.</div>
+        <div class="feature-text"><b>Кривая Гаусса:</b> вычисление процентиля редкости внешности среди популяции.</div>
       </div>
       <div class="feature-row">
         <div class="feature-num">03</div>
-        <div class="feature-text"><b>Индивидуальный Hardmax/Softmax протокол:</b> директивы по исправлению слабых зон.</div>
-      </div>
-    </div>
-
-    <!-- Метрики доверия -->
-    <div class="stats-row">
-      <div class="stat-badge">
-        <div class="stat-val" style="color: var(--neon-green);">9.4<span style="font-size: 13px; color: var(--muted);">/10</span></div>
-        <div class="stat-sub">Точность детекции костной структуры</div>
-      </div>
-      <div class="stat-badge">
-        <div class="stat-val" style="color: var(--neon-cyan);">5.8<span style="font-size: 13px; color: var(--muted);">/10</span></div>
-        <div class="stat-sub">Средний балл популяции (MTN)</div>
+        <div class="feature-text"><b>Персональный протокол:</b> директивы по оптимизации подкожного жира, прически и осанки.</div>
       </div>
     </div>
   </div>
 
-  <!-- ================= SCREEN 2: ИНСТРУКЦИЯ ================= -->
-  <div class="screen" id="screenGuide">
-    <div class="hero-title">КАЛИБРОВКА <span>СЕНСОРА</span></div>
-    <div class="hero-desc">Точность вычисления углов зависит от оптических искажений объектива.</div>
-
-    <div class="box-card" style="margin-top: 14px; border-left: 3px solid var(--neon-green);">
-      <div class="box-header" style="color: var(--neon-green);">✓ ЭТАЛОННЫЙ СНИМОК</div>
-      <div class="rule-item ok"><span>•</span> Дистанция 1.5–2 метра, зум 2× (устраняет бочкообразное искажение носа).</div>
-      <div class="rule-item ok"><span>•</span> Нейтральная мимика, расслабленные губы, прямой взгляд в объектив.</div>
-      <div class="rule-item ok"><span>•</span> Лоб и уши полностью открыты от волос.</div>
-      <div class="rule-item ok"><span>•</span> Ровный дневной рассеянный свет без жестких теней на скулах.</div>
-    </div>
-
-    <div class="box-card" style="border-left: 3px solid var(--neon-red);">
-      <div class="box-header" style="color: var(--neon-red);">✕ ДЕФЕКТЫ СЪЕМКИ</div>
-      <div class="rule-item bad"><span>•</span> Фронтальная камера вплотную (1× растягивает среднюю треть лица).</div>
-      <div class="rule-item bad"><span>•</span> Наклон головы вперед/назад (сбивает кантальный угол).</div>
-      <div class="rule-item bad"><span>•</span> Очки, челка или прищур.</div>
-    </div>
-
-    <button class="btn-main" onclick="goToScreen('screenGender')">ПРОДОЛЖИТЬ →</button>
-  </div>
-
-  <!-- ================= SCREEN 3: ВЫБОР ПОЛА ================= -->
-  <div class="screen" id="screenGender">
-    <div class="hero-title">ПОЛОВОЙ <span>ДИМОРФИЗМ</span></div>
-    <div class="hero-desc">Параметры челюстного угла и надбровных дуг калибруются индивидуально.</div>
-
-    <div style="margin: 20px 0;">
-      <div class="select-card" onclick="selectGender('Мужской')">
-        <span>Мужской фенотип</span>
-        <span style="color: var(--neon-cyan);">→</span>
-      </div>
-      <div class="select-card" onclick="selectGender('Женский')">
-        <span>Женский фенотип</span>
-        <span style="color: var(--neon-cyan);">→</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= SCREEN 4: ВЫБОР РАСЫ ================= -->
-  <div class="screen" id="screenRace">
-    <div class="hero-title">АНАТОМИЧЕСКИЙ <span>ТИП</span></div>
-    <div class="hero-desc">Выберите базовую морфологию черепа для точной нормализации пропорций.</div>
-
-    <div style="margin: 20px 0;">
-      <div class="select-card" onclick="selectRace('Европеоидный')">
-        <span>Европеоидный</span>
-        <span style="color: var(--neon-green);">✓</span>
-      </div>
-      <div class="select-card" onclick="selectRace('Монголоидный / Азиатский')">
-        <span>Монголоидный / Азиатский</span>
-        <span style="color: var(--neon-green);">✓</span>
-      </div>
-      <div class="select-card" onclick="selectRace('Негроидный')">
-        <span>Негроидный</span>
-        <span style="color: var(--neon-green);">✓</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= SCREEN 5: ЗАГРУЗКА ФОТО ================= -->
+  <!-- ЭКРАН 2: ИНСТРУКЦИЯ И ЗАГРУЗКА -->
   <div class="screen" id="screenUpload">
-    <div class="hero-title">СНИМОК <span>АНФАС</span></div>
-    <div class="hero-desc">Держите телефон ровно на уровне глаз. Загрузите файл из галереи или сделайте снимок.</div>
+    <div class="hero-title">ЗАГРУЗКА <span>СЕЛФИ</span></div>
+    <div class="hero-desc">Убедись, что лицо освещено равномерно, без искажений фронтальной камеры.</div>
 
-    <div style="margin: 24px 0;">
-      <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
-        <div class="upload-icon">📷</div>
-        <div style="font-size: 13px; font-weight: 800; color: #fff;">НАЖМИ ДЛЯ ВЫБОРА ФОТО</div>
-        <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">JPG, PNG высокого разрешения</div>
-      </div>
-      <input type="file" id="fileInput" accept="image/*" onchange="handleUserPhoto(event)">
+    <div class="box-card" style="border-left: 3px solid var(--neon-green);">
+      <div class="rule-item"><span>✓</span> Расстояние 1.5–2 метра (зум 1.5–2×)</div>
+      <div class="rule-item"><span>✓</span> Прямой взгляд строго в камеру, нейтральные губы</div>
+      <div class="rule-item"><span>✓</span> Лоб и овал лица полностью открыты</div>
     </div>
+
+    <div class="upload-zone" onclick="triggerPhotoPick()">
+      <div class="upload-icon">📷</div>
+      <div style="font-size: 14px; font-weight: 800; color: #fff;">НАЖМИ, ЧТОБЫ ВЫБРАТЬ ФОТО</div>
+      <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">Камера или файл из галереи</div>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" onchange="handleUserPhoto(event)">
   </div>
 
-  <!-- ================= SCREEN 6: HUD И РЕЗУЛЬТАТ ================= -->
+  <!-- ЭКРАН 3: РЕЗУЛЬТАТ HUD СКАНЕРА -->
   <div class="screen" id="screenHud">
     <div class="hud-box">
       <canvas id="faceCanvas" width="600" height="600"></canvas>
@@ -357,7 +253,7 @@
     <div class="hud-ctrls">
       <button class="hud-btn" onclick="rescan()">⚡️ СКАН</button>
       <button class="hud-btn active" id="toggleGridBtn" onclick="toggleOverlay()">СЕТКА ВКЛ</button>
-      <button class="hud-btn" onclick="goToScreen('screenUpload')">+ НОВОЕ ФОТО</button>
+      <button class="hud-btn" onclick="startFlow()">+ НОВОЕ ФОТО</button>
     </div>
 
     <div class="tabs">
@@ -437,9 +333,20 @@
         <div style="font-size: 12px; font-weight: 800; color: var(--neon-gold); margin-bottom: 4px;">ПРОТОКОЛ ОПТИМИЗАЦИИ</div>
         <div style="font-size: 11px; color: var(--text); line-height: 1.5;">
           • Удержание процента жира 10–12% для максимальной резкости подчелюстного угла.<br>
-          • Поддержание правильного положения языка к нёбу (mewing) для тонуса подъязычной зоны.
+          • Поддержание правильного положения языка к нёбу (mewing).
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО ОПЛАТЫ НА 49 РУБЛЕЙ -->
+  <div class="modal-overlay" id="payModal">
+    <div class="modal-card">
+      <div class="modal-title">ДОСТУП ОГРАНИЧЕН</div>
+      <div class="modal-desc">Твой бесплатный скан использован. Пополни баланс, чтобы продолжать сканирование новых фото.</div>
+      <div class="modal-price">49 ₽</div>
+      <button class="btn-main" onclick="confirmPayment()">ОПЛАТИТЬ 49 ₽ (СПБ / КАРТА)</button>
+      <button class="btn-pay" style="margin-bottom: 0;" onclick="closePaymentModal()">ЗАКРЫТЬ</button>
     </div>
   </div>
 
@@ -449,58 +356,77 @@
       window.Telegram.WebApp.expand();
     }
 
-    // Состояние пользователя
-    let userGender = "Мужской";
-    let userRace = "Европеоидный";
-    let historyStack = ['screenHub'];
+    // --- УПРАВЛЕНИЕ БАЛАНСОМ СКАНОВ ---
+    let userScans = parseInt(localStorage.getItem('blackpill_scans') ?? '1', 10);
+
+    function updateBalanceUI() {
+      const textEl = document.getElementById('scansLeftText');
+      if (userScans > 0) {
+        textEl.innerText = `${userScans} скан`;
+        textEl.parentElement.style.borderColor = "rgba(0, 255, 102, 0.3)";
+        textEl.parentElement.style.color = "var(--neon-green)";
+      } else {
+        textEl.innerText = `0 сканов`;
+        textEl.parentElement.style.borderColor = "rgba(255, 42, 95, 0.4)";
+        textEl.parentElement.style.color = "var(--neon-red)";
+      }
+    }
+    updateBalanceUI();
 
     function goToScreen(screenId) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById(screenId).classList.add('active');
-      historyStack.push(screenId);
 
       const topLeft = document.getElementById('topbarLeft');
-      if (screenId !== 'screenHub') {
-        topLeft.innerHTML = `<button class="back-btn" onclick="goBack()">← Назад</button>`;
+      if (screenId !== 'screenHome') {
+        topLeft.innerHTML = `<button class="back-btn" onclick="goToScreen('screenHome')">← Назад</button>`;
       } else {
         topLeft.innerHTML = `<div class="status-dot"></div> BLACKPILL // HUD`;
-      }
-
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
       }
       window.scrollTo(0, 0);
     }
 
-    function goBack() {
-      if (historyStack.length > 1) {
-        historyStack.pop();
-        const prevScreen = historyStack[historyStack.length - 1];
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(prevScreen).classList.add('active');
-
-        const topLeft = document.getElementById('topbarLeft');
-        if (prevScreen === 'screenHub') {
-          topLeft.innerHTML = `<div class="status-dot"></div> BLACKPILL // HUD`;
-        }
+    function startFlow() {
+      if (userScans <= 0) {
+        openPaymentModal();
+        return;
       }
-    }
-
-    function selectGender(gender) {
-      userGender = gender;
-      goToScreen('screenRace');
-    }
-
-    function selectRace(race) {
-      userRace = race;
       goToScreen('screenUpload');
     }
 
-    function buyScans() {
-      alert("Для пополнения баланса перейди в чат с ботом и выбери тариф за 50 ₽.");
+    function triggerPhotoPick() {
+      if (userScans <= 0) {
+        openPaymentModal();
+        return;
+      }
+      document.getElementById('fileInput').click();
     }
 
-    /* ================= ЛОГИКА MEDIAPIPE ================= */
+    function openPaymentModal() {
+      document.getElementById('payModal').style.display = 'flex';
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('warning');
+      }
+    }
+
+    function closePaymentModal() {
+      document.getElementById('payModal').style.display = 'none';
+    }
+
+    function confirmPayment() {
+      // Имитация успешной оплаты: добавляем 3 скана
+      userScans += 3;
+      localStorage.setItem('blackpill_scans', userScans);
+      updateBalanceUI();
+      closePaymentModal();
+      alert("✅ Баланс успешно пополнен на 3 скана!");
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      }
+      goToScreen('screenUpload');
+    }
+
+    /* --- ЛОГИКА MEDIAPIPE FACE MESH --- */
     let showOverlay = true;
     let loadedImage = null;
     let detectedLandmarks = null;
@@ -535,9 +461,16 @@
       const file = e.target.files[0];
       if (!file) return;
 
+      // Списываем 1 скан при реальной загрузке
+      if (userScans > 0) {
+        userScans -= 1;
+        localStorage.setItem('blackpill_scans', userScans);
+        updateBalanceUI();
+      }
+
       goToScreen('screenHud');
       logEl.innerText = "SCANNING // АНАЛИЗ ГЕОМЕТРИИ...";
-      
+
       const reader = new FileReader();
       reader.onload = function(evt) {
         const img = new Image();
