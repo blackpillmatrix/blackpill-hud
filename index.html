@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>BLACKPILL // BIOMETRIC HUD</title>
+  <title>BLACKPILL // VISION</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
   <style>
@@ -156,7 +156,7 @@
     .progress-bg { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
     .progress-fill { height: 100%; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green)); border-radius: 3px; }
 
-    /* МОДАЛЬНОЕ ОКНО */
+    /* МОДАЛКА ПОДПИСКИ */
     .modal-overlay {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(6px); z-index: 200;
@@ -168,7 +168,7 @@
       box-shadow: 0 0 30px rgba(0, 255, 102, 0.25);
     }
     .modal-title { font-size: 18px; font-weight: 900; margin-bottom: 8px; color: #fff; }
-    .modal-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 20px; }
+    .modal-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
     .modal-price { font-size: 32px; font-weight: 900; color: var(--neon-green); margin-bottom: 16px; }
 
     #fileInput { display: none; }
@@ -179,39 +179,37 @@
   <div class="topbar">
     <div id="topbarLeft" class="brand">
       <div class="status-dot"></div>
-      BLACKPILL // HUD
+      BLACKPILL // VISION
     </div>
     <div class="balance-badge" id="balanceBadge">
-      ⚡️ <span id="scansLeftText">0 сканов</span>
+      ⚡️ <span id="statusBadgeText">Загрузка...</span>
     </div>
   </div>
 
-  <!-- ЭКРАН 1: ГЛАВНЫЙ -->
   <div class="screen active" id="screenHome">
     <div class="hero-title">АНТРОПОМЕТРИЧЕСКИЙ<br><span>НЕЙРОРАЗБОР</span></div>
     <div class="hero-desc">Прецизионный замер 468 точек лица, кантального наклона глаз, челюстного угла и нормального распределения Гаусса.</div>
 
     <button class="btn-main" onclick="startFlow()">⚡️ НАЧАТЬ АНАЛИЗ ЛИЦА</button>
-    <button class="btn-pay" onclick="openPaymentModal()">ПОПОЛНИТЬ БАЛАНС (49 ₽)</button>
+    <button class="btn-pay" onclick="openPaymentModal()">НЕДЕЛЬНЫЙ БЕЗЛИМИТ (49 ₽)</button>
 
     <div class="box-card">
-      <div class="box-header">Что входит в протокол сканирования</div>
+      <div class="box-header">Преимущества подписки BLACKPILL VISION PRO (7 дней)</div>
       <div class="feature-row">
         <div class="feature-num">01</div>
-        <div class="feature-text"><b>Более 120 замеров анатомии:</b> кантальный наклон глаз, симметрия третей, посадка глазниц и угол челюсти.</div>
+        <div class="feature-text"><b>Полный безлимит:</b> сканируйте неограниченное число фото, примеряйте ракурсы и причёски.</div>
       </div>
       <div class="feature-row">
         <div class="feature-num">02</div>
-        <div class="feature-text"><b>Кривая Гаусса:</b> вычисление процентиля редкости внешности среди популяции.</div>
+        <div class="feature-text"><b>Кривая Гаусса и процентиль:</b> динамический расчёт редкости внешности в мужской популяции.</div>
       </div>
       <div class="feature-row">
         <div class="feature-num">03</div>
-        <div class="feature-text"><b>Персональный протокол:</b> директивы по оптимизации подкожного жира, прически и осанки.</div>
+        <div class="feature-text"><b>Hardmax & Softmax протокол:</b> директивы по оптимизации подкожного жира и черт лица.</div>
       </div>
     </div>
   </div>
 
-  <!-- ЭКРАН 2: ЗАГРУЗКА -->
   <div class="screen" id="screenUpload">
     <div class="hero-title">ЗАГРУЗКА <span>СЕЛФИ</span></div>
     <div class="hero-desc">Убедись, что лицо освещено равномерно, без оптических искажений фронтальной камеры.</div>
@@ -230,7 +228,6 @@
     <input type="file" id="fileInput" accept="image/*" onchange="handleUserPhoto(event)">
   </div>
 
-  <!-- ЭКРАН 3: РЕЗУЛЬТАТ HUD СКАНЕРА -->
   <div class="screen" id="screenHud">
     <div class="hud-box">
       <canvas id="faceCanvas" width="600" height="600"></canvas>
@@ -331,14 +328,12 @@
     </div>
   </div>
 
-  <!-- ЗАЩИЩЕННОЕ МОДАЛЬНОЕ ОКНО ОПЛАТЫ -->
   <div class="modal-overlay" id="payModal">
     <div class="modal-card">
       <div class="modal-title">ДОСТУП ОГРАНИЧЕН</div>
-      <div class="modal-desc">Твой бесплатный скан использован. Пополни баланс через Telegram-бота, чтобы продолжить сканирование новых фото.</div>
-      <div class="modal-price">49 ₽</div>
-      <!-- ПЕРЕНАПРАВЛЕНИЕ НА РЕАЛЬНУЮ ОПЛАТУ В ЧАТ С БОТОМ -->
-      <button class="btn-main" onclick="redirectToBotPayment()">ОПЛАТИТЬ 49 ₽ (СПБ / КАРТА)</button>
+      <div class="modal-desc">Бесплатный скан завершён. Подключи подписку BLACKPILL VISION PRO на 7 дней для продолжения.</div>
+      <div class="modal-price">49 ₽ <span style="font-size:14px; color:var(--muted);">/ 7 ДНЕЙ</span></div>
+      <button class="btn-main" onclick="redirectToBotPayment()">ОФОРМИТЬ BLACKPILL VISION PRO (49 ₽ / 25 ⭐️)</button>
       <button class="btn-pay" style="margin-bottom: 0;" onclick="closePaymentModal()">ЗАКРЫТЬ</button>
     </div>
   </div>
@@ -349,36 +344,41 @@
       window.Telegram.WebApp.expand();
     }
 
-    // Идентификация Telegram пользователя
     const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id ? String(window.Telegram.WebApp.initDataUnsafe.user.id) : "guest";
     const urlParams = new URLSearchParams(window.location.search);
 
-    // Чтение баланса: если передан из бота в URL — берем его, иначе проверяем персональное хранилище
-    let userScans = 0;
-    if (urlParams.has('scans')) {
-      userScans = parseInt(urlParams.get('scans'), 10);
+    let accessStatus = "expired";
+    let subDaysLeft = 0;
+
+    if (urlParams.has('status')) {
+      accessStatus = urlParams.get('status');
+      if (accessStatus === 'sub') {
+        subDaysLeft = parseInt(urlParams.get('days') || '7', 10);
+      }
     } else {
-      const isFreeUsed = localStorage.getItem('bp_used_' + tgUserId);
+      const isFreeUsed = localStorage.getItem('bp_vision_used_' + tgUserId);
       if (!isFreeUsed) {
-        userScans = 1; // Ровно один бесплатный скан на аккаунт
-      } else {
-        userScans = parseInt(localStorage.getItem('bp_paid_' + tgUserId) ?? '0', 10);
+        accessStatus = "free";
       }
     }
 
-    function updateBalanceUI() {
-      const textEl = document.getElementById('scansLeftText');
-      if (userScans > 0) {
-        textEl.innerText = `${userScans} скан`;
-        textEl.parentElement.style.borderColor = "rgba(0, 255, 102, 0.3)";
+    function updateBadgeUI() {
+      const textEl = document.getElementById('statusBadgeText');
+      if (accessStatus === 'sub') {
+        textEl.innerText = `💎 VISION PRO (${subDaysLeft} дн.)`;
+        textEl.parentElement.style.borderColor = "rgba(0, 255, 102, 0.4)";
         textEl.parentElement.style.color = "var(--neon-green)";
+      } else if (accessStatus === 'free') {
+        textEl.innerText = `⚡️ 1 скан`;
+        textEl.parentElement.style.borderColor = "rgba(0, 240, 255, 0.4)";
+        textEl.parentElement.style.color = "var(--neon-cyan)";
       } else {
         textEl.innerText = `0 сканов`;
         textEl.parentElement.style.borderColor = "rgba(255, 42, 95, 0.4)";
         textEl.parentElement.style.color = "var(--neon-red)";
       }
     }
-    updateBalanceUI();
+    updateBadgeUI();
 
     function goToScreen(screenId) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -388,13 +388,13 @@
       if (screenId !== 'screenHome') {
         topLeft.innerHTML = `<button class="back-btn" onclick="goToScreen('screenHome')">← Назад</button>`;
       } else {
-        topLeft.innerHTML = `<div class="status-dot"></div> BLACKPILL // HUD`;
+        topLeft.innerHTML = `<div class="status-dot"></div> BLACKPILL // VISION`;
       }
       window.scrollTo(0, 0);
     }
 
     function startFlow() {
-      if (userScans <= 0) {
+      if (accessStatus === 'expired') {
         openPaymentModal();
         return;
       }
@@ -402,7 +402,7 @@
     }
 
     function triggerPhotoPick() {
-      if (userScans <= 0) {
+      if (accessStatus === 'expired') {
         openPaymentModal();
         return;
       }
@@ -420,10 +420,8 @@
       document.getElementById('payModal').style.display = 'none';
     }
 
-    // БЕЗОПАСНЫЙ ПЕРЕХОД К ОПЛАТЕ: НИКАКИХ НАЧИСЛЕНИЙ НА КЛИЕНТЕ
     function redirectToBotPayment() {
       closePaymentModal();
-      // Отправляем пользователя в диалог с ботом с командой оплаты
       if (window.Telegram?.WebApp) {
         window.Telegram.WebApp.openTelegramLink("https://t.me/blackpillvision_bot?start=pay49");
         window.Telegram.WebApp.close();
@@ -432,7 +430,7 @@
       }
     }
 
-    /* --- ЛОГИКА MEDIAPIPE FACE MESH --- */
+    /* --- MEDIAPIPE FACE MESH --- */
     let showOverlay = true;
     let loadedImage = null;
     let detectedLandmarks = null;
@@ -467,12 +465,10 @@
       const file = e.target.files[0];
       if (!file) return;
 
-      // Перманентная фиксация использования скана
-      if (userScans > 0) {
-        userScans -= 1;
-        localStorage.setItem('bp_used_' + tgUserId, 'true');
-        localStorage.setItem('bp_paid_' + tgUserId, String(userScans));
-        updateBalanceUI();
+      if (accessStatus === 'free') {
+        accessStatus = 'expired';
+        localStorage.setItem('bp_vision_used_' + tgUserId, 'true');
+        updateBadgeUI();
       }
 
       goToScreen('screenHud');
