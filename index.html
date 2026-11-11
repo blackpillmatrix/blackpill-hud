@@ -136,6 +136,8 @@
     .rank-name.chad { color: var(--neon-green); text-shadow: 0 0 14px rgba(0,255,102,0.4); }
     .rank-name.htn { color: var(--neon-cyan); }
     .rank-name.mtn { color: var(--neon-gold); }
+    .rank-name.ltn { color: var(--neon-red); }
+    .rank-name.sub { color: #ff0033; }
 
     .score-badge {
       background: rgba(0, 240, 255, 0.08); border: 1px solid var(--neon-cyan);
@@ -254,41 +256,41 @@
       <div class="score-card">
         <div>
           <div class="rank-title">Классификация фенотипа</div>
-          <div class="rank-name chad" id="rankDisplay">CHAD</div>
+          <div class="rank-name mtn" id="rankDisplay">MTN</div>
         </div>
         <div class="score-badge">
-          <div class="score-num" id="scoreDisplay">9.2</div>
+          <div class="score-num" id="scoreDisplay">5.2</div>
           <div class="score-sub">ИЗ 10.0</div>
         </div>
       </div>
 
       <div class="box-card">
-        <div class="box-header" id="gaussPercentTitle">РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (ТОП 0.8%)</div>
+        <div class="box-header" id="gaussPercentTitle">РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (МЕДИАНА 50%)</div>
         <canvas id="gaussChart" class="gauss-canvas" width="340" height="90"></canvas>
       </div>
 
       <div class="metric-item">
         <div class="metric-head">
           <span class="metric-label">Гармония третей</span>
-          <span class="metric-val" id="valHarmony">94%</span>
+          <span class="metric-val" id="valHarmony">82%</span>
         </div>
-        <div class="progress-bg"><div class="progress-fill" id="barHarmony" style="width: 94%;"></div></div>
+        <div class="progress-bg"><div class="progress-fill" id="barHarmony" style="width: 82%;"></div></div>
       </div>
 
       <div class="metric-item">
         <div class="metric-head">
           <span class="metric-label">Угловатость челюсти</span>
-          <span class="metric-val" id="valAngular">97%</span>
+          <span class="metric-val" id="valAngular">74%</span>
         </div>
-        <div class="progress-bg"><div class="progress-fill" id="barAngular" style="width: 97%;"></div></div>
+        <div class="progress-bg"><div class="progress-fill" id="barAngular" style="width: 74%;"></div></div>
       </div>
 
       <div class="metric-item">
         <div class="metric-head">
-          <span class="metric-label">Eye Area (Hunter Index)</span>
-          <span class="metric-val" id="valEyes">96%</span>
+          <span class="metric-label">Eye Area (Compactness)</span>
+          <span class="metric-val" id="valEyes">71%</span>
         </div>
-        <div class="progress-bg"><div class="progress-fill" id="barEyes" style="width: 96%;"></div></div>
+        <div class="progress-bg"><div class="progress-fill" id="barEyes" style="width: 71%;"></div></div>
       </div>
     </div>
 
@@ -296,32 +298,32 @@
       <div class="metric-item">
         <div class="metric-head">
           <span class="metric-label">Кантальный наклон</span>
-          <span class="metric-val" id="valCanthal">+7.4° [HUNTER]</span>
+          <span class="metric-val" id="valCanthal">+0.8° [НЕЙТРАЛЬНЫЙ]</span>
         </div>
-        <div style="font-size: 11px; color: var(--muted);">Положительный вектор, идеальная посадка глазных щелей.</div>
+        <div style="font-size: 11px; color: var(--muted);">Вектор наклона наружного кантуса относительно внутреннего.</div>
       </div>
       <div class="metric-item">
         <div class="metric-head">
           <span class="metric-label">Угол челюсти (Gonial)</span>
-          <span class="metric-val" id="valGonial">116° [ЭТАЛОН]</span>
+          <span class="metric-val" id="valGonial">124° [СТАНДАРТ]</span>
         </div>
-        <div style="font-size: 11px; color: var(--muted);">Высокая латеральная проекция нижней челюсти.</div>
+        <div style="font-size: 11px; color: var(--muted);">Латеральная проекция углов нижней челюсти.</div>
       </div>
     </div>
 
     <div class="tab-pane" id="pane2">
       <div class="metric-item" style="border-left: 3px solid var(--neon-green);">
-        <div style="font-size: 12px; font-weight: 800; color: var(--neon-green); margin-bottom: 4px;">HALO-ФАКТОРЫ</div>
+        <div style="font-size: 12px; font-weight: 800; color: var(--neon-green); margin-bottom: 4px;">АНАТОМИЧЕСКИЙ БАЗИС</div>
         <div style="font-size: 11px; color: var(--text); line-height: 1.5;">
-          • Положительный кантальный наклон и выраженные скуловые дуги (Zygos).<br>
-          • Hunter Eyes: глубокая посадка глазницы, выраженный капот верхнего века.
+          • Строение костного скелета находится в диапазоне нормального распределения.<br>
+          • Базовый уровень симметрии лица без выраженных пороков развития.
         </div>
       </div>
       <div class="metric-item" style="border-left: 3px solid var(--neon-gold); margin-top: 10px;">
         <div style="font-size: 12px; font-weight: 800; color: var(--neon-gold); margin-bottom: 4px;">ПРОТОКОЛ ОПТИМИЗАЦИИ</div>
         <div style="font-size: 11px; color: var(--text); line-height: 1.5;">
-          • Удержание процента жира 10–12% для максимальной резкости подчелюстного угла.<br>
-          • Поддержание правильного положения языка к нёбу (mewing).
+          • Снижение подкожного жира до 10–12% для проявления скуловой дуги.<br>
+          • Контроль носового дыхания и осанки шеи для натяжения подъязычной зоны.
         </div>
       </div>
     </div>
@@ -357,8 +359,8 @@
         freeScansLeft = parseInt(urlParams.get('left') || '1', 10);
       }
     } else {
-      accessStatus = "free";
-      freeScansLeft = 1;
+      accessStatus = "sub";
+      subDaysLeft = 7;
     }
 
     function updateBadgeUI() {
@@ -429,7 +431,7 @@
       }
     }
 
-    /* --- MEDIAPIPE FACE MESH --- */
+    /* --- MEDIAPIPE FACE MESH & ЖЁСТКАЯ АНАТОМИЯ --- */
     let showOverlay = true;
     let loadedImage = null;
     let detectedLandmarks = null;
@@ -466,9 +468,7 @@
 
       if (accessStatus === 'free') {
         freeScansLeft -= 1;
-        if (freeScansLeft <= 0) {
-          accessStatus = 'expired';
-        }
+        if (freeScansLeft <= 0) accessStatus = 'expired';
         updateBadgeUI();
       }
 
@@ -495,57 +495,102 @@
       const rIn  = { x: lm[362].x * w, y: lm[362].y * h };
       const rOut = { x: lm[263].x * w, y: lm[263].y * h };
 
+      // Расчет кантального наклона глаз
       const leftTilt = -Math.atan2(lOut.y - lIn.y, lIn.x - lOut.x) * (180 / Math.PI);
       const rightTilt = -Math.atan2(rOut.y - rIn.y, rOut.x - rIn.x) * (180 / Math.PI);
-      const avgTilt = ((leftTilt + rightTilt) / 2).toFixed(1);
+      const avgTilt = parseFloat(((leftTilt + rightTilt) / 2).toFixed(1));
 
+      // Расчет пропорций третей
       const forehead = lm[10].y * h;
       const brow     = lm[9].y * h;
       const noseBase = lm[2].y * h;
       const chin     = lm[152].y * h;
 
+      const upperThird = Math.max(10, brow - forehead);
       const midThird   = Math.max(10, noseBase - brow);
       const lowerThird = Math.max(10, chin - noseBase);
-      const harmonyScore = Math.min(99, Math.max(70, Math.round(100 - (Math.abs(midThird - lowerThird) / lowerThird) * 50)));
 
-      let baseScore = 7.5;
-      if (avgTilt > 4) baseScore += 1.2;
-      else if (avgTilt > 1) baseScore += 0.6;
-      else if (avgTilt < -2) baseScore -= 1.0;
+      const maxDiff = Math.max(Math.abs(midThird - lowerThird), Math.abs(midThird - upperThird));
+      const harmonyScore = Math.min(98, Math.max(35, Math.round(100 - (maxDiff / midThird) * 75)));
 
-      if (harmonyScore > 88) baseScore += 0.8;
-      baseScore = Math.min(9.7, Math.max(4.8, baseScore)).toFixed(1);
+      // СТРОГИЙ АЛГОРИТМ: БАЗОВАЯ ТОЧКА MTN = 5.2 (МЕДИАНА)
+      let score = 5.2;
 
-      updateUI(baseScore, avgTilt, harmonyScore);
+      // 1. Оценка кантального наклона (Hunter vs Prey)
+      if (avgTilt >= 4.5) {
+        score += 1.1; // Выдающийся положительный наклон
+      } else if (avgTilt >= 1.5) {
+        score += 0.3; // Нормальный положительный
+      } else if (avgTilt < 0 && avgTilt >= -2.0) {
+        score -= 0.8; // Негативный кантус
+      } else if (avgTilt < -2.0) {
+        score -= 1.6; // Тяжелый дебафф опущенных век
+      }
+
+      // 2. Оценка гармонии третей
+      if (harmonyScore >= 88) {
+        score += 0.5;
+      } else if (harmonyScore < 72) {
+        score -= 0.8; // Непропорциональная средняя треть / длинный нос
+      } else if (harmonyScore < 55) {
+        score -= 1.5;
+      }
+
+      // 3. Ширина нижней челюсти к скулам (Bi-gonial / Bi-zygomatic ratio)
+      const jawWidth = Math.abs((lm[397].x - lm[172].x) * w);
+      const cheekWidth = Math.abs((lm[454].x - lm[234].x) * w);
+      const jawRatio = jawWidth / (cheekWidth || 1);
+
+      if (jawRatio >= 0.85 && jawRatio <= 0.95) {
+        score += 0.6; // Идеальная квадратная структура
+      } else if (jawRatio < 0.72) {
+        score -= 0.9; // Слишком узкая, скошенная челюсть
+      }
+
+      // Замыкание в диапазон от 2.5 до 9.5
+      score = Math.min(9.5, Math.max(2.5, score)).toFixed(1);
+
+      updateUI(score, avgTilt, harmonyScore);
     }
 
     function updateUI(score, tilt, harmony) {
       document.getElementById('scoreDisplay').innerText = score;
       const rankEl = document.getElementById('rankDisplay');
 
-      if (score >= 9.0) {
+      // Объективная шкала рангов
+      if (score >= 8.5) {
         rankEl.innerText = "CHAD";
         rankEl.className = "rank-name chad";
-        document.getElementById('gaussPercentTitle').innerText = "РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (ТОП 0.5%)";
-        drawGauss(0.85);
-      } else if (score >= 8.0) {
+        document.getElementById('gaussPercentTitle').innerText = "РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (ТОП 0.1%)";
+        drawGauss(0.92);
+      } else if (score >= 7.2) {
         rankEl.innerText = "CHADLITE";
         rankEl.className = "rank-name chad";
-        document.getElementById('gaussPercentTitle').innerText = "РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (ТОП 2.8%)";
-        drawGauss(0.78);
-      } else if (score >= 7.0) {
+        document.getElementById('gaussPercentTitle').innerText = "РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (ТОП 2.5%)";
+        drawGauss(0.82);
+      } else if (score >= 6.0) {
         rankEl.innerText = "HTN (High-Tier Normie)";
         rankEl.className = "rank-name htn";
-        document.getElementById('gaussPercentTitle').innerText = "РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (ТОП 12%)";
+        document.getElementById('gaussPercentTitle').innerText = "РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (ТОП 15%)";
         drawGauss(0.68);
-      } else {
+      } else if (score >= 4.8) {
         rankEl.innerText = "MTN (Mid-Tier Normie)";
         rankEl.className = "rank-name mtn";
-        document.getElementById('gaussPercentTitle').innerText = "РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (ТОП 45%)";
+        document.getElementById('gaussPercentTitle').innerText = "РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (МЕДИАНА 50%)";
         drawGauss(0.50);
+      } else if (score >= 3.8) {
+        rankEl.innerText = "LTN (Low-Tier Normie)";
+        rankEl.className = "rank-name ltn";
+        document.getElementById('gaussPercentTitle').innerText = "РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (НИЖНИЕ 25%)";
+        drawGauss(0.28);
+      } else {
+        rankEl.innerText = "SUBHUMAN";
+        rankEl.className = "rank-name sub";
+        document.getElementById('gaussPercentTitle').innerText = "РАСПРЕДЕЛЕНИЕ В ПОПУЛЯЦИИ (НИЖНИЕ 5%)";
+        drawGauss(0.10);
       }
 
-      document.getElementById('valCanthal').innerText = `${tilt > 0 ? '+' : ''}${tilt}° [${tilt > 2 ? 'HUNTER' : tilt >= 0 ? 'НЕЙТРАЛЬНЫЙ' : 'PREY'}]`;
+      document.getElementById('valCanthal').innerText = `${tilt > 0 ? '+' : ''}${tilt}° [${tilt >= 2.0 ? 'HUNTER' : tilt >= 0 ? 'НЕЙТРАЛЬНЫЙ' : 'PREY'}]`;
       document.getElementById('valHarmony').innerText = `${harmony}%`;
       document.getElementById('barHarmony').style.width = `${harmony}%`;
 
@@ -634,7 +679,7 @@
       document.querySelectorAll('.tab-pane').forEach((p, i) => p.classList.toggle('active', i === idx));
     }
 
-    function drawGauss(userPercent = 0.8) {
+    function drawGauss(userPercent = 0.5) {
       const gCanvas = document.getElementById('gaussChart');
       const gCtx = gCanvas.getContext('2d');
       const w = gCanvas.width, h = gCanvas.height;
@@ -674,7 +719,7 @@
       gCtx.fillText("YOU", startX - 10, 10);
     }
 
-    drawGauss(0.85);
+    drawGauss(0.50);
   </script>
 </body>
 </html>
