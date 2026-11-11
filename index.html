@@ -27,7 +27,6 @@
       background-size: 100% 4px; pointer-events: none; z-index: 100;
     }
 
-    /* ШАПКА */
     .topbar {
       padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
       border-bottom: 1px solid var(--border); background: rgba(8, 13, 20, 0.94); backdrop-filter: blur(10px);
@@ -41,12 +40,10 @@
     }
     .back-btn { background: none; border: none; color: var(--neon-cyan); font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: bold; }
 
-    /* ЭКРАНЫ */
     .screen { display: none; padding: 16px; animation: fadeIn 0.25s ease; }
     .screen.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* ТЕКСТЫ И КНОПКИ */
     .hero-title { font-size: 25px; font-weight: 900; letter-spacing: -0.5px; line-height: 1.2; margin-top: 6px; }
     .hero-title span { color: var(--neon-green); text-shadow: 0 0 16px rgba(0, 255, 102, 0.35); }
     .hero-desc { font-size: 13px; color: var(--muted); margin: 8px 0 20px 0; line-height: 1.5; }
@@ -81,7 +78,6 @@
     .rule-item { display: flex; gap: 8px; font-size: 12px; line-height: 1.45; margin-bottom: 8px; color: var(--text); }
     .rule-item span { color: var(--neon-green); font-weight: bold; }
 
-    /* ЗАГРУЗКА */
     .upload-zone {
       border: 2px dashed var(--border); border-radius: 14px; padding: 44px 20px;
       text-align: center; cursor: pointer; transition: 0.2s; background: rgba(8, 13, 20, 0.5);
@@ -90,7 +86,6 @@
     .upload-zone:active { border-color: var(--neon-green); background: rgba(0, 255, 102, 0.04); }
     .upload-icon { font-size: 36px; margin-bottom: 10px; }
 
-    /* ХОЛСТ HUD */
     .hud-box {
       position: relative; width: 100%; aspect-ratio: 1/1; border-radius: 14px;
       background: #010305; border: 1px solid var(--border); overflow: hidden;
@@ -161,10 +156,10 @@
     .progress-bg { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
     .progress-fill { height: 100%; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green)); border-radius: 3px; }
 
-    /* МОДАЛЬНОЕ ОКНО ОПЛАТЫ */
+    /* МОДАЛЬНОЕ ОКНО */
     .modal-overlay {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.82); backdrop-filter: blur(6px); z-index: 200;
+      background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(6px); z-index: 200;
       align-items: center; justify-content: center; padding: 20px;
     }
     .modal-card {
@@ -181,14 +176,13 @@
 </head>
 <body class="crt">
 
-  <!-- ШАПКА -->
   <div class="topbar">
     <div id="topbarLeft" class="brand">
       <div class="status-dot"></div>
       BLACKPILL // HUD
     </div>
     <div class="balance-badge" id="balanceBadge">
-      ⚡️ <span id="scansLeftText">1 скан</span>
+      ⚡️ <span id="scansLeftText">0 сканов</span>
     </div>
   </div>
 
@@ -197,11 +191,9 @@
     <div class="hero-title">АНТРОПОМЕТРИЧЕСКИЙ<br><span>НЕЙРОРАЗБОР</span></div>
     <div class="hero-desc">Прецизионный замер 468 точек лица, кантального наклона глаз, челюстного угла и нормального распределения Гаусса.</div>
 
-    <!-- ДВЕ ГЛАВНЫЕ КНОПКИ -->
     <button class="btn-main" onclick="startFlow()">⚡️ НАЧАТЬ АНАЛИЗ ЛИЦА</button>
     <button class="btn-pay" onclick="openPaymentModal()">ПОПОЛНИТЬ БАЛАНС (49 ₽)</button>
 
-    <!-- ЧТО ВХОДИТ В АНАЛИЗ -->
     <div class="box-card">
       <div class="box-header">Что входит в протокол сканирования</div>
       <div class="feature-row">
@@ -219,10 +211,10 @@
     </div>
   </div>
 
-  <!-- ЭКРАН 2: ИНСТРУКЦИЯ И ЗАГРУЗКА -->
+  <!-- ЭКРАН 2: ЗАГРУЗКА -->
   <div class="screen" id="screenUpload">
     <div class="hero-title">ЗАГРУЗКА <span>СЕЛФИ</span></div>
-    <div class="hero-desc">Убедись, что лицо освещено равномерно, без искажений фронтальной камеры.</div>
+    <div class="hero-desc">Убедись, что лицо освещено равномерно, без оптических искажений фронтальной камеры.</div>
 
     <div class="box-card" style="border-left: 3px solid var(--neon-green);">
       <div class="rule-item"><span>✓</span> Расстояние 1.5–2 метра (зум 1.5–2×)</div>
@@ -339,13 +331,14 @@
     </div>
   </div>
 
-  <!-- МОДАЛЬНОЕ ОКНО ОПЛАТЫ НА 49 РУБЛЕЙ -->
+  <!-- ЗАЩИЩЕННОЕ МОДАЛЬНОЕ ОКНО ОПЛАТЫ -->
   <div class="modal-overlay" id="payModal">
     <div class="modal-card">
       <div class="modal-title">ДОСТУП ОГРАНИЧЕН</div>
-      <div class="modal-desc">Твой бесплатный скан использован. Пополни баланс, чтобы продолжать сканирование новых фото.</div>
+      <div class="modal-desc">Твой бесплатный скан использован. Пополни баланс через Telegram-бота, чтобы продолжить сканирование новых фото.</div>
       <div class="modal-price">49 ₽</div>
-      <button class="btn-main" onclick="confirmPayment()">ОПЛАТИТЬ 49 ₽ (СПБ / КАРТА)</button>
+      <!-- ПЕРЕНАПРАВЛЕНИЕ НА РЕАЛЬНУЮ ОПЛАТУ В ЧАТ С БОТОМ -->
+      <button class="btn-main" onclick="redirectToBotPayment()">ОПЛАТИТЬ 49 ₽ (СПБ / КАРТА)</button>
       <button class="btn-pay" style="margin-bottom: 0;" onclick="closePaymentModal()">ЗАКРЫТЬ</button>
     </div>
   </div>
@@ -356,8 +349,22 @@
       window.Telegram.WebApp.expand();
     }
 
-    // --- УПРАВЛЕНИЕ БАЛАНСОМ СКАНОВ ---
-    let userScans = parseInt(localStorage.getItem('blackpill_scans') ?? '1', 10);
+    // Идентификация Telegram пользователя
+    const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id ? String(window.Telegram.WebApp.initDataUnsafe.user.id) : "guest";
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // Чтение баланса: если передан из бота в URL — берем его, иначе проверяем персональное хранилище
+    let userScans = 0;
+    if (urlParams.has('scans')) {
+      userScans = parseInt(urlParams.get('scans'), 10);
+    } else {
+      const isFreeUsed = localStorage.getItem('bp_used_' + tgUserId);
+      if (!isFreeUsed) {
+        userScans = 1; // Ровно один бесплатный скан на аккаунт
+      } else {
+        userScans = parseInt(localStorage.getItem('bp_paid_' + tgUserId) ?? '0', 10);
+      }
+    }
 
     function updateBalanceUI() {
       const textEl = document.getElementById('scansLeftText');
@@ -413,17 +420,16 @@
       document.getElementById('payModal').style.display = 'none';
     }
 
-    function confirmPayment() {
-      // Имитация успешной оплаты: добавляем 3 скана
-      userScans += 3;
-      localStorage.setItem('blackpill_scans', userScans);
-      updateBalanceUI();
+    // БЕЗОПАСНЫЙ ПЕРЕХОД К ОПЛАТЕ: НИКАКИХ НАЧИСЛЕНИЙ НА КЛИЕНТЕ
+    function redirectToBotPayment() {
       closePaymentModal();
-      alert("✅ Баланс успешно пополнен на 3 скана!");
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      // Отправляем пользователя в диалог с ботом с командой оплаты
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.openTelegramLink("https://t.me/blackpillvision_bot?start=pay49");
+        window.Telegram.WebApp.close();
+      } else {
+        window.location.href = "https://t.me/blackpillvision_bot?start=pay49";
       }
-      goToScreen('screenUpload');
     }
 
     /* --- ЛОГИКА MEDIAPIPE FACE MESH --- */
@@ -461,10 +467,11 @@
       const file = e.target.files[0];
       if (!file) return;
 
-      // Списываем 1 скан при реальной загрузке
+      // Перманентная фиксация использования скана
       if (userScans > 0) {
         userScans -= 1;
-        localStorage.setItem('blackpill_scans', userScans);
+        localStorage.setItem('bp_used_' + tgUserId, 'true');
+        localStorage.setItem('bp_paid_' + tgUserId, String(userScans));
         updateBalanceUI();
       }
 
