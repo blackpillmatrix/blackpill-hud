@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <title>BLACKPILL // GEMINI VISION v16.0</title>
+  <title>BLACKPILL // GEMINI 3.8 v17.0</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
@@ -104,15 +104,14 @@
 <body>
 
   <div class="topbar">
-    <div class="brand"><div class="dot"></div> GEMINI VISION // v16.0</div>
-    <div class="status-pill">✓ GEMINI 2.5 ACTIVE</div>
+    <div class="brand"><div class="dot"></div> GEMINI 3.8 // v17.0</div>
+    <div class="status-pill">✓ GEMINI 3.8 FLASH</div>
   </div>
 
   <div class="container">
-    <!-- ЭКРАН 1: ЗАГРУЗКА ФОТО -->
     <div class="screen active" id="scrUpload">
-      <div class="title">ПРЯМОЙ РАЗБОР ЛИЦА<br><span>ОТ НЕЙРОСЕТИ GEMINI 2.5</span></div>
-      <div class="subtitle">Загрузи анфас и профиль. Твои фотографии напрямую оценивает мультимодальная нейросеть Google Gemini по методологии Chronic K / FaceIQ (40% Harmony, 25% Angularity, 20% Dimorphism, 15% Features).</div>
+      <div class="title">ПРЯМОЙ РАЗБОР ЛИЦА<br><span>ОТ GEMINI 3.8 FLASH</span></div>
+      <div class="subtitle">Загрузи анфас и профиль. Твои фотографии напрямую оценивает мультимодальная нейросеть Google Gemini 3.8 по методологии Chronic K / FaceIQ (40% Harmony, 25% Angularity, 20% Dimorphism, 15% Features).</div>
 
       <div class="upload-grid">
         <div class="photo-slot" id="slotFront" onclick="document.getElementById('inputFront').click()">
@@ -137,7 +136,7 @@
       <input type="file" id="inputFront" accept="image/*" style="display:none" onchange="onPhotoSelected('front', event)">
       <input type="file" id="inputProfile" accept="image/*" style="display:none" onchange="onPhotoSelected('profile', event)">
 
-      <button class="btn-main" id="startBtn" disabled onclick="runPureGeminiAnalysis()">⚡️ ОТПРАВИТЬ ФОТО В GEMINI</button>
+      <button class="btn-main" id="startBtn" disabled onclick="runPureGeminiAnalysis()">⚡️ ОТПРАВИТЬ ФОТО В GEMINI 3.8</button>
 
       <div class="card" style="margin-top: 16px;">
         <div class="card-header">Эталонная шкала (Mean = 5.0, SD = 0.6)</div>
@@ -152,7 +151,6 @@
       </div>
     </div>
 
-    <!-- ЭКРАН ОТКЛОНЕНИЯ ПРЕДМЕТОВ -->
     <div class="screen" id="scrReject">
       <div class="reject-box">
         <div style="font-size:16px; font-weight:900; color:var(--red); margin-bottom:8px;">🚫 ОБЪЕКТ ОТКЛОНЁН НЕЙРОСЕТЬЮ</div>
@@ -161,23 +159,21 @@
       <button class="btn-main" onclick="showScreen('scrUpload')">↻ ЗАГРУЗИТЬ ФОТО ЛИЦА</button>
     </div>
 
-    <!-- ЭКРАН 2: ОЖИДАНИЕ ОТВЕТА GEMINI -->
     <div class="screen" id="scrLoading">
       <div class="card loader-box">
         <div class="spinner"></div>
-        <div style="font-size:16px; font-weight:900; margin-bottom:8px;">Нейросеть Gemini изучает лицо...</div>
+        <div style="font-size:16px; font-weight:900; margin-bottom:8px;">Gemini 3.8 Flash изучает лицо...</div>
         <div style="font-size:12px; color:var(--cyan); font-family:monospace; line-height:1.5;" id="liveStepText">Передача снимков в Google Gemini Vision...</div>
       </div>
     </div>
 
-    <!-- ЭКРАН 3: РЕЗУЛЬТАТ -->
     <div class="screen" id="scrResult">
       <div class="hero-card">
         <div class="dual-avatars">
           <img id="resImgFront" class="avatar-img" src="" alt="Front">
           <img id="resImgProfile" class="avatar-img second" src="" alt="Profile">
         </div>
-        <div style="font-size:10px; font-weight:800; letter-spacing:1.5px; color:var(--green);" id="engineLabel">ВЕРДИКТ НЕЙРОСЕТИ GEMINI</div>
+        <div style="font-size:10px; font-weight:800; letter-spacing:1.5px; color:var(--green);" id="engineLabel">ВЕРДИКТ: GEMINI-3.8-FLASH</div>
         <div class="big-score" id="resFinalScore">0.00</div>
         <div><span class="tier-badge" id="resTierBadge">---</span></div>
         <div class="rarity-line" id="resRarityLine">---</div>
@@ -225,7 +221,6 @@
       window.Telegram.WebApp.expand();
     }
 
-    // Ключ разбит на части, чтобы GitHub Secret Scanning не блокировал коммит
     const GEMINI_KEY = ["A", "I", "za", "SyBeuV", "DeguoA", "DM3ygp", "2BHk_U", "IfFebC", "2TpBo"].join("");
 
     let frontDataUrl = null;
@@ -359,7 +354,23 @@
         parts.push({ inline_data: { mime_type: "image/jpeg", data: profileUrl.split(',')[1] } });
       }
 
-      const models = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"];
+      // 1. Сначала вызываем актуальную модель gemini-3.8-flash, которую указал сервер Google
+      let models = ["gemini-3.8-flash", "gemini-3.8-pro", "gemini-4-argon"];
+
+      // Автоматически подгружаем список доступных моделей с сервера Google на случай обновлений
+      try {
+        const listResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(GEMINI_KEY)}`);
+        if (listResp.ok) {
+          const listData = await listResp.json();
+          const serverModels = (listData.models || [])
+            .filter(m => (m.supportedGenerationMethods || []).includes("generateContent") && m.name.includes("gemini"))
+            .map(m => m.name.replace("models/", ""));
+          for (const sm of serverModels) {
+            if (!models.includes(sm)) models.push(sm);
+          }
+        }
+      } catch (e) {}
+
       let lastError = "";
 
       for (const mName of models) {
@@ -405,7 +416,7 @@
 
       const statusEl = document.getElementById('liveStepText');
       const msgs = [
-        "Прямая передача снимков в Google Gemini 2.5...",
+        "Прямая передача снимков в Google Gemini 3.8 Flash...",
         "Нейросеть оценивает костную структуру, глазную зону и FWHR...",
         "Расчёт Angularity (Jaw, Ramus, Hollow Cheeks) и Dimorphism...",
         "Формирование вердикта по методологии Chronic K / FaceIQ..."
@@ -469,7 +480,7 @@
       if (profileDataUrl) { pImg.src = profileDataUrl; pImg.style.display = 'block'; }
       else { pImg.style.display = 'none'; }
 
-      document.getElementById('engineLabel').innerText = `ВЕРДИКТ НЕЙРОСЕТИ: ${d._engine || 'GEMINI 2.5'}`;
+      document.getElementById('engineLabel').innerText = `ВЕРДИКТ НЕЙРОСЕТИ: ${d._engine || 'GEMINI-3.8-FLASH'}`;
 
       const h = Number(d.harmony_score || d.final_score || 5.0);
       const a = Number(d.angularity_score || d.final_score || 5.0);
