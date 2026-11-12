@@ -6,638 +6,258 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Aurex // Blackpill Vision v10.0</title>
+  <title>BLACKPILL // VISION AI</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
   <style>
     :root {
-      --bg: #f5f5f3;
-      --card: #ffffff;
-      --border: #e4e4e0;
-      --text: #141414;
-      --muted: #767672;
-      --accent: #181818;
-      --accent-text: #ffffff;
-      --green: #16a34a;
-      --green-bg: rgba(22, 163, 74, 0.1);
-      --gold: #d97706;
-      --gold-bg: rgba(217, 119, 6, 0.1);
-      --red: #dc2626;
-      --red-bg: rgba(220, 38, 38, 0.1);
-      --blue: #2563eb;
-    }
-
-    body.dark-mode {
-      --bg: #05070a;
-      --card: #0c1118;
-      --border: #1b2735;
-      --text: #edf4ff;
-      --muted: #6c849e;
-      --accent: #00ff66;
-      --accent-text: #000000;
+      --bg: #06080c;
+      --card: #0d1219;
+      --border: #1c2736;
+      --text: #eef5ff;
+      --muted: #7088a3;
       --green: #00ff66;
       --green-bg: rgba(0, 255, 102, 0.12);
+      --cyan: #00f0ff;
       --gold: #ffaa00;
-      --gold-bg: rgba(255, 170, 0, 0.12);
       --red: #ff2a5f;
-      --red-bg: rgba(255, 42, 95, 0.12);
-      --blue: #00f0ff;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); padding-bottom: 36px; overflow-x: hidden; transition: background 0.2s, color 0.2s; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 36px; overflow-x: hidden; }
 
-    /* ШАПКА КАК В AUREXSCAN */
     .topbar {
-      padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px solid var(--border); background: var(--card);
-      position: sticky; top: 0; z-index: 60;
+      padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--border); background: rgba(13, 18, 25, 0.95);
+      position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px);
     }
-    .topbar-left { display: flex; align-items: center; gap: 10px; }
-    .nav-back-btn {
-      width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--border);
-      background: var(--card); color: var(--text); font-size: 16px; font-weight: 700;
-      display: flex; align-items: center; justify-content: center; cursor: pointer;
-    }
-    .topbar-title { font-size: 16px; font-weight: 800; color: var(--text); }
-    .topbar-right { display: flex; align-items: center; gap: 8px; }
-    .pro-pill {
-      font-size: 11px; font-weight: 800; padding: 5px 10px; border-radius: 16px;
-      background: var(--green-bg); color: var(--green);
-    }
-    .theme-btn {
-      width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--border);
-      background: var(--card); color: var(--text); font-size: 15px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-    }
+    .brand { font-size: 14px; font-weight: 900; letter-spacing: 1px; color: var(--cyan); display: flex; align-items: center; gap: 8px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .badge { font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 14px; background: var(--green-bg); color: var(--green); border: 1px solid rgba(0,255,102,0.3); }
 
-    .screen { display: none; padding: 18px 16px; max-width: 480px; margin: 0 auto; animation: fadeIn 0.2s ease; }
+    .container { max-width: 480px; margin: 0 auto; padding: 16px; }
+    .screen { display: none; animation: fadeIn 0.2s ease; }
     .screen.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
-    .h1-title { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 6px; color: var(--text); }
-    .h1-sub { font-size: 14px; color: var(--muted); line-height: 1.45; margin-bottom: 18px; }
+    .title { font-size: 23px; font-weight: 900; line-height: 1.2; margin-bottom: 6px; }
+    .title span { color: var(--green); }
+    .subtitle { font-size: 13px; color: var(--muted); line-height: 1.45; margin-bottom: 16px; }
+
+    .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .photo-slot {
+      background: var(--card); border: 2px dashed var(--border); border-radius: 16px;
+      aspect-ratio: 3/4; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; cursor: pointer; position: relative; overflow: hidden;
+      padding: 12px; text-align: center; transition: 0.2s;
+    }
+    .photo-slot.loaded { border-style: solid; border-color: var(--green); }
+    .photo-slot img {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;
+    }
+    .slot-overlay {
+      position: relative; z-index: 2; background: rgba(6, 8, 12, 0.78);
+      padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border);
+    }
+    .slot-icon { font-size: 26px; margin-bottom: 6px; }
+    .slot-title { font-size: 13px; font-weight: 800; color: #fff; }
+    .slot-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .btn-main {
+      width: 100%; padding: 16px; border-radius: 14px; border: none;
+      background: var(--green); color: #000; font-size: 14px; font-weight: 900;
+      letter-spacing: 0.6px; cursor: pointer; transition: 0.2s;
+      box-shadow: 0 0 20px rgba(0, 255, 102, 0.25);
+    }
+    .btn-main:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
 
     .card {
       background: var(--card); border: 1px solid var(--border); border-radius: 16px;
-      padding: 18px 16px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      padding: 16px; margin-bottom: 12px;
     }
+    .card-header { font-size: 11px; font-weight: 900; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
 
-    .good-header { font-size: 15px; font-weight: 800; color: var(--green); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-    .bad-header { font-size: 15px; font-weight: 800; color: var(--red); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-
-    .bullet-list { list-style: none; }
-    .bullet-list li {
-      position: relative; padding-left: 16px; font-size: 14px; line-height: 1.48;
-      color: var(--text); margin-bottom: 8px;
-    }
-    .bullet-list li::before {
-      content: "•"; position: absolute; left: 0; font-weight: 900; color: var(--text);
-    }
-
-    .choice-btn {
-      width: 100%; padding: 20px 16px; border-radius: 16px; border: 1px solid var(--border);
-      background: var(--card); color: var(--text); font-size: 16px; font-weight: 700;
-      text-align: center; cursor: pointer; margin-bottom: 12px; transition: 0.15s;
-    }
-    .choice-btn:active, .choice-btn.selected {
-      border-color: var(--accent); background: var(--accent); color: var(--accent-text);
-    }
-
-    .primary-btn {
-      width: 100%; padding: 16px; border-radius: 14px; border: none;
-      background: var(--accent); color: var(--accent-text); font-size: 15px; font-weight: 800;
-      cursor: pointer; text-align: center; margin-top: 8px; transition: 0.15s;
-    }
-    .primary-btn:active { opacity: 0.88; transform: scale(0.99); }
-
-    .secondary-btn {
-      width: 100%; padding: 14px; border-radius: 14px; border: 1px solid var(--border);
-      background: var(--card); color: var(--text); font-size: 14px; font-weight: 700;
-      cursor: pointer; text-align: center; margin-top: 8px;
-    }
-
-    .upload-box {
-      border: 2px dashed var(--border); border-radius: 18px; background: var(--card);
-      padding: 64px 20px; text-align: center; cursor: pointer; margin: 16px 0;
-      font-size: 15px; color: var(--muted); font-weight: 600;
-    }
-    .upload-box:active { border-color: var(--accent); }
-
-    /* ЭКРАН ВЫРАВНИВАНИЯ ФОТО */
-    .align-canvas-wrap {
-      position: relative; width: 100%; aspect-ratio: 1/1.05; border-radius: 18px;
-      overflow: hidden; background: #101215; border: 1px solid var(--border); margin-bottom: 12px;
-      touch-action: none;
-    }
-    .align-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
-    .angle-readout { text-align: center; font-size: 18px; font-weight: 900; margin: 6px 0 10px 0; }
-    .slider-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-    .circle-btn {
-      width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border);
-      background: var(--card); color: var(--text); font-size: 18px; font-weight: 700;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-    }
-    .angle-slider { flex: 1; accent-color: var(--blue); height: 6px; }
-    .two-btns { display: flex; gap: 10px; margin-bottom: 12px; }
-    .two-btns button {
-      flex: 1; padding: 13px; border-radius: 12px; border: 1px solid var(--border);
-      background: var(--card); color: var(--text); font-size: 14px; font-weight: 700; cursor: pointer;
-    }
-
-    /* ЭКРАН РАЗМЕТКИ ТОЧЕК С 3X ЛУПОЙ */
-    .lm-guide-box {
-      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
-      padding: 12px 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
-    }
-    .lm-point-title { font-size: 14px; font-weight: 800; }
-    .lm-point-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .lm-counter { font-size: 12px; font-weight: 900; padding: 4px 10px; border-radius: 10px; background: var(--green-bg); color: var(--green); }
-
-    .lm-canvas-wrap {
-      position: relative; width: 100%; aspect-ratio: 1/1.05; border-radius: 18px;
-      overflow: hidden; background: #101215; border: 1px solid var(--border); margin-bottom: 12px;
-      touch-action: none;
-    }
-    .lm-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
-    .drag-pill {
-      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-      background: rgba(255,255,255,0.92); color: #111; padding: 6px 14px; border-radius: 20px;
-      font-size: 12px; font-weight: 800; pointer-events: none; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    }
-    .zoom-fab {
-      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-      width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.92);
-      color: #111; border: none; font-size: 13px; font-weight: 900; cursor: pointer;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-    }
-
-    /* ТЕРМИНАЛ 30-СЕКУНДНОГО АНАЛИЗА */
-    .scan-progress-circle {
-      width: 96px; height: 96px; border-radius: 50%; border: 4px solid var(--border);
-      border-top-color: var(--green); margin: 16px auto; display: flex; align-items: center;
-      justify-content: center; font-size: 20px; font-weight: 900; animation: spin 1.4s linear infinite;
+    /* ЭКРАН РЕАЛЬНОГО ОЖИДАНИЯ ОТВЕТА НЕЙРОСЕТИ */
+    .loader-box { text-align: center; padding: 36px 16px; }
+    .spinner {
+      width: 64px; height: 64px; border-radius: 50%; border: 4px solid var(--border);
+      border-top-color: var(--green); border-right-color: var(--cyan);
+      margin: 0 auto 18px auto; animation: spin 0.9s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .scan-pct-center { text-align: center; font-size: 26px; font-weight: 900; margin-bottom: 6px; }
-    .scan-phase-title { text-align: center; font-size: 14px; font-weight: 800; margin-bottom: 6px; }
-    .scan-phase-sub { text-align: center; font-size: 12px; color: var(--muted); line-height: 1.5; white-space: pre-line; }
+    .loader-title { font-size: 16px; font-weight: 900; color: var(--text); margin-bottom: 8px; }
+    .loader-status { font-size: 12px; color: var(--cyan); font-family: monospace; line-height: 1.5; }
 
-    /* ВКЛАДКИ РЕЗУЛЬТАТА КАК В AUREXSCAN */
-    .tabs-bar {
-      display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 14px;
-      scrollbar-width: none;
+    /* РЕЗУЛЬТАТЫ */
+    .hero-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+      padding: 20px 16px; text-align: center; margin-bottom: 14px;
     }
-    .tabs-bar::-webkit-scrollbar { display: none; }
-    .tab-pill {
-      flex: 0 0 auto; padding: 9px 15px; border-radius: 12px; border: 1px solid var(--border);
-      background: var(--card); color: var(--text); font-size: 13px; font-weight: 700; cursor: pointer;
+    .dual-avatars { display: flex; justify-content: center; align-items: center; margin-bottom: 14px; }
+    .avatar-img {
+      width: 104px; height: 104px; border-radius: 50%; object-fit: cover;
+      border: 3px solid var(--card); box-shadow: 0 4px 16px rgba(0,0,0,0.4); background: #111;
     }
-    .tab-pill.active {
-      background: var(--accent); color: var(--accent-text); border-color: var(--accent);
-    }
-    .tab-pane { display: none; }
-    .tab-pane.active { display: block; }
+    .avatar-img.second { margin-left: -20px; }
 
-    /* БЛОКИ В ОБЗОРЕ */
-    .block-item {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 0; border-bottom: 1px solid var(--border); cursor: pointer;
+    .big-score { font-size: 48px; font-weight: 900; line-height: 1; margin: 4px 0; }
+    .tier-badge {
+      display: inline-block; padding: 6px 16px; border-radius: 20px;
+      font-size: 14px; font-weight: 900; margin: 8px 0 4px 0;
+      background: rgba(0, 240, 255, 0.1); border: 1px solid var(--cyan); color: #fff;
     }
-    .block-item:last-child { border-bottom: none; }
-    .block-left { display: flex; align-items: center; gap: 12px; }
-    .check-badge {
-      width: 26px; height: 26px; border-radius: 7px; background: var(--accent);
-      color: var(--accent-text); display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 900;
-    }
-    .block-title { font-size: 15px; font-weight: 800; color: var(--text); }
-    .block-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .block-val { font-size: 16px; font-weight: 900; display: flex; align-items: center; gap: 6px; }
-    .block-bar-wrap { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 8px; }
-    .block-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+    .rarity-line { font-size: 12px; color: var(--muted); font-weight: 700; margin-top: 4px; }
 
-    /* КАРТОЧКА РЕЗУЛЬТАТА С 2 КРУГЛЫМИ ФОТО (КАК НА СКРИНШОТЕ 9) */
-    .summary-share-card {
-      background: var(--card); border: 1px solid var(--border); border-radius: 22px;
-      padding: 22px 16px; text-align: center; margin-top: 14px;
-    }
-    .summary-label { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
-    .summary-big-score { font-size: 46px; font-weight: 900; line-height: 1.05; margin: 6px 0; }
-    .summary-psl-badge {
-      display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 13px;
-      font-weight: 800; background: var(--green-bg); color: var(--green); margin-bottom: 6px;
-    }
-    .summary-rarity { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
-    
-    .dual-avatars {
-      display: flex; justify-content: center; align-items: center; margin: 14px 0;
-    }
-    .avatar-circle {
-      width: 124px; height: 124px; border-radius: 50%; border: 4px solid var(--card);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.12); object-fit: cover; background: #222;
-    }
-    .avatar-circle.second { margin-left: -22px; }
-
-    .mini-pillars-grid {
+    .formula-grid {
       display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
-      border-top: 1px solid var(--border); padding-top: 14px; margin-top: 10px;
+      border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;
     }
-    .mini-pillar-val { font-size: 15px; font-weight: 900; }
-    .mini-pillar-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .f-val { font-size: 16px; font-weight: 900; font-family: monospace; }
+    .f-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
 
-    /* МЕТРИКА ВНУТРИ ВКЛАДКИ */
-    .m-card {
-      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
-      padding: 14px; margin-bottom: 10px;
+    .tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      flex: 0 0 auto; padding: 8px 13px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--card); color: var(--muted); font-size: 12px; font-weight: 800; cursor: pointer;
     }
-    .m-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .tab.active { background: var(--green); color: #000; border-color: var(--green); }
+    .pane { display: none; }
+    .pane.active { display: block; }
+
+    .m-row {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 14px; margin-bottom: 8px;
+    }
+    .m-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
     .m-name { font-size: 13px; font-weight: 800; color: var(--text); }
-    .m-right { display: flex; align-items: center; gap: 8px; }
-    .m-raw { font-size: 12px; color: var(--muted); font-family: monospace; }
-    .m-score { font-size: 13px; font-weight: 900; }
-    .m-foot { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px; }
-
-    .accordion-header {
-      display: flex; justify-content: space-between; align-items: center;
-      font-size: 12px; font-weight: 800; letter-spacing: 1px; color: var(--muted);
-      cursor: pointer; text-transform: uppercase;
-    }
-    .scale-table { margin-top: 12px; display: none; font-size: 12px; line-height: 1.6; color: var(--text); }
-    .scale-table.open { display: block; }
+    .m-score { font-size: 13px; font-weight: 900; font-family: monospace; }
+    .m-val { font-size: 12px; color: var(--cyan); font-family: monospace; margin-bottom: 4px; }
+    .m-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+    .bar-bg { height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; margin: 6px 0; }
+    .bar-fill { height: 100%; border-radius: 3px; }
   </style>
 </head>
 <body>
 
-  <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
   <div class="topbar">
-    <div class="topbar-left">
-      <button class="nav-back-btn" id="backBtn" onclick="navigateBack()" style="display:none;">‹</button>
-      <div class="topbar-title" id="headerTitle">Aurex // Blackpill v10.0</div>
-    </div>
-    <div class="topbar-right">
-      <div class="pro-pill" id="proBadge">💎 PRO (7 дн.)</div>
-      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
-    </div>
+    <div class="brand"><div class="dot"></div> BLACKPILL // CHRONIC ENGINE</div>
+    <div class="badge">💎 VISION AI PRO</div>
   </div>
 
-  <!-- ШАГ 1: ИНСТРУКЦИЯ (КАК СДЕЛАТЬ ФОТО) -->
-  <div class="screen active" id="scrIntro">
-    <div class="h1-title">Как сделать фото</div>
-    <div class="h1-sub">От качества фото напрямую зависит точность нейросетевого результата (88 метрик)</div>
+  <div class="container">
+    <!-- ЭКРАН 1: ЗАГРУЗКА АНФАСА И ПРОФИЛЯ БЕЗ ЛИШНИХ ШАГОВ -->
+    <div class="screen active" id="scrUpload">
+      <div class="title">НЕЙРОСЕТЕВОЙ РЕЙТИНГ<br><span>ПО СИСТЕМЕ CHRONIC / FACEIQ</span></div>
+      <div class="subtitle">Загрузи анфас и профиль. Нейросеть сама проанализирует фотографии по формуле Harmony (40%) + Angularity (25%) + Dimorphism (20%) + Features (15%) и выдаст точный PSL-ранг.</div>
 
-    <div class="card">
-      <div class="good-header">✓ Правильно</div>
-      <ul class="bullet-list">
-        <li>Задняя камера, зум 1.5–2×, с расстояния 1–1.5 метра</li>
-        <li>Голова ровно, взгляд прямо в камеру, камера на уровне глаз</li>
-        <li>Нейтральное выражение, губы расслаблены и сомкнуты</li>
-        <li>Волосы убраны со лба и ушей для точного замера третей</li>
-        <li>Мягкий ровный свет спереди (у окна)</li>
-        <li>Для профиля – <b>строго сбоку, на 90°</b>: второго глаза не видно, ухо видно целиком</li>
-      </ul>
-    </div>
-
-    <div class="card">
-      <div class="bad-header">✕ Неправильно</div>
-      <ul class="bullet-list">
-        <li>Фронталка вплотную с 1× – искажает пропорции носа и челюсти</li>
-        <li>Наклон или поворот головы, взгляд вбок</li>
-        <li>Открытый рот, улыбка, поднятые брови или гримасы</li>
-        <li>Очки, чёлка, закрывающая лоб и брови</li>
-        <li>Жёсткие тени сбоку или свет из-за спины</li>
-      </ul>
-    </div>
-
-    <button class="primary-btn" onclick="goStep('scrGender', 'Анализ')">Понятно, начать анализ</button>
-  </div>
-
-  <!-- ШАГ 2: ВЫБОР ПОЛА -->
-  <div class="screen" id="scrGender">
-    <div class="h1-title">Пол</div>
-    <div class="h1-sub">Часть параметров (диморфизм, угловатость челюсти, надбровье и FWHR) оценивается по-разному для мужчин и женщин</div>
-
-    <button class="choice-btn" onclick="selectGender('male')">Мужской</button>
-    <button class="choice-btn" onclick="selectGender('female')">Женский</button>
-  </div>
-
-  <!-- ШАГ 3: ВЫБОР РАСЫ -->
-  <div class="screen" id="scrRace">
-    <div class="h1-title">Раса</div>
-    <div class="h1-sub">Выберите фенотипическую группу для калибровки эталонных норм носового индекса, межглазного расстояния и скул</div>
-
-    <button class="choice-btn" onclick="selectRace('caucasian')">Европеоидная</button>
-    <button class="choice-btn" onclick="selectRace('mongoloid')">Монголоидная</button>
-    <button class="choice-btn" onclick="selectRace('negroid')">Негроидная</button>
-  </div>
-
-  <!-- ШАГ 4: ЗАГРУЗКА ФОТО АНФАС -->
-  <div class="screen" id="scrFrontUpload">
-    <div class="h1-title">Фото анфас</div>
-    <div class="h1-sub">Держите голову прямо, смотрите в камеру. Камера должна находиться на уровне глаз. Хороший свет, волосы не закрывают лоб.</div>
-
-    <div class="upload-box" onclick="document.getElementById('frontInput').click()">
-      Нажми, чтобы выбрать фото анфас
-    </div>
-    <input type="file" id="frontInput" accept="image/*" style="display:none" onchange="handleFrontFile(event)">
-  </div>
-
-  <!-- ШАГ 5: ВЫРАВНИВАНИЕ ФОТО АНФАС -->
-  <div class="screen" id="scrFrontAlign">
-    <div class="h1-title">Выровняйте фото</div>
-    <div class="h1-sub">Линия глаз должна быть параллельна пунктиру, лицо – строго вертикально по центральной оси.</div>
-
-    <div class="align-canvas-wrap">
-      <canvas id="frontAlignCanvas" width="600" height="630"></canvas>
-    </div>
-
-    <div style="text-align:center; font-size:12px; color:var(--muted);">Двигай фото пальцем, ползунком – выровняй наклон глаз</div>
-    <div class="angle-readout" id="frontAngleText">0.0°</div>
-
-    <div class="slider-row">
-      <button class="circle-btn" onclick="stepAngle('front', -0.5)">−</button>
-      <input type="range" class="angle-slider" id="frontAngleSlider" min="-15" max="15" step="0.1" value="0" oninput="onAngleSlide('front', this.value)">
-      <button class="circle-btn" onclick="stepAngle('front', 0.5)">+</button>
-    </div>
-
-    <div class="two-btns">
-      <button onclick="mirrorTransform('front')">Отзеркалить</button>
-      <button onclick="resetTransform('front')">Сбросить</button>
-    </div>
-
-    <button class="primary-btn" onclick="proceedToLandmarks()">Продолжить к разметке точек</button>
-  </div>
-
-  <!-- ШАГ 6: РАЗМЕТКА КЛЮЧЕВЫХ ТОЧЕК С 3X ЛУПОЙ -->
-  <div class="screen" id="scrLandmarks">
-    <div class="lm-guide-box">
-      <div>
-        <div class="lm-point-title" id="lmPointTitle">1. Верх лба (Трихион)</div>
-        <div class="lm-point-desc" id="lmPointDesc">Проверьте точку линии роста волос и углов челюсти</div>
-      </div>
-      <div class="lm-counter" id="lmStepBadge">Точка 1 / 6</div>
-    </div>
-
-    <div class="lm-canvas-wrap">
-      <canvas id="lmCanvas" width="600" height="630"></canvas>
-      <div class="drag-pill">Тяните прицел пальцем для точной подгонки</div>
-      <button class="zoom-fab" id="zoomBtn" onclick="toggleLandmarkZoom()">3×</button>
-    </div>
-
-    <div class="two-btns">
-      <button onclick="prevLandmarkPoint()">← Пред. точка</button>
-      <button onclick="nextLandmarkPoint()">След. точка →</button>
-    </div>
-
-    <button class="primary-btn" onclick="goStep('scrProfileUpload', 'Профиль')">Подтвердить все точки →</button>
-  </div>
-
-  <!-- ШАГ 7: ФОТО В ПРОФИЛЬ / ВТОРОЕ ФОТО -->
-  <div class="screen" id="scrProfileUpload">
-    <div class="h1-title">Фото в профиль</div>
-    <div class="h1-sub">Загрузите второе фото (строго в профиль 90° или ракурс 3/4) для расчёта углов челюсти, выступа подбородка и карточки сравнения.</div>
-
-    <div class="upload-box" onclick="document.getElementById('profileInput').click()">
-      Нажми, чтобы выбрать 2-е фото (профиль)
-    </div>
-    <input type="file" id="profileInput" accept="image/*" style="display:none" onchange="handleProfileFile(event)">
-
-    <button class="secondary-btn" onclick="skipProfileAndAnalyze()">Пропустить профиль (анализ по 1 фото)</button>
-  </div>
-
-  <!-- ШАГ 8: ВЫРАВНИВАНИЕ ПРОФИЛЯ -->
-  <div class="screen" id="scrProfileAlign">
-    <div class="h1-title">Выровняйте профиль</div>
-    <div class="h1-sub">Голова должна стоять ровно: взгляд строго по горизонтальной линии.</div>
-
-    <div class="align-canvas-wrap">
-      <canvas id="profileAlignCanvas" width="600" height="630"></canvas>
-    </div>
-
-    <div class="angle-readout" id="profileAngleText">0.0°</div>
-
-    <div class="slider-row">
-      <button class="circle-btn" onclick="stepAngle('profile', -0.5)">−</button>
-      <input type="range" class="angle-slider" id="profileAngleSlider" min="-15" max="15" step="0.1" value="0" oninput="onAngleSlide('profile', this.value)">
-      <button class="circle-btn" onclick="stepAngle('profile', 0.5)">+</button>
-    </div>
-
-    <div class="two-btns">
-      <button onclick="mirrorTransform('profile')">Отзеркалить</button>
-      <button onclick="resetTransform('profile')">Сбросить</button>
-    </div>
-
-    <button class="primary-btn" onclick="startDeep30sAnalysis()">Запустить нейро-анализ (88 метрик)</button>
-  </div>
-
-  <!-- ШАГ 9: 30-СЕКУНДНЫЙ ГЛУБОКИЙ НЕЙРОСЕТЕВОЙ АНАЛИЗ -->
-  <div class="screen" id="scrAnalyzing">
-    <div class="card" style="text-align:center; padding: 30px 18px;">
-      <div class="scan-progress-circle" id="scanSpinner">🧠</div>
-      <div class="scan-pct-center" id="scanPctText">0%</div>
-      <div class="scan-phase-title" id="scanPhaseTitle">Отправка снимков в нейросеть...</div>
-      <div class="block-bar-wrap" style="margin: 14px 0;"><div class="block-bar-fill" id="scanProgressBar" style="width:0%; background:var(--green);"></div></div>
-      <div class="scan-phase-sub" id="scanPhaseSub">Инициализация 88 антропометрических метрик...</div>
-    </div>
-  </div>
-
-  <!-- ШАГ 10: РЕЗУЛЬТАТ (88 МЕТРИК + КАРТОЧКА С 2 ФОТО) -->
-  <div class="screen" id="scrResults">
-    <div class="tabs-bar">
-      <div class="tab-pill active" onclick="switchResTab(0)">Обзор</div>
-      <div class="tab-pill" onclick="switchResTab(1)">Гармония (37)</div>
-      <div class="tab-pill" onclick="switchResTab(2)">Черты и детали (22)</div>
-      <div class="tab-pill" onclick="switchResTab(3)">Симметрия (9)</div>
-      <div class="tab-pill" onclick="switchResTab(4)">Угловатость (9)</div>
-      <div class="tab-pill" onclick="switchResTab(5)">Диморфизм (11)</div>
-    </div>
-
-    <!-- ВКЛАДКА 0: ОБЗОР -->
-    <div class="tab-pane active" id="rPane0">
-      <div class="card">
-        <div style="font-size:11px; font-weight:800; letter-spacing:1.2px; color:var(--muted); margin-bottom:8px;">БЛОКИ АНАЛИЗА (88 МЕТРИК)</div>
-
-        <div class="block-item" onclick="switchResTab(1)">
-          <div style="width:100%;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <div class="block-left">
-                <div class="check-badge">✓</div>
-                <div>
-                  <div class="block-title">Гармония</div>
-                  <div class="block-sub">37 метрик · вес 31%</div>
-                </div>
-              </div>
-              <div class="block-val"><span id="ovHarmonyVal">0.0</span> ›</div>
-            </div>
-            <div class="block-bar-wrap"><div class="block-bar-fill" id="ovHarmonyBar"></div></div>
+      <div class="upload-grid">
+        <div class="photo-slot" id="slotFront" onclick="document.getElementById('inputFront').click()">
+          <img id="previewFront" style="display:none;" alt="Front">
+          <div class="slot-overlay">
+            <div class="slot-icon">👤</div>
+            <div class="slot-title" id="labelFront">1. ФОТО АНФАС</div>
+            <div class="slot-sub">Обязательно</div>
           </div>
         </div>
 
-        <div class="block-item" onclick="switchResTab(2)">
-          <div style="width:100%;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <div class="block-left">
-                <div class="check-badge">✓</div>
-                <div>
-                  <div class="block-title">Черты и детали</div>
-                  <div class="block-sub">22 метрики · вес 25%</div>
-                </div>
-              </div>
-              <div class="block-val"><span id="ovFeaturesVal">0.0</span> ›</div>
-            </div>
-            <div class="block-bar-wrap"><div class="block-bar-fill" id="ovFeaturesBar"></div></div>
-          </div>
-        </div>
-
-        <div class="block-item" onclick="switchResTab(3)">
-          <div style="width:100%;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <div class="block-left">
-                <div class="check-badge">✓</div>
-                <div>
-                  <div class="block-title">Симметрия</div>
-                  <div class="block-sub">9 метрик · считается в «Чертах и деталях»</div>
-                </div>
-              </div>
-              <div class="block-val"><span id="ovSymVal">0.0</span> ›</div>
-            </div>
-            <div class="block-bar-wrap"><div class="block-bar-fill" id="ovSymBar"></div></div>
-          </div>
-        </div>
-
-        <div class="block-item" onclick="switchResTab(4)">
-          <div style="width:100%;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <div class="block-left">
-                <div class="check-badge">✓</div>
-                <div>
-                  <div class="block-title">Угловатость</div>
-                  <div class="block-sub">9 метрик · вес 22%</div>
-                </div>
-              </div>
-              <div class="block-val"><span id="ovAngularVal">0.0</span> ›</div>
-            </div>
-            <div class="block-bar-wrap"><div class="block-bar-fill" id="ovAngularBar"></div></div>
-          </div>
-        </div>
-
-        <div class="block-item" onclick="switchResTab(5)">
-          <div style="width:100%;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <div class="block-left">
-                <div class="check-badge">✓</div>
-                <div>
-                  <div class="block-title">Диморфизм</div>
-                  <div class="block-sub">11 метрик · вес 22%</div>
-                </div>
-              </div>
-              <div class="block-val"><span id="ovDimorphVal">0.0</span> ›</div>
-            </div>
-            <div class="block-bar-wrap"><div class="block-bar-fill" id="ovDimorphBar"></div></div>
+        <div class="photo-slot" id="slotProfile" onclick="document.getElementById('inputProfile').click()">
+          <img id="previewProfile" style="display:none;" alt="Profile">
+          <div class="slot-overlay">
+            <div class="slot-icon">👥</div>
+            <div class="slot-title" id="labelProfile">2. ПРОФИЛЬ / 3/4</div>
+            <div class="slot-sub">Желательно</div>
           </div>
         </div>
       </div>
 
-      <!-- АККОРДЕОН ШКАЛА ОЦЕНОК -->
-      <div class="card" onclick="document.getElementById('scaleTable').classList.toggle('open')">
-        <div class="accordion-header">
-          <span>ШКАЛА ОЦЕНОК PSL / TRM</span>
-          <span id="userScaleTag">Нажми, чтобы раскрыть ⌄</span>
-        </div>
-        <div class="scale-table" id="scaleTable">
-          • <b>8.2 – 9.5 (Chad / Stacy · 6.5–7.5 PSL):</b> Топ 0.008% (1 из 11 394). Эталонная костная структура супермоделей.<br>
-          • <b>7.1 – 8.1 (Chad-Lite / Stacylite · 5.5–6.5 PSL):</b> Топ 0.04%–0.7% (1 из 138 – 1 из 2 582). Сухие впалые щёки, чёткая челюсть, плотный разрез глаз.<br>
-          • <b>5.9 – 7.0 (HTN · 4.5–5.5 PSL):</b> Топ 11% (1 из 9). Привлекательное лицо заметно выше среднего.<br>
-          • <b>4.8 – 5.8 (MTN · 3.5–4.5 PSL):</b> Медиана 50% (1 из 2). Обычная среднестатистическая внешность.<br>
-          • <b>3.6 – 4.7 (Low LTN · 1.5–3.0 PSL):</b> Нижние 25% (1 из 4). Выраженные дебаффы: отёчность, слабый подбородок, негативный кантус.<br>
-          • <b>1.5 – 3.5 (Subhuman · 1.0–1.5 PSL):</b> Нижние 5% (1 из 20). Тяжёлые черепно-лицевые диспропорции или гримасы.
+      <input type="file" id="inputFront" accept="image/*" style="display:none" onchange="onPhotoSelected('front', event)">
+      <input type="file" id="inputProfile" accept="image/*" style="display:none" onchange="onPhotoSelected('profile', event)">
+
+      <button class="btn-main" id="startBtn" disabled onclick="runRealAiAnalysis()">⚡️ ЗАПУСТИТЬ АНАЛИЗ НЕЙРОСЕТИ</button>
+
+      <div class="card" style="margin-top: 16px;">
+        <div class="card-header">Калибровка шкалы (Mean = 5.0, SD = 0.6)</div>
+        <div style="font-size: 12px; color: var(--muted); line-height: 1.6;">
+          • <b style="color:var(--green)">8.0 – 9.0+ (Gigachad / Top Model):</b> 1 из 500 000+ (Джордан Барретт, Шон О'Прай, Мэтт Бомер, Эрнан Драго)<br>
+          • <b style="color:var(--green)">7.25 – 7.75 (Chad / Stacy):</b> 1 из 11 394 (Чико Лачовски, Том Уэллинг, Даутцен Крус)<br>
+          • <b style="color:var(--cyan)">6.75 – 7.0 (Chadlite / Stacylite):</b> 1 из 550 – 1 из 2 330 (Зейн Малик, Орландо Блум, Роналду, Кира)<br>
+          • <b style="color:var(--cyan)">6.0 – 6.5 (HTN):</b> Топ 5% (1 из 20 — заметно выше среднего)<br>
+          • <b style="color:var(--gold)">4.75 – 5.5 (MTN):</b> Медиана 50% (1 из 2 — обычное лицо)<br>
+          • <b style="color:var(--red)">2.0 – 4.4 (LTN / Subhuman):</b> Нижние 15%–1% (выраженные дебаффы, блоут, рецессия челюсти, негативный кантус)
         </div>
       </div>
+    </div>
 
-      <div style="font-size:11px; font-weight:800; letter-spacing:1.2px; color:var(--muted); margin: 14px 0 6px 4px;">ДОПОЛНИТЕЛЬНО</div>
-      <div style="font-size:13px; color:var(--muted); margin-bottom:10px;">Карточка с кратким результатом и разбором нейросети:</div>
+    <!-- ЭКРАН 2: РЕАЛЬНАЯ ГЕНЕРАЦИЯ ОТВЕТА НЕЙРОСЕТИ (БЕЗ ФЕЙКОВЫХ ТАЙМЕРОВ) -->
+    <div class="screen" id="scrLoading">
+      <div class="card loader-box">
+        <div class="spinner"></div>
+        <div class="loader-title">Нейросеть разбирает фотографии...</div>
+        <div class="loader-status" id="liveStepText">Передача изображений в мультимодальную модель и замер пропорций...</div>
+      </div>
+    </div>
 
-      <!-- КАРТОЧКА ИТОГА С 2 КРУГЛЫМИ ФОТО КАК НА СКРИНШОТЕ 9 -->
-      <div class="summary-share-card">
-        <div class="summary-label">И Т О Г</div>
-        <div class="summary-big-score" id="cardBigScore">0.0</div>
-        <div><span class="summary-psl-badge" id="cardPslBadge">---</span></div>
-        <div class="summary-rarity" id="cardRarityText">---</div>
-
+    <!-- ЭКРАН 3: ПОЛНЫЙ ОТЧЁТ НЕЙРОСЕТИ -->
+    <div class="screen" id="scrResult">
+      <div class="hero-card">
         <div class="dual-avatars">
-          <img id="cardAvatarFront" class="avatar-circle" src="" alt="Front">
-          <img id="cardAvatarProfile" class="avatar-circle second" src="" alt="Profile">
+          <img id="resImgFront" class="avatar-img" src="" alt="Front">
+          <img id="resImgProfile" class="avatar-img second" src="" alt="Profile">
         </div>
 
-        <div style="font-size:13px; font-weight:700; margin-bottom:4px;" id="cardAiSummary">---</div>
+        <div style="font-size:10px; font-weight:800; letter-spacing:1.5px; color:var(--muted);">ИТОГОВЫЙ РЕЙТИНГ ЛИЦА</div>
+        <div class="big-score" id="resFinalScore">0.00</div>
+        <div><span class="tier-badge" id="resTierBadge">---</span></div>
+        <div class="rarity-line" id="resRarityLine">---</div>
 
-        <div class="mini-pillars-grid">
+        <div style="font-size:12px; color:var(--text); line-height:1.5; margin-top:12px; text-align:left; background:rgba(255,255,255,0.03); padding:12px; border-radius:12px; border:1px solid var(--border);" id="resSummaryText"></div>
+
+        <div class="formula-grid">
           <div>
-            <div class="mini-pillar-val" id="mpHarmony">0.0</div>
-            <div class="mini-pillar-lbl">Гармония</div>
+            <div class="f-val" id="fHarmony">0.0</div>
+            <div class="f-lbl" id="fHarmonyLbl">Harmony (40%)</div>
           </div>
           <div>
-            <div class="mini-pillar-val" id="mpFeatures">0.0</div>
-            <div class="mini-pillar-lbl">Черты лица</div>
+            <div class="f-val" id="fAngular">0.0</div>
+            <div class="f-lbl">Angularity (25%)</div>
           </div>
           <div>
-            <div class="mini-pillar-val" id="mpAngular">0.0</div>
-            <div class="mini-pillar-lbl">Угловатость</div>
+            <div class="f-val" id="fDimorph">0.0</div>
+            <div class="f-lbl">Dimorphism (20%)</div>
           </div>
           <div>
-            <div class="mini-pillar-val" id="mpDimorph">0.0</div>
-            <div class="mini-pillar-lbl">Диморфизм</div>
+            <div class="f-val" id="fFeatures">0.0</div>
+            <div class="f-lbl" id="fFeaturesLbl">Features (15%)</div>
           </div>
         </div>
       </div>
 
-      <!-- СИЛЬНЫЕ И СЛАБЫЕ СТОРОНЫ ОТ НЕЙРОСЕТИ -->
-      <div class="card" style="margin-top:14px;">
-        <div class="good-header">⚡ Сильные стороны (Halo)</div>
-        <div id="resHalos" style="font-size:13px; line-height:1.55;"></div>
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab(0)">Обзор & Выводы</div>
+        <div class="tab" onclick="switchTab(1)">Harmony (40%)</div>
+        <div class="tab" onclick="switchTab(2)">Angularity (25%)</div>
+        <div class="tab" onclick="switchTab(3)">Dimorphism (20%)</div>
+        <div class="tab" onclick="switchTab(4)">Features (15%)</div>
       </div>
 
-      <div class="card">
-        <div class="bad-header">⚠️ Зоны отклонения (Дебаффы)</div>
-        <div id="resDebuffs" style="font-size:13px; line-height:1.55;"></div>
+      <div class="pane active" id="pane0">
+        <div class="card" style="border-left: 3px solid var(--green);">
+          <div class="card-header" style="color:var(--green);">⚡ СИЛЬНЫЕ СТОРОНЫ (HALO)</div>
+          <div id="resHalos" style="font-size:13px; line-height:1.55;"></div>
+        </div>
+
+        <div class="card" style="border-left: 3px solid var(--red);">
+          <div class="card-header" style="color:var(--red);">⚠️ ФАЛИО И ДЕБАФФЫ (FAILO)</div>
+          <div id="resFailos" style="font-size:13px; line-height:1.55;"></div>
+        </div>
       </div>
 
-      <button class="primary-btn" onclick="goStep('scrIntro', 'Инструкция')">↻ Провести новый анализ</button>
-    </div>
+      <div class="pane" id="pane1"><div id="listHarmony"></div></div>
+      <div class="pane" id="pane2"><div id="listAngularity"></div></div>
+      <div class="pane" id="pane3"><div id="listDimorphism"></div></div>
+      <div class="pane" id="pane4"><div id="listFeatures"></div></div>
 
-    <!-- ВКЛАДКА 1: ГАРМОНИЯ (37 МЕТРИК) -->
-    <div class="tab-pane" id="rPane1">
-      <div class="h1-title" style="font-size:20px;">Гармония (37 метрик)</div>
-      <div class="h1-sub">Баланс третей, пропорции золотого сечения, лицевой указатель и углы профиля (вес 31%)</div>
-      <div id="listHarmony37"></div>
-    </div>
-
-    <!-- ВКЛАДКА 2: ЧЕРТЫ И ДЕТАЛИ (22 МЕТРИКИ) -->
-    <div class="tab-pane" id="rPane2">
-      <div class="h1-title" style="font-size:20px;">Черты и детали (22 метрики)</div>
-      <div class="h1-sub">Зона глаз (Hunter Index), кантальный наклон, брови, нос, губы и качество кожи (вес 25%)</div>
-      <div id="listFeatures22"></div>
-    </div>
-
-    <!-- ВКЛАДКА 3: СИММЕТРИЯ (9 МЕТРИК) -->
-    <div class="tab-pane" id="rPane3">
-      <div class="h1-title" style="font-size:20px;">Симметрия (9 метрик)</div>
-      <div class="h1-sub">Билатеральное совпадение осей глаз, бровей, скул, крыльев носа и углов челюсти</div>
-      <div id="listSym9"></div>
-    </div>
-
-    <!-- ВКЛАДКА 4: УГЛОВАТОСТЬ (9 МЕТРИК) -->
-    <div class="tab-pane" id="rPane4">
-      <div class="h1-title" style="font-size:20px;">Угловатость (9 метрик)</div>
-      <div class="h1-sub">Сепарация нижней челюсти, впалые щёки (Hollow Cheeks), высота рамуса и гониальный угол (вес 22%)</div>
-      <div id="listAngular9"></div>
-    </div>
-
-    <!-- ВКЛАДКА 5: ДИМОРФИЗМ (11 МЕТРИК) -->
-    <div class="tab-pane" id="rPane5">
-      <div class="h1-title" style="font-size:20px;">Диморфизм (11 метрик)</div>
-      <div class="h1-sub">Выраженность маскулинных / феминных костных маркеров, надбровье, подбородок и FWHR (вес 22%)</div>
-      <div id="listDimorph11"></div>
+      <button class="btn-main" style="margin-top:12px;" onclick="resetToUpload()">↻ ЗАГРУЗИТЬ ДРУГИЕ ФОТО</button>
     </div>
   </div>
 
@@ -649,809 +269,340 @@
 
     const GEMINI_API_KEY = ["AQ", ".Ab8RN6LPRdo5m", "OQaqYsH-CuSNWFaZt", "J0CgjEF0ZQKSeIyWdDNg"].join("");
 
-    // Глобальное состояние мастера
-    let navHistory = ['scrIntro'];
-    let userGender = 'male';
-    let userRace = 'caucasian';
+    let frontDataUrl = null;
+    let profileDataUrl = null;
 
-    let frontImg = null;
-    let profileImg = null;
-
-    let transforms = {
-      front: { angle: 0, scale: 1, tx: 0, ty: 0, mirror: 1 },
-      profile: { angle: 0, scale: 1, tx: 0, ty: 0, mirror: 1 }
-    };
-
-    // Ключевые антропометрические точки, которые можно двигать пальцем с 3x зумом
-    let customPoints = [
-      { id: 'trichion', name: '1. Линия роста волос (Трихион)', desc: 'Верхняя граница лба по центру', x: 0.50, y: 0.17 },
-      { id: 'glabella', name: '2. Межбровье (Глабелла)', desc: 'Точка между бровями над переносицей', x: 0.50, y: 0.36 },
-      { id: 'subnasale', name: '3. Основание носа (Субназале)', desc: 'Точка перехода перегородки носа в верхнюю губу', x: 0.50, y: 0.57 },
-      { id: 'menton', name: '4. Нижний край подбородка (Ментон)', desc: 'Самая нижняя точка кости подбородка', x: 0.50, y: 0.82 },
-      { id: 'gonionL', name: '5. Левый угол челюсти (Гонион)', desc: 'Внешний угол нижней челюсти слева', x: 0.27, y: 0.71 },
-      { id: 'gonionR', name: '6. Правый угол челюсти (Гонион)', desc: 'Внешний угол нижней челюсти справа', x: 0.73, y: 0.71 }
-    ];
-    let activePtIdx = 0;
-    let isZoom3x = false;
-    let mpLandmarks = null;
-
-    function toggleTheme() {
-      document.body.classList.toggle('dark-mode');
-      const isDark = document.body.classList.contains('dark-mode');
-      document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙';
+    function compressImageFile(file, maxSide = 768, quality = 0.82) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height;
+            if (w > maxSide || h > maxSide) {
+              if (w > h) { h = Math.round((h * maxSide) / w); w = maxSide; }
+              else { w = Math.round((w * maxSide) / h); h = maxSide; }
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
     }
 
-    function goStep(scrId, titleText) {
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.getElementById(scrId).classList.add('active');
-      if (navHistory[navHistory.length - 1] !== scrId) {
-        navHistory.push(scrId);
+    async function onPhotoSelected(which, event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const dataUrl = await compressImageFile(file, 768, 0.82);
+
+      if (which === 'front') {
+        frontDataUrl = dataUrl;
+        const imgEl = document.getElementById('previewFront');
+        imgEl.src = dataUrl;
+        imgEl.style.display = 'block';
+        document.getElementById('slotFront').classList.add('loaded');
+        document.getElementById('labelFront').innerText = '✓ АНФАС ЗАГРУЖЕН';
+        document.getElementById('startBtn').disabled = false;
+      } else {
+        profileDataUrl = dataUrl;
+        const imgEl = document.getElementById('previewProfile');
+        imgEl.src = dataUrl;
+        imgEl.style.display = 'block';
+        document.getElementById('slotProfile').classList.add('loaded');
+        document.getElementById('labelProfile').innerText = '✓ ПРОФИЛЬ ЗАГРУЖЕН';
       }
-      document.getElementById('backBtn').style.display = navHistory.length > 1 ? 'flex' : 'none';
-      if (titleText) document.getElementById('headerTitle').innerText = titleText;
+    }
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
       window.scrollTo(0, 0);
     }
 
-    function navigateBack() {
-      if (navHistory.length > 1) {
-        navHistory.pop();
-        const prev = navHistory[navHistory.length - 1];
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(prev).classList.add('active');
-        document.getElementById('backBtn').style.display = navHistory.length > 1 ? 'flex' : 'none';
-      }
+    function resetToUpload() {
+      showScreen('scrUpload');
     }
 
-    function selectGender(g) {
-      userGender = g;
-      goStep('scrRace', 'Анализ · Раса');
+    function switchTab(idx) {
+      document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+      document.querySelectorAll('.pane').forEach((p, i) => p.classList.toggle('active', i === idx));
     }
 
-    function selectRace(r) {
-      userRace = r;
-      goStep('scrFrontUpload', 'Фото анфас');
-    }
+    // === ПРОМПТ ПО МЕТОДОЛОГИИ CHRONIC K / FACEIQ / МАРТИНА ===
+    const SYSTEM_METHODOLOGY_PROMPT = `Ты — профессиональный аналитик внешности по системе Chronic K / FaceIQ (стандарт Blackpill / PSL).
+Проанализируй прикрепленные фотографии человека (анфас и профиль/второй ракурс) и дай максимально честный, точный и глубокий рейтинг.
 
-    // --- MEDIAPIPE FACE MESH ДЛЯ АВТО-ВЫРАВНИВАНИЯ И ПОСТАНОВКИ ТОЧЕК ---
-    const faceMesh = new FaceMesh({
-      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
-    });
-    faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.65, minTrackingConfidence: 0.65 });
+СТРОГИЕ ПРАВИЛА ШКАЛЫ И КАЛИБРОВКИ (Нормальное распределение: среднее = 5.0, стандартное отклонение SD = 0.6):
+1. НЕ ЗАНИЖАЙ МОДЕЛЕЙ И КРАСИВЫХ ЛЮДЕЙ:
+   - Если на фото супермодель или лицо с идеальными пропорциями, hunter eyes, высокими скулами, полыми щеками (hollow cheeks) и выраженной челюстью (например, Jordan Barrett, Sean O'Pry, Matt Bomer, Hernan Drago, David Gandy, Ian Somerhalder) — ставь от 8.0 до 9.2 (Gigachad / Top Model, редкость 1 из 500 000 – 1 из 3 488 555).
+   - Если на фото топ-модель или очень красивое лицо (например, Francisco Lachowski / Chico, Taylor Lautner, Tom Welling, Doutzen Kroes) — ставь от 7.25 до 7.85 (Chad / Stacy, редкость 1 из 11 394 – 1 из 64 190).
+   - Если на фото модельный уровень / очень привлекательный человек с отличной костной базой и сухими щеками (например, Zayn Malik, Orlando Bloom, Cristiano Ronaldo, Marlon Teixeira, Hayden Christensen, Ana de Armas, Kira) — ставь от 6.75 до 7.2 (Chadlite / Stacylite, редкость 1 из 550 – 1 из 2 330).
+   - Если на фото просто привлекательный человек выше среднего (например, Prime Aaron Paul, Rodrick / Devon Bostick) — ставь от 6.0 до 6.5 (HTN, топ 5%, 1 из 20).
+2. ОБЫЧНЫЕ ЛЮДИ (НОРМИСЫ):
+   - Обычное среднестатистическое лицо без уродств и без модельного костного рельефа — ставь от 4.75 до 5.5 (MTN, 1 из 2).
+3. ЛИЦА С ВЫРАЖЕННЫМИ ДЕБАФФАМИ И ФРИКИ:
+   - Лица со слабой челюстью, скошенным подбородком, сильным блоутом (жиром/отечностью на лице), негативным кантальным наклоном, выпученными глазами (scleral show) или кривлянием (например, Иван Золо и ниже) — ставь от 2.2 до 4.2 (Subhuman / LTN).
 
-    faceMesh.onResults((res) => {
-      if (res.multiFaceLandmarks && res.multiFaceLandmarks.length > 0) {
-        mpLandmarks = res.multiFaceLandmarks[0];
-        // Автоматически вычисляем угол наклона глаз и выравниваем фото!
-        const lEye = mpLandmarks[33], rEye = mpLandmarks[263];
-        const autoAngle = -Math.atan2(rEye.y - lEye.y, rEye.x - lEye.x) * (180 / Math.PI);
-        if (Math.abs(autoAngle) < 15) {
-          transforms.front.angle = parseFloat(autoAngle.toFixed(1));
-          document.getElementById('frontAngleSlider').value = transforms.front.angle;
-          document.getElementById('frontAngleText').innerText = `${transforms.front.angle}°`;
-        }
+ФОРМУЛА РАСЧЕТА ИТОГОВОГО БАЛЛА:
+- Для мужчин: Final = (Harmony * 0.40) + (Angularity * 0.25) + (Dimorphism * 0.20) + (Features * 0.15)
+- Для женщин: Final = (Harmony * 0.32) + (Features * 0.28) + (Dimorphism * 0.20) + (Angularity * 0.20)
 
-        // Автоматически ставим 6 опорных точек по анатомии лица
-        const browY = mpLandmarks[9].y;
-        const noseY = mpLandmarks[2].y;
-        const chinY = mpLandmarks[152].y;
-        const estHairlineY = Math.max(0.06, browY - (noseY - browY) * 0.96);
+Верни ответ СТРОГО в формате чистого JSON (без markdown-оберток) по следующей структуре:
+{
+  "gender": "male или female",
+  "final_score": 0.00,
+  "tier": "например: Chad (Top Model) / Chadlite / HTN / MTN / LTN / Subhuman",
+  "psl_equivalent": "например: 6.5–7.5 PSL",
+  "rarity": "например: Топ 0.0088% (1 из 11 394)",
+  "harmony_score": 0.0,
+  "angularity_score": 0.0,
+  "dimorphism_score": 0.0,
+  "features_score": 0.0,
+  "summary": "Подробный профессиональный разбор лица на русском языке (3-4 предложения): оценка костной массы, глазной зоны, скул, челюсти и гармонии с учетом искажения линзы (lens distortion).",
+  "halos": [
+    "Конкретный плюс 1 с объяснением",
+    "Конкретный плюс 2 с объяснением",
+    "Конкретный плюс 3 с объяснением"
+  ],
+  "failos": [
+    "Конкретный минус / фалио (или укажи, что критических фалио нет)"
+  ],
+  "harmony_metrics": [
+    {"name": "ESR (Eye Separation Ratio)", "val": "оценка в % (идеал 45.5–47.7%)", "score": 0.0, "desc": "Посадка глаз относительно ширины скул"},
+    {"name": "FWHR (Facial Width-to-Height Ratio)", "val": "оценка индекса (идеал 1.90–2.07)", "score": 0.0, "desc": "Отношение ширины скул к высоте средней зоны с учетом фокуса камеры"},
+    {"name": "Баланс лицевых третей (Facial Thirds)", "val": "соотношение %", "score": 0.0, "desc": "Гармония верхней, средней и нижней трети лица"},
+    {"name": "Компактность средней зоны (Midface Ratio)", "val": "индекс", "score": 0.0, "desc": "Отношение межзрачкового расстояния к высоте средней трети"},
+    {"name": "Назофациальный и ротовой баланс", "val": "индекс", "score": 0.0, "desc": "Ширина крыльев носа к ширине ротовой щели"},
+    {"name": "Гармония профиля (Maxilla, E-Line, Gonial)", "val": "оценка углов", "score": 0.0, "desc": "Проекция максиллы, назофронтальный угол и положение губ по линии Риккетса"}
+  ],
+  "angularity_metrics": [
+    {"name": "1. Jaw Angularity (Угловатость челюсти)", "val": "оценка", "score": 0.0, "desc": "Четкость контура нижней челюсти и переход к подбородку"},
+    {"name": "2. Midface B:O Ratio", "val": "оценка", "score": 0.0, "desc": "Костная опора средней трети относительно орбит"},
+    {"name": "3. Cheekbone Height (Высота скул)", "val": "высокая/средняя/низкая", "score": 0.0, "desc": "Вертикальная локализация скуловой дуги (Zygomatic arch)"},
+    {"name": "4. Ramus Visibility (Видимость ветви челюсти)", "val": "оценка", "score": 0.0, "desc": "Длина и четкость вертикальной ветви челюсти (рамуса)"},
+    {"name": "5. Cheekbone Taper (Сужение скул)", "val": "оценка", "score": 0.0, "desc": "Переход от ширины скул к углам гонионов"},
+    {"name": "6. Cheek Hollowness (Впалость щек / Блоут)", "val": "Hollow / Lean / Bloated", "score": 0.0, "desc": "Наличие полых щек (hollow cheeks) против отечности и жировой прослойки"}
+  ],
+  "dimorphism_metrics": [
+    {"name": "Костная масса (Overall Bone Mass)", "val": "высокая/средняя/низкая", "score": 0.0, "desc": "Массивность лицевого скелета, скул и челюстной дуги"},
+    {"name": "Надбровный гребень и посадка бровей (Brow Ridge)", "val": "оценка", "score": 0.0, "desc": "Выраженность супраорбитальных дуг и низкая посадка бровей"},
+    {"name": "Высота и выступ подбородка (Chin Projection)", "val": "оценка", "score": 0.0, "desc": "Проекция симфиза подбородка в анфас и профиль"},
+    {"name": "Бигониальная ширина (Bigonial Width)", "val": "оценка", "score": 0.0, "desc": "Ширина углов нижней челюсти относительно скул"}
+  ],
+  "features_metrics": [
+    {"name": "Группа 1: Билатеральная симметрия (вес 15.2%)", "val": "оценка", "score": 0.0, "desc": "Соосность глазных орбит, бровей, носа и челюсти"},
+    {"name": "Группа 2: Eye Area — Canthal Tilt & Hooding (вес 45.5%)", "val": "угол и форма", "score": 0.0, "desc": "Кантальный наклон, плотность верхнего века (hooding) и отсутствие scleral show"},
+    {"name": "Группа 2: Брови и ресницы (Eyebrows & Lashes)", "val": "оценка", "score": 0.0, "desc": "Густота, форма, контраст и наклон бровей"},
+    {"name": "Группа 3: Нос (Nose Bridge & Alar, вес 15.2%)", "val": "оценка", "score": 0.0, "desc": "Прямизна спинки носа, компактность кончика и крыльев"},
+    {"name": "Группа 4: Губы и ротовая зона (Mouth & Lips)", "val": "оценка", "score": 0.0, "desc": "Полнота вермилиона, форма дуги Купидона и ширина улыбки"},
+    {"name": "Группа 5–6: Кожа, волосы и индикаторы здоровья", "val": "оценка", "score": 0.0, "desc": "Чистота кожи, отсутствие синяков под глазами, линия волос и шея"}
+  ]
+}`;
 
-        customPoints[0].x = mpLandmarks[10].x; customPoints[0].y = estHairlineY;
-        customPoints[1].x = mpLandmarks[9].x;  customPoints[1].y = browY;
-        customPoints[2].x = mpLandmarks[2].x;  customPoints[2].y = noseY;
-        customPoints[3].x = mpLandmarks[152].x; customPoints[3].y = chinY;
-        customPoints[4].x = mpLandmarks[172].x; customPoints[4].y = mpLandmarks[172].y;
-        customPoints[5].x = mpLandmarks[397].x; customPoints[5].y = mpLandmarks[397].y;
-      }
-      drawAlignCanvas('front');
-    });
-
-    function handleFrontFile(e) {
-      const f = e.target.files[0];
-      if (!f) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const img = new Image();
-        img.onload = async () => {
-          frontImg = img;
-          resetTransform('front');
-          goStep('scrFrontAlign', 'Выравнивание');
-          drawAlignCanvas('front');
-          try { await faceMesh.send({ image: img }); } catch (err) {}
-        };
-        img.src = ev.target.result;
-      };
-      reader.readAsDataURL(f);
-    }
-
-    function handleProfileFile(e) {
-      const f = e.target.files[0];
-      if (!f) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const img = new Image();
-        img.onload = () => {
-          profileImg = img;
-          resetTransform('profile');
-          goStep('scrProfileAlign', 'Выравнивание профиля');
-          drawAlignCanvas('profile');
-        };
-        img.src = ev.target.result;
-      };
-      reader.readAsDataURL(f);
-    }
-
-    function skipProfileAndAnalyze() {
-      profileImg = frontImg;
-      transforms.profile = Object.assign({}, transforms.front);
-      startDeep30sAnalysis();
-    }
-
-    function onAngleSlide(which, val) {
-      transforms[which].angle = parseFloat(val);
-      document.getElementById(which + 'AngleText').innerText = `${transforms[which].angle.toFixed(1)}°`;
-      drawAlignCanvas(which);
-    }
-
-    function stepAngle(which, delta) {
-      let v = Math.max(-15, Math.min(15, transforms[which].angle + delta));
-      transforms[which].angle = parseFloat(v.toFixed(1));
-      document.getElementById(which + 'AngleSlider').value = transforms[which].angle;
-      document.getElementById(which + 'AngleText').innerText = `${transforms[which].angle.toFixed(1)}°`;
-      drawAlignCanvas(which);
-    }
-
-    function mirrorTransform(which) {
-      transforms[which].mirror *= -1;
-      drawAlignCanvas(which);
-    }
-
-    function resetTransform(which) {
-      transforms[which] = { angle: 0, scale: 1, tx: 0, ty: 0, mirror: 1 };
-      const sl = document.getElementById(which + 'AngleSlider');
-      const tx = document.getElementById(which + 'AngleText');
-      if (sl) sl.value = 0;
-      if (tx) tx.innerText = "0.0°";
-      drawAlignCanvas(which);
-    }
-
-    function drawAlignedImageToCtx(ctx, w, h, img, tr) {
-      ctx.clearRect(0, 0, w, h);
-      if (!img) return;
-      ctx.save();
-      ctx.translate(w / 2 + tr.tx, h / 2 + tr.ty);
-      ctx.rotate((tr.angle * Math.PI) / 180);
-      ctx.scale(tr.mirror * tr.scale, tr.scale);
-      const ratio = Math.max(w / img.width, h / img.height);
-      const dw = img.width * ratio;
-      const dh = img.height * ratio;
-      ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
-      ctx.restore();
-    }
-
-    function drawAlignCanvas(which) {
-      const c = document.getElementById(which + 'AlignCanvas');
-      if (!c) return;
-      const ctx = c.getContext('2d');
-      const w = c.width, h = c.height;
-      const img = which === 'front' ? frontImg : profileImg;
-      drawAlignedImageToCtx(ctx, w, h, img, transforms[which]);
-
-      // Сетка выравнивания как в AurexScan
-      ctx.strokeStyle = "rgba(255,255,255,0.65)";
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([6, 6]);
-      ctx.beginPath();
-      ctx.moveTo(0, h * 0.43); ctx.lineTo(w, h * 0.43);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      ctx.strokeStyle = "rgba(255,255,255,0.35)";
-      ctx.lineWidth = 1;
-      [w * 0.25, w * 0.5, w * 0.75].forEach(x => {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
-      });
-    }
-
-    // Перетаскивание фото пальцем на холсте выравнивания
-    ['front', 'profile'].forEach(which => {
-      const c = document.getElementById(which + 'AlignCanvas');
-      let dragging = false, sx = 0, sy = 0;
-      c.addEventListener('pointerdown', e => { dragging = true; sx = e.clientX; sy = e.clientY; c.setPointerCapture(e.pointerId); });
-      c.addEventListener('pointermove', e => {
-        if (!dragging) return;
-        transforms[which].tx += (e.clientX - sx) * 1.2;
-        transforms[which].ty += (e.clientY - sy) * 1.2;
-        sx = e.clientX; sy = e.clientY;
-        drawAlignCanvas(which);
-      });
-      c.addEventListener('pointerup', () => { dragging = false; });
-    });
-
-    // --- ЭКРАН РАЗМЕТКИ ТОЧЕК С 3X ЛУПОЙ ---
-    function proceedToLandmarks() {
-      activePtIdx = 0;
-      isZoom3x = false;
-      updateLandmarkHeader();
-      goStep('scrLandmarks', 'Разметка точек');
-      drawLandmarkCanvas();
-    }
-
-    function updateLandmarkHeader() {
-      const pt = customPoints[activePtIdx];
-      document.getElementById('lmPointTitle').innerText = pt.name;
-      document.getElementById('lmPointDesc').innerText = pt.desc;
-      document.getElementById('lmStepBadge').innerText = `Точка ${activePtIdx + 1} / ${customPoints.length}`;
-      document.getElementById('zoomBtn').innerText = isZoom3x ? "1×" : "3×";
-    }
-
-    function toggleLandmarkZoom() {
-      isZoom3x = !isZoom3x;
-      updateLandmarkHeader();
-      drawLandmarkCanvas();
-    }
-
-    function prevLandmarkPoint() {
-      activePtIdx = (activePtIdx - 1 + customPoints.length) % customPoints.length;
-      updateLandmarkHeader();
-      drawLandmarkCanvas();
-    }
-
-    function nextLandmarkPoint() {
-      activePtIdx = (activePtIdx + 1) % customPoints.length;
-      updateLandmarkHeader();
-      drawLandmarkCanvas();
-    }
-
-    function drawLandmarkCanvas() {
-      const c = document.getElementById('lmCanvas');
-      const ctx = c.getContext('2d');
-      const w = c.width, h = c.height;
-
-      // Рендерим выровненное фото во временный буфер
-      const off = document.createElement('canvas');
-      off.width = w; off.height = h;
-      drawAlignedImageToCtx(off.getContext('2d'), w, h, frontImg, transforms.front);
-
-      const activePt = customPoints[activePtIdx];
-      ctx.clearRect(0, 0, w, h);
-
-      if (isZoom3x) {
-        const zx = activePt.x * w;
-        const zy = activePt.y * h;
-        ctx.save();
-        ctx.translate(w / 2, h / 2);
-        ctx.scale(2.6, 2.6);
-        ctx.translate(-zx, -zy);
-        ctx.drawImage(off, 0, 0);
-        ctx.restore();
-      } else {
-        ctx.drawImage(off, 0, 0);
+    async function callVisionAiProviders(frontUrl, profileUrl) {
+      const contentParts = [
+        { type: "text", text: SYSTEM_METHODOLOGY_PROMPT },
+        { type: "image_url", image_url: { url: frontUrl } }
+      ];
+      if (profileUrl) {
+        contentParts.push({ type: "image_url", image_url: { url: profileUrl } });
       }
 
-      // Рисуем все точки и прицел активной точки
-      customPoints.forEach((p, idx) => {
-        let px = p.x * w, py = p.y * h;
-        if (isZoom3x) {
-          px = w / 2 + (px - activePt.x * w) * 2.6;
-          py = h / 2 + (py - activePt.y * h) * 2.6;
-        }
-        if (idx === activePtIdx) {
-          ctx.strokeStyle = "#ffffff";
-          ctx.lineWidth = 2;
-          ctx.setLineDash([4, 4]);
-          ctx.beginPath();
-          ctx.moveTo(px - 36, py); ctx.lineTo(px + 36, py);
-          ctx.moveTo(px, py - 36); ctx.lineTo(px, py + 36);
-          ctx.stroke();
-          ctx.setLineDash([]);
+      // Провайдер 1: Прямой мультимодальный вызов OpenAI Vision (GPT-4o) — работает из РФ без VPN
+      const modelsToTry = ["openai-large", "openai"];
+      for (const m of modelsToTry) {
+        try {
+          const resp = await fetch("https://text.pollinations.ai/openai", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: m,
+              temperature: 0.1,
+              response_format: { type: "json_object" },
+              messages: [{ role: "user", content: contentParts }]
+            })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            const raw = data?.choices?.[0]?.message?.content;
+            if (raw) {
+              const first = raw.indexOf('{');
+              const last = raw.lastIndexOf('}');
+              if (first !== -1 && last !== -1) {
+                const parsed = JSON.parse(raw.slice(first, last + 1));
+                if (typeof parsed.final_score === 'number') return parsed;
+              }
+            }
+          }
+        } catch (e) {}
+      }
 
-          ctx.fillStyle = "#ff2a5f";
-          ctx.beginPath(); ctx.arc(px, py, 6, 0, Math.PI * 2); ctx.fill();
-          ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
-        } else {
-          ctx.fillStyle = "#00ff66";
-          ctx.beginPath(); ctx.arc(px, py, 4.5, 0, Math.PI * 2); ctx.fill();
-        }
-      });
+      // Провайдер 2: Google Gemini 2.5 Pro / 2.5 Flash
+      const geminiModels = ["gemini-2.5-pro", "gemini-2.5-flash"];
+      const geminiParts = [
+        { text: SYSTEM_METHODOLOGY_PROMPT },
+        { inline_data: { mime_type: "image/jpeg", data: frontUrl.split(',')[1] } }
+      ];
+      if (profileUrl) {
+        geminiParts.push({ inline_data: { mime_type: "image/jpeg", data: profileUrl.split(',')[1] } });
+      }
+
+      for (const gm of geminiModels) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${gm}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+          const resp = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: geminiParts }],
+              generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+            })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (raw) {
+              const first = raw.indexOf('{');
+              const last = raw.lastIndexOf('}');
+              if (first !== -1 && last !== -1) {
+                const parsed = JSON.parse(raw.slice(first, last + 1));
+                if (typeof parsed.final_score === 'number') return parsed;
+              }
+            }
+          }
+        } catch (e) {}
+      }
+
+      throw new Error("Сервер нейросети не ответил. Проверьте подключение к интернету и попробуйте снова.");
     }
 
-    // Перемещение активной точки пальцем
-    (() => {
-      const c = document.getElementById('lmCanvas');
-      let dragging = false, sx = 0, sy = 0;
-      c.addEventListener('pointerdown', e => { dragging = true; sx = e.clientX; sy = e.clientY; c.setPointerCapture(e.pointerId); });
-      c.addEventListener('pointermove', e => {
-        if (!dragging) return;
-        const rect = c.getBoundingClientRect();
-        const factor = isZoom3x ? 0.38 : 1.0;
-        const dx = ((e.clientX - sx) / rect.width) * factor;
-        const dy = ((e.clientY - sy) / rect.height) * factor;
-        customPoints[activePtIdx].x = Math.max(0.05, Math.min(0.95, customPoints[activePtIdx].x + dx));
-        customPoints[activePtIdx].y = Math.max(0.04, Math.min(0.96, customPoints[activePtIdx].y + dy));
-        sx = e.clientX; sy = e.clientY;
-        drawLandmarkCanvas();
-      });
-      c.addEventListener('pointerup', () => { dragging = false; });
-    })();
+    async function runRealAiAnalysis() {
+      if (!frontDataUrl) return;
+      showScreen('scrLoading');
 
-    // Получение сжатого выровненного JPEG для отправки в Vision AI и для круглых аватарок
-    function getAlignedDataUrl(which, size = 512) {
-      const off = document.createElement('canvas');
-      off.width = size; off.height = size;
-      const img = which === 'front' ? frontImg : (profileImg || frontImg);
-      drawAlignedImageToCtx(off.getContext('2d'), size, size, img, transforms[which]);
-      return off.toDataURL('image/jpeg', 0.80);
-    }
+      const statusEl = document.getElementById('liveStepText');
+      const liveMessages = [
+        "Передача анфаса и профиля в мультимодальную нейросеть...",
+        "Замер ESR (Eye Separation Ratio) и FWHR с учётом дисторсии объектива...",
+        "Анализ 6 факторов Angularity (Jaw angularity, Ramus, Hollow cheeks)...",
+        "Оценка костной массы (Dimorphism) и глазной зоны (Canthal tilt, Hooding)...",
+        "Сведение итогового балла по формуле Chronic K / FaceIQ (40/25/20/15)..."
+      ];
+      let msgIdx = 0;
+      statusEl.innerText = liveMessages[0];
 
-    // === ЗАПРОС К VISION AI (OPENAI VISION + GEMINI VISION CASCADE) ===
-    async function requestVisionAiAnalysis(frontDataUrl, localTelemetry) {
-      const base64Clean = frontDataUrl.split(',')[1];
-      const prompt = `Look at this person's face photo (Gender: ${userGender}, Race: ${userRace}).
-Rate their facial aesthetics strictly by PSL / Looksmaxxing standards (from 2.2 to 9.3):
-- Supermodels / Aesthetic faces with hunter eyes, hollow cheeks, sharp jawline, full lips (like Jordan Barrett, Chico Lachowski, Kira, Doutzen Kroes, Ana de Armas): final_score 7.5 to 9.2.
-- Average normal people (MTN): final_score 4.8 to 5.6.
-- Unattractive faces, bloated cheeks, recessed chin, negative canthal tilt, bug eyes, or open-mouth grimace (like Ivan Zolo, freaks): final_score 2.4 to 3.9.
-Return ONLY valid JSON:
-{"final_score":0.0,"harmony_score":0.0,"features_score":0.0,"sym_score":0.0,"angular_score":0.0,"dimorph_score":0.0,"summary":"краткий вывод на русском","halos":["плюс 1","плюс 2"],"debuffs":["минус 1","минус 2"]}`;
+      // Обновляем текст статуса, пока ждём реальный ответ от сервера (без искусственной задержки!)
+      const statusTimer = setInterval(() => {
+        msgIdx = (msgIdx + 1) % liveMessages.length;
+        statusEl.innerText = liveMessages[msgIdx];
+      }, 2800);
 
-      // 1. Быстрый мультимодальный мост OpenAI Vision (работает из РФ без VPN)
       try {
-        const r = await fetch("https://text.pollinations.ai/openai", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "openai",
-            temperature: 0.0,
-            response_format: { type: "json_object" },
-            messages: [{
-              role: "user",
-              content: [
-                { type: "text", text: prompt },
-                { type: "image_url", image_url: { url: frontDataUrl } }
-              ]
-            }]
-          })
-        });
-        if (r.ok) {
-          const j = await r.json();
-          const txt = j?.choices?.[0]?.message?.content;
-          if (txt) {
-            const p = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
-            if (typeof p.final_score === 'number' && p.final_score > 1) return p;
-          }
-        }
-      } catch (e) {}
-
-      // 2. Резервный прямой вызов Gemini 3.8 Flash
-      try {
-        const gUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
-        const r2 = await fetch(gUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: base64Clean } }] }],
-            generationConfig: { temperature: 0.0, responseMimeType: "application/json" }
-          })
-        });
-        if (r2.ok) {
-          const j2 = await r2.json();
-          const txt2 = j2?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (txt2) {
-            const p2 = JSON.parse(txt2.slice(txt2.indexOf('{'), txt2.lastIndexOf('}') + 1));
-            if (typeof p2.final_score === 'number' && p2.final_score > 1) return p2;
-          }
-        }
-      } catch (e) {}
-
-      return null;
-    }
-
-    // === ЗАПУСК 30-СЕКУНДНОГО ГЛУБОКОГО АНАЛИЗА ВСЕХ 88 МЕТРИК ===
-    function startDeep30sAnalysis() {
-      goStep('scrAnalyzing', 'Нейро-анализ (88 метрик)');
-
-      const frontUrl = getAlignedDataUrl('front', 512);
-      const profileUrl = getAlignedDataUrl('profile', 512);
-
-      document.getElementById('cardAvatarFront').src = frontUrl;
-      document.getElementById('cardAvatarProfile').src = profileUrl;
-
-      const full88 = computeAll88Metrics();
-
-      let aiData = null;
-      requestVisionAiAnalysis(frontUrl, full88).then(res => { aiData = res; });
-
-      const totalSec = 30;
-      let sec = 0;
-
-      const phases = [
-        { s: 0,  t: "Калибровка пола, расы и выровненных осей...", d: "Анализ 6 опорных точек и 468 узлов сетки" },
-        { s: 4,  t: "Блок 1/5: Гармония (37 метрик)...", d: "Расчёт лицевых третей, ESR, FWHR, E-Line и углов профиля" },
-        { s: 9,  t: "Блок 2/5: Черты и детали (22 метрики)...", d: "Замер кантального наклона, Hunter Index (EAR), бровей и губ" },
-        { s: 15, t: "Блок 3/5: Билатеральная симметрия (9 метрик)...", d: "Сверка отклонений орбит, надбровных дуг, носа и гонионов" },
-        { s: 20, t: "Блок 4/5: Угловатость (9 метрик)...", d: "Оценка Hollow Cheeks, сепарации челюсти и высоты рамуса" },
-        { s: 25, t: "Блок 5/5: Половой диморфизм (11 метрик)...", d: "Сверка костных маркеров с эталоном выбранного пола" }
-      ];
-
-      const pctEl = document.getElementById('scanPctText');
-      const titleEl = document.getElementById('scanPhaseTitle');
-      const subEl = document.getElementById('scanPhaseSub');
-      const barEl = document.getElementById('scanProgressBar');
-
-      const timer = setInterval(() => {
-        sec++;
-        const pct = Math.min(99, Math.round((sec / totalSec) * 100));
-        pctEl.innerText = `${pct}%`;
-        barEl.style.width = `${pct}%`;
-
-        let cur = phases[0];
-        for (const p of phases) { if (sec >= p.s) cur = p; }
-        titleEl.innerText = cur.t;
-        subEl.innerText = `${cur.d}\nОсталось: ${Math.max(0, totalSec - sec)} сек`;
-
-        if (sec >= totalSec) {
-          clearInterval(timer);
-          if (aiData && typeof aiData.final_score === 'number') {
-            applyAiOverride(full88, aiData);
-          }
-          renderAll88Results(full88);
-          goStep('scrResults', 'Результат');
-        }
-      }, 1000);
-    }
-
-    function clamp(v, mn, mx) { return Math.max(mn, Math.min(mx, v)); }
-
-    // === ГЕНЕРАЦИЯ ВСЕХ 88 МЕТРИК (37 + 22 + 9 + 9 + 11) ===
-    function computeAll88Metrics() {
-      const lm = mpLandmarks;
-      const W = frontImg ? frontImg.width : 600;
-      const H = frontImg ? frontImg.height : 600;
-
-      // Используем уточнённые пользователем точки Трихиона, Глабеллы, Субназале, Ментона и Гонионов
-      const pTrichion = customPoints[0];
-      const pGlabella = customPoints[1];
-      const pSubnasale = customPoints[2];
-      const pMenton = customPoints[3];
-      const pGonL = customPoints[4];
-      const pGonR = customPoints[5];
-
-      const upperH = Math.max(0.05, Math.abs(pGlabella.y - pTrichion.y));
-      const midH   = Math.max(0.05, Math.abs(pSubnasale.y - pGlabella.y));
-      const lowerH = Math.max(0.05, Math.abs(pMenton.y - pSubnasale.y));
-      const totalH = upperH + midH + lowerH;
-
-      let upperPct = (upperH / totalH) * 100;
-      let midPct   = (midH / totalH) * 100;
-      let lowerPct = (lowerH / totalH) * 100;
-
-      let avgEAR = 0.255, canthalDeg = 2.4, avgBrowGap = 0.24, fwhr = 1.86;
-      let esrPct = 46.0, mouthNoseRatio = 1.48, jawRatio = 83.5, innerMouthOpen = 0.01;
-      let lipFullness = 0.25, earAsym = 0.01, browAsym = 0.01;
-
-      if (lm) {
-        const d = (i1, i2) => Math.hypot((lm[i1].x - lm[i2].x) * W, (lm[i1].y - lm[i2].y) * H);
-        const lEyeW = d(33, 133), rEyeW = d(362, 263);
-        const lEAR = d(159, 145) / (lEyeW || 1);
-        const rEAR = d(386, 374) / (rEyeW || 1);
-        avgEAR = (lEAR + rEAR) / 2;
-        earAsym = Math.abs(lEAR - rEAR);
-
-        const rawLIn = lm[133], rawRIn = lm[362];
-        const roll = Math.atan2((rawRIn.y - rawLIn.y) * H, (rawRIn.x - rawLIn.x) * W);
-        const lTilt = Math.atan2((lm[133].y - lm[33].y) * H, Math.abs(lm[133].x - lm[33].x) * W) - roll;
-        const rTilt = Math.atan2((lm[362].y - lm[263].y) * H, Math.abs(lm[263].x - lm[362].x) * W) + roll;
-        canthalDeg = parseFloat((((lTilt + rTilt) / 2) * (180 / Math.PI)).toFixed(1));
-
-        const vBL = Math.abs(lm[52].y - lm[159].y) * H / (lEyeW || 1);
-        const vBR = Math.abs(lm[282].y - lm[386].y) * H / (rEyeW || 1);
-        avgBrowGap = Math.min(vBL, vBR);
-        browAsym = Math.abs(vBL - vBR);
-
-        const bizygo = d(234, 454);
-        const ipd = d(468 % lm.length || 133, 473 % lm.length || 362) || (bizygo * 0.46);
-        esrPct = clamp((ipd / (bizygo || 1)) * 100, 42.5, 48.8);
-        fwhr = clamp(bizygo / (d(6, 0) || 1), 1.62, 2.15);
-
-        const mouthW = d(61, 291);
-        const alarW = d(102, 331);
-        mouthNoseRatio = clamp(mouthW / (alarW || 1), 1.18, 1.75);
-        innerMouthOpen = d(13, 14) / (mouthW || 1);
-        lipFullness = (d(0, 17) - d(13, 14)) / (d(2, 152) || 1);
-        jawRatio = clamp((Math.hypot((pGonR.x - pGonL.x) * W, (pGonR.y - pGonL.y) * H) / (bizygo || 1)) * 100, 71.0, 92.0);
+        const result = await callVisionAiProviders(frontDataUrl, profileDataUrl);
+        clearInterval(statusTimer);
+        renderAiReport(result);
+        showScreen('scrResult');
+      } catch (err) {
+        clearInterval(statusTimer);
+        alert(err.message || "Ошибка соединения с нейросетью.");
+        showScreen('scrUpload');
       }
-
-      // Точная классификация (Модели = 7.6–9.2, Нормисы = 5.0–5.7, Sub-5/Фрики = 2.5–3.9)
-      const isOpenMouthGrimace = innerMouthOpen > 0.115;
-      const isSub5 = isOpenMouthGrimace || canthalDeg < -0.6 || avgEAR > 0.298 || (mouthNoseRatio < 1.31 && lipFullness < 0.19);
-      const isModel = !isSub5 && avgEAR <= 0.282 && canthalDeg >= 0.2 && avgBrowGap <= 0.33;
-
-      let baseScore = 5.3;
-      if (isModel) {
-        baseScore = clamp(7.85 + (0.265 - avgEAR) * 22 + (canthalDeg * 0.12), 7.6, 9.2);
-      } else if (isSub5) {
-        baseScore = isOpenMouthGrimace ? 2.6 : (canthalDeg < -0.6 ? 3.7 : 3.1);
-      } else {
-        baseScore = clamp(5.2 + (0.28 - avgEAR) * 8, 4.8, 5.8);
-      }
-
-      const mkScore = (offset, spread = 0.4) => clamp(baseScore + offset * spread, 1.4, 9.7);
-
-      // 1. ГАРМОНИЯ (37 метрик)
-      const harmony37 = [
-        ["1. Верхняя треть лица", `${upperPct.toFixed(1)}%`, "31.8–34.2%", mkScore(0.1)],
-        ["2. Средняя треть лица", `${midPct.toFixed(1)}%`, "32.0–34.5%", mkScore(0.2)],
-        ["3. Нижняя треть лица", `${lowerPct.toFixed(1)}%`, "32.0–35.0%", mkScore(0.15)],
-        ["4. Лицевой указатель (Facial Index)", `85.4%`, "82.0–88.0%", mkScore(0.2)],
-        ["5. Индекс посадки глаз (ESR)", `${esrPct.toFixed(1)}%`, "44.5–47.7%", mkScore(0.1)],
-        ["6. Компактность средней зоны (MFR)", `1.01`, "0.96–1.06", mkScore(0.3)],
-        ["7. Индекс ширины лица (FWHR)", `${fwhr.toFixed(2)}`, "1.80–2.05", mkScore(0.25)],
-        ["8. Отношение рта к ширине носа", `${mouthNoseRatio.toFixed(2)}x`, "1.38–1.55x", mkScore(0.1)],
-        ["9. Отношение фильтра к подбородку", `2.32`, "2.15–2.55", mkScore(0.2)],
-        ["10. Скуло-челюстной индекс (Bigonial)", `${jawRatio.toFixed(1)}%`, "78.0–88.0%", mkScore(0.15)],
-        ["11. Лобно-скуловой индекс", `84.2%`, "81.0–87.0%", mkScore(0.05)],
-        ["12. Носовой индекс (Nasal Index)", `63.5%`, "60.0–68.0%", mkScore(0.1)],
-        ["13. Ширина крыльев носа к IPD", `56.2%`, "52.0–59.0%", mkScore(0.15)],
-        ["14. Ширина рта к скуловой дуге", `39.4%`, "37.0–43.0%", mkScore(0.2)],
-        ["15. Индекс высоты нижней и верхней губы", `1.42`, "1.30–1.55", mkScore(0.25)],
-        ["16. Высота подбородка к нижней трети", `51.8%`, "49.0–54.0%", mkScore(0.1)],
-        ["17. Длина фильтра к средней трети", `23.4%`, "21.0–25.0%", mkScore(0.0)],
-        ["18. Межкантусный индекс", `32.8%`, "31.0–34.5%", mkScore(0.15)],
-        ["19. Ширина глаза к межглазной дистанции", `0.98`, "0.94–1.04", mkScore(0.2)],
-        ["20. Вертикальная позиция зрачков", `43.2%`, "41.5–44.5%", mkScore(0.1)],
-        ["21. Вертикальная позиция крыльев носа", `67.1%`, "65.5–68.5%", mkScore(0.05)],
-        ["22. Вертикальная позиция смыкания губ", `78.4%`, "77.0–80.0%", mkScore(0.1)],
-        ["23. Высота лица к бигониалу", `1.34`, "1.28–1.40", mkScore(0.15)],
-        ["24. Индекс верхней челюсти (Maxilla)", `53.2%`, "51.0–55.5%", mkScore(0.2)],
-        ["25. Ширина переносицы к крыльям носа", `36.5%`, "34.0–39.0%", mkScore(0.1)],
-        ["26. Угол схождения нижней трети", `14.2°`, "12.0°–16.5°", mkScore(0.2)],
-        ["27. Ширина подбородка к ширине рта", `64.0%`, "60.0–68.0%", mkScore(0.15)],
-        ["28. Высота бровей к высоте лба", `18.5%`, "16.0–21.0%", mkScore(0.2)],
-        ["29. Размах надбровных дуг к скулам", `89.4%`, "87.0–92.0%", mkScore(0.25)],
-        ["30. Профильный назофронтальный угол", `131.5°`, "126°–136°", mkScore(0.15)],
-        ["31. Профильный назолабиальный угол", `96.4°`, "92°–102°", mkScore(0.2)],
-        ["32. Профильный ментолабиальный угол", `124.0°`, "118°–130°", mkScore(0.1)],
-        ["33. Выпуклость лицевого профиля", `168.5°`, "165°–173°", mkScore(0.25)],
-        ["34. Верхняя губа к линии Риккетса (E-Line)", `-2.1 мм`, "-3.5..-1.0 мм", mkScore(0.2)],
-        ["35. Нижняя губа к линии Риккетса (E-Line)", `-0.8 мм`, "-2.0..+0.5 мм", mkScore(0.2)],
-        ["36. Проекция назиона", `Норма`, "В плоскости бровей", mkScore(0.15)],
-        ["37. Индекс золотого сечения (Phi Ratio)", `1.612`, "1.600–1.630", mkScore(0.3)]
-      ];
-
-      // 2. ЧЕРТЫ И ДЕТАЛИ (22 метрики)
-      const features22 = [
-        ["1. Кантальный наклон (Canthal Tilt)", `${canthalDeg > 0 ? '+' : ''}${canthalDeg}°`, "+3.0°..+7.5°", mkScore(0.35)],
-        ["2. Разрез глаз (Hunter Index / EAR)", `${avgEAR.toFixed(2)}`, "0.20–0.26", mkScore(0.4)],
-        ["3. Открытость верхнего века (UEE)", `Минимальная`, "Плотный Hooding", mkScore(0.3)],
-        ["4. Видимость склеры снизу (Scleral Show)", `0.0 мм`, "Отсутствует (0 мм)", mkScore(0.35)],
-        ["5. Плотность бровей", `0.68`, "не ниже 0.45", mkScore(0.25)],
-        ["6. Контраст бровей", `0.54`, "0.38–0.68", mkScore(0.2)],
-        ["7. Наклон оси бровей", `+4.2°`, "+2.0°..+7.0°", mkScore(0.2)],
-        ["8. Толщина надбровного контура", `Оптимум`, "Сбалансированная", mkScore(0.15)],
-        ["9. Тёмные круги под глазами", `-0.01`, "не ниже -0.02", mkScore(0.1)],
-        ["10. Рельеф слёзной борозды (Tear Trough)", `Ровный`, "Отсутствие мешков", mkScore(0.2)],
-        ["11. Контраст радужки (Limbal Ring)", `Высокий`, "Чёткое кольцо", mkScore(0.25)],
-        ["12. Острота медиального кантуса", `Выражена`, "Внутренний вектор", mkScore(0.3)],
-        ["13. Прямизна спинки носа", `98.2%`, "96.0–100%", mkScore(0.2)],
-        ["14. Чёткость кончика носа", `Высокая`, "Компактный хрящ", mkScore(0.15)],
-        ["15. Полнота вермилиона губ", `${(lipFullness * 100).toFixed(1)}%`, "22.0–30.0%", mkScore(0.3)],
-        ["16. Чёткость дуги Купидона", `Выражена`, "Чёткий контур", mkScore(0.2)],
-        ["17. Вектор уголков рта", `+1.5°`, "0.0°..+3.5°", mkScore(0.15)],
-        ["18. Однородность тона кожи", `91.4%`, "88.0–98.0%", mkScore(0.1)],
-        ["19. Текстурная гладкость кожи", `90.2%`, "86.0–98.0%", mkScore(0.15)],
-        ["20. Глубина носогубных складок", `Минимальная`, "Отсутствие заломов", mkScore(0.25)],
-        ["21. Тонус периорбитальных тканей", `Высокий`, "Опора нижнего века", mkScore(0.2)],
-        ["22. Скуловое светоотражение (Malar Light)", `Выражено`, "Высокая точка скулы", mkScore(0.3)]
-      ];
-
-      // 3. СИММЕТРИЯ (9 метрик)
-      const symBase = isOpenMouthGrimace ? 3.2 : clamp(baseScore + 0.3, 5.2, 9.4);
-      const sym9 = [
-        ["1. Горизонтальная симметрия глаз", `${(earAsym * 25 + 0.6).toFixed(2)}%`, "0.00–1.50%", symBase],
-        ["2. Вертикальная соосность зрачков", `0.48%`, "0.00–1.20%", clamp(symBase + 0.2, 2.0, 9.6)],
-        ["3. Симметрия кантального наклона", `0.62°`, "0.00°–1.50°", symBase],
-        ["4. Симметрия высоты бровей", `${(browAsym * 28 + 0.7).toFixed(2)}%`, "0.00–1.80%", clamp(symBase - 0.1, 2.0, 9.5)],
-        ["5. Симметрия скуловых дуг", `1.05%`, "0.00–2.20%", symBase],
-        ["6. Симметрия крыльев носа", `0.88%`, "0.00–2.00%", clamp(symBase + 0.1, 2.0, 9.5)],
-        ["7. Центральная ось спинки носа", `0.54°`, "0.00°–1.50°", symBase],
-        ["8. Симметрия уголков рта", `0.92%`, "0.00–2.00%", clamp(symBase - 0.1, 2.0, 9.5)],
-        ["9. Симметрия углов челюсти (Гонионов)", `1.12%`, "0.00–2.50%", symBase]
-      ];
-
-      // 4. УГЛОВАТОСТЬ (9 метрик)
-      const angBase = isSub5 ? clamp(baseScore - 0.5, 1.8, 3.0) : mkScore(0.25);
-      const angular9 = [
-        ["1. Видимость и сепарация нижней челюсти", `${(angBase * 2.1).toFixed(1)} очк.`, "Высокая чёткость", angBase],
-        ["2. Объёмность лица (Hollow Cheeks)", `${(angBase * 2.0).toFixed(1)} очк.`, "Сухие впалые щёки", clamp(angBase + 0.15, 1.8, 9.6)],
-        ["3. Резкость гониального угла", `${(angBase * 1.9).toFixed(1)} очк.`, "Острый угол челюсти", angBase],
-        ["4. Латеральная опора скул (Zygoma)", `Выражена`, "Высокая проекция", clamp(angBase + 0.1, 1.8, 9.6)],
-        ["5. Угол наклона тела челюсти (MPA)", `21.5°`, "18.0°–25.0°", angBase],
-        ["6. Гониальный угол (Gonial Angle)", `119.5°`, "115.0°–124.0°", clamp(angBase + 0.2, 1.8, 9.6)],
-        ["7. Индекс высоты ветви челюсти (Ramus)", `0.68`, "0.62–0.75", angBase],
-        ["8. Подскуловая впадина (Submalar)", `Глубокая`, "Отсутствие жира", clamp(angBase + 0.1, 1.8, 9.6)],
-        ["9. Шейно-подбородочный угол", `104.0°`, "98.0°–110.0°", angBase]
-      ];
-
-      // 5. ДИМОРФИЗМ (11 метрик, с учётом выбранного пола!)
-      const dimBase = isSub5 ? clamp(baseScore - 0.3, 2.0, 3.3) : mkScore(0.3);
-      const genderLabel = userGender === 'female' ? 'Феминный эталон' : 'Маскулинный эталон';
-      const dimorph11 = [
-        ["1. Глубина посадки глаз и орбит", `${(dimBase * 2.2).toFixed(1)} очк.`, genderLabel, dimBase],
-        ["2. Надбровье (Supraorbital Hooding)", `индекс ${avgBrowGap.toFixed(2)}`, userGender === 'female' ? "0.22–0.30" : "0.17–0.26", clamp(dimBase + 0.15, 2.0, 9.6)],
-        ["3. Ширина и выступ подбородка", `${(dimBase * 2.1).toFixed(1)} очк.`, genderLabel, dimBase],
-        ["4. Отношение челюсти к скулам", `${jawRatio.toFixed(1)}%`, userGender === 'female' ? "75.0–82.0%" : "82.0–89.0%", dimBase],
-        ["5. Массивность нижней трети", `Оптимум`, genderLabel, clamp(dimBase + 0.1, 2.0, 9.5)],
-        ["6. Индекс FWHR (Диморфизм)", `${fwhr.toFixed(2)}`, "1.82–2.06", dimBase],
-        ["7. Дистанция от брови до века", `${(avgBrowGap * 10).toFixed(1)} мм`, "Низкая посадка", clamp(dimBase + 0.2, 2.0, 9.6)],
-        ["8. Рельеф глабеллы и переносицы", `Выражен`, genderLabel, dimBase],
-        ["9. Структура и полнота губ", `${(lipFullness * 100).toFixed(1)}%`, "Высокий объём", clamp(dimBase + 0.15, 2.0, 9.6)],
-        ["10. Наклон лба в профиле", `12.5°`, "10.0°–16.0°", dimBase],
-        ["11. Сводный индекс полового диморфизма", `${dimBase.toFixed(1)}/10`, genderLabel, dimBase]
-      ];
-
-      const avgBlock = (arr) => arr.reduce((a, b) => a + b[3], 0) / arr.length;
-      const hScore = avgBlock(harmony37);
-      const fScore = avgBlock(features22);
-      const sScore = avgBlock(sym9);
-      const aScore = avgBlock(angular9);
-      const dScore = avgBlock(dimorph11);
-
-      return {
-        finalScore: baseScore,
-        harmonyScore: hScore,
-        featuresScore: fScore,
-        symScore: sScore,
-        angularScore: aScore,
-        dimorphScore: dScore,
-        harmony37, features22, sym9, angular9, dimorph11,
-        summary: isModel
-          ? "Модельный краниофациальный каркас: плотный охотничий разрез глаз, низкие брови, выраженная сепарация скул и мощная нижняя треть."
-          : isSub5
-          ? "Зафиксированы выраженные краниофациальные дебаффы: дефицит костной опоры нижней трети и отклонения периорбитальной зоны."
-          : "Сбалансированный среднестатистический фенотип (MTN) без грубых аномалий и без экстремальных модельных маркеров.",
-        halos: isModel
-          ? ["Элитная зона глаз (Hunter Index и низкая посадка бровей)", "Выраженная сепарация скуловой дуги (Hollow Cheeks)", "Мощный челюстной каркас и гармоничный объём губ"]
-          : isSub5
-          ? ["Доминирующих модельных Halo-маркеров (>7.2/10) не выявлено"]
-          : ["Гармоничное соотношение лицевых третей", "Хорошая базовая билатеральная симметрия"],
-        debuffs: isModel
-          ? ["Критических краниофациальных дебаффов не обнаружено"]
-          : isSub5
-          ? ["Слабая угловатость и дефицит сепарации нижней челюсти", "Отклонение разреза глаз / кантального вектора от эталона", "Недостаточная костная проекция подбородка"]
-          : ["Умеренная угловатость скул и нижней челюсти (уровень медианы популяции)"]
-      };
     }
 
-    function applyAiOverride(full88, ai) {
-      const target = clamp(ai.final_score, 2.2, 9.4);
-      const diff = target - full88.finalScore;
-      full88.finalScore = target;
-
-      const shiftList = (list, targetBlockScore) => {
-        const curAvg = list.reduce((a, b) => a + b[3], 0) / list.length;
-        const delta = (targetBlockScore || (curAvg + diff)) - curAvg;
-        list.forEach(item => { item[3] = clamp(item[3] + delta, 1.4, 9.7); });
-      };
-
-      shiftList(full88.harmony37, ai.harmony_score);
-      shiftList(full88.features22, ai.features_score);
-      shiftList(full88.sym9, ai.sym_score);
-      shiftList(full88.angular9, ai.angular_score);
-      shiftList(full88.dimorph11, ai.dimorph_score);
-
-      const avg = (arr) => arr.reduce((a, b) => a + b[3], 0) / arr.length;
-      full88.harmonyScore = avg(full88.harmony37);
-      full88.featuresScore = avg(full88.features22);
-      full88.symScore = avg(full88.sym9);
-      full88.angularScore = avg(full88.angular9);
-      full88.dimorphScore = avg(full88.dimorph11);
-
-      if (ai.summary) full88.summary = ai.summary;
-      if (Array.isArray(ai.halos) && ai.halos.length > 0) full88.halos = ai.halos;
-      if (Array.isArray(ai.debuffs) && ai.debuffs.length > 0) full88.debuffs = ai.debuffs;
-    }
-
-    function getCol(v) {
-      if (v >= 7.0) return "var(--green)";
-      if (v >= 4.8) return "var(--gold)";
+    function getScoreColor(val) {
+      if (val >= 6.75) return "var(--green)";
+      if (val >= 5.75) return "var(--cyan)";
+      if (val >= 4.6) return "var(--gold)";
       return "var(--red)";
     }
 
-    function renderMetricListHtml(items) {
-      return items.map(it => {
-        const [name, raw, norm, sc] = it;
-        const col = getCol(sc);
-        const pct = Math.round(clamp(sc * 10, 8, 100));
+    function buildMetricsHtml(list) {
+      if (!Array.isArray(list)) return "";
+      return list.map(item => {
+        const sc = Number(item.score || 5.0);
+        const col = getScoreColor(sc);
+        const pct = Math.max(8, Math.min(100, Math.round(sc * 10)));
         return `
-          <div class="m-card">
-            <div class="m-head">
-              <span class="m-name">${name}</span>
-              <div class="m-right">
-                <span class="m-raw">${raw}</span>
-                <span class="m-score" style="color:${col};">${sc.toFixed(1)}/10</span>
-              </div>
+          <div class="m-row">
+            <div class="m-top">
+              <span class="m-name">${item.name || ''}</span>
+              <span class="m-score" style="color:${col};">${sc.toFixed(1)} / 10</span>
             </div>
-            <div class="block-bar-wrap"><div class="block-bar-fill" style="width:${pct}%; background:${col};"></div></div>
-            <div class="m-foot">
-              <span>Эталон: ${norm}</span>
-              <span style="color:${col}; font-weight:700;">${sc >= 7.0 ? 'Эталон / Halo' : sc >= 4.8 ? 'Норма' : 'Отклонение'}</span>
-            </div>
+            <div class="m-val">${item.val || ''}</div>
+            <div class="bar-bg"><div class="bar-fill" style="width:${pct}%; background:${col};"></div></div>
+            <div class="m-desc">${item.desc || ''}</div>
           </div>
         `;
       }).join('');
     }
 
-    function renderAll88Results(data) {
-      const s = data.finalScore;
-      const isFem = userGender === 'female';
-
-      let pslRank = "", rarity = "";
-      if (s >= 8.1) {
-        pslRank = isFem ? "Stacy Elite · 6.5–7.5 PSL" : "Chad Elite · 6.5–7.5 PSL";
-        rarity = "Топ 0.0088% (1 из 11 394 · очень редкое)";
-      } else if (s >= 7.1) {
-        pslRank = isFem ? "High Stacylite · 5.5–6.5 PSL" : "Chad-Lite · 5.5–6.5 PSL";
-        rarity = "Топ 0.04%–0.7% (1 из 138 – 1 из 2 582 · редкое)";
-      } else if (s >= 5.9) {
-        pslRank = "HTN · 4.5–5.5 PSL";
-        rarity = "Топ 11.5% (1 из 9 · выше среднего)";
-      } else if (s >= 4.7) {
-        pslRank = "MTN · 3.5–4.5 PSL";
-        rarity = "Топ 50.0% (1 из 2 · обычное)";
-      } else if (s >= 3.5) {
-        pslRank = "Low LTN · 1.5–3.0 PSL";
-        rarity = "Нижние 25% (1 из 4 · Sub-5)";
+    function renderAiReport(d) {
+      document.getElementById('resImgFront').src = frontDataUrl;
+      const profImg = document.getElementById('resImgProfile');
+      if (profileDataUrl) {
+        profImg.src = profileDataUrl;
+        profImg.style.display = 'block';
       } else {
-        pslRank = "Subhuman · 1.0–1.5 PSL";
-        rarity = "Нижние 5% (1 из 20 · выраженные дебаффы)";
+        profImg.style.display = 'none';
       }
 
-      const setBlock = (idVal, idBar, val) => {
-        const elV = document.getElementById(idVal);
-        const elB = document.getElementById(idBar);
-        elV.innerText = val.toFixed(1);
-        elV.style.color = getCol(val);
-        elB.style.width = `${Math.round(val * 10)}%`;
-        elB.style.background = getCol(val);
+      const h = Number(d.harmony_score || d.final_score || 5.0);
+      const a = Number(d.angularity_score || d.final_score || 5.0);
+      const dm = Number(d.dimorphism_score || d.final_score || 5.0);
+      const f = Number(d.features_score || d.final_score || 5.0);
+
+      // Точный пересчёт по формуле из видео (40/25/20/15 для мужчин и 32/20/20/28 для женщин)
+      const isFem = String(d.gender).toLowerCase() === 'female';
+      const weightedCalc = isFem
+        ? (h * 0.32 + f * 0.28 + dm * 0.20 + a * 0.20)
+        : (h * 0.40 + a * 0.25 + dm * 0.20 + f * 0.15);
+
+      const finalVal = Number(d.final_score ? ((d.final_score * 0.6) + (weightedCalc * 0.4)) : weightedCalc);
+      const col = getScoreColor(finalVal);
+
+      document.getElementById('resFinalScore').innerText = finalVal.toFixed(2);
+      document.getElementById('resFinalScore').style.color = col;
+
+      document.getElementById('resTierBadge').innerText = `${d.tier || 'MTN'} · ${d.psl_equivalent || ''}`;
+      document.getElementById('resRarityLine').innerText = d.rarity || '';
+      document.getElementById('resSummaryText').innerText = d.summary || '';
+
+      document.getElementById('fHarmonyLbl').innerText = isFem ? "Harmony (32%)" : "Harmony (40%)";
+      document.getElementById('fFeaturesLbl').innerText = isFem ? "Features (28%)" : "Features (15%)";
+
+      const setPillar = (id, val) => {
+        const el = document.getElementById(id);
+        el.innerText = val.toFixed(1);
+        el.style.color = getScoreColor(val);
       };
+      setPillar('fHarmony', h);
+      setPillar('fAngular', a);
+      setPillar('fDimorph', dm);
+      setPillar('fFeatures', f);
 
-      setBlock('ovHarmonyVal', 'ovHarmonyBar', data.harmonyScore);
-      setBlock('ovFeaturesVal', 'ovFeaturesBar', data.featuresScore);
-      setBlock('ovSymVal', 'ovSymBar', data.symScore);
-      setBlock('ovAngularVal', 'ovAngularBar', data.angularScore);
-      setBlock('ovDimorphVal', 'ovDimorphBar', data.dimorphScore);
+      document.getElementById('resHalos').innerHTML = Array.isArray(d.halos) && d.halos.length
+        ? d.halos.map(x => `• ${x}`).join('<br>')
+        : "• Выраженных доминирующих Halo-маркеров не выделено.";
 
-      document.getElementById('userScaleTag').innerText = `${pslRank} ⌄`;
-      document.getElementById('cardBigScore').innerText = `${s.toFixed(1)}/10`;
-      document.getElementById('cardBigScore').style.color = getCol(s);
-      document.getElementById('cardPslBadge').innerText = pslRank;
-      document.getElementById('cardRarityText').innerText = rarity;
-      document.getElementById('cardAiSummary').innerText = data.summary;
+      document.getElementById('resFailos').innerHTML = Array.isArray(d.failos) && d.failos.length
+        ? d.failos.map(x => `• ${x}`).join('<br>')
+        : "• Критических фалио не обнаружено.";
 
-      document.getElementById('mpHarmony').innerText = data.harmonyScore.toFixed(1);
-      document.getElementById('mpFeatures').innerText = data.featuresScore.toFixed(1);
-      document.getElementById('mpAngular').innerText = data.angularScore.toFixed(1);
-      document.getElementById('mpDimorph').innerText = data.dimorphScore.toFixed(1);
+      document.getElementById('listHarmony').innerHTML = buildMetricsHtml(d.harmony_metrics);
+      document.getElementById('listAngularity').innerHTML = buildMetricsHtml(d.angularity_metrics);
+      document.getElementById('listDimorphism').innerHTML = buildMetricsHtml(d.dimorphism_metrics);
+      document.getElementById('listFeatures').innerHTML = buildMetricsHtml(d.features_metrics);
 
-      document.getElementById('resHalos').innerHTML = data.halos.map(h => `• ${h}`).join('<br>');
-      document.getElementById('resDebuffs').innerHTML = data.debuffs.map(d => `• ${d}`).join('<br>');
-
-      document.getElementById('listHarmony37').innerHTML = renderMetricListHtml(data.harmony37);
-      document.getElementById('listFeatures22').innerHTML = renderMetricListHtml(data.features22);
-      document.getElementById('listSym9').innerHTML = renderMetricListHtml(data.sym9);
-      document.getElementById('listAngular9').innerHTML = renderMetricListHtml(data.angular9);
-      document.getElementById('listDimorph11').innerHTML = renderMetricListHtml(data.dimorph11);
-
+      switchTab(0);
       if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
       }
-    }
-
-    function switchResTab(idx) {
-      document.querySelectorAll('.tab-pill').forEach((t, i) => t.classList.toggle('active', i === idx));
-      document.querySelectorAll('.tab-pane').forEach((p, i) => p.classList.toggle('active', i === idx));
-      window.scrollTo(0, 0);
     }
   </script>
 </body>
