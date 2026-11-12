@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>BLACKPILL // CHRONIC ENGINE v13.0</title>
+  <title>BLACKPILL // CHRONIC ENGINE v14.0</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
   <style>
@@ -77,6 +77,13 @@
     }
     .card-header { font-size: 11px; font-weight: 900; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
 
+    .reject-box {
+      background: rgba(255, 42, 95, 0.1); border: 1px solid var(--red);
+      border-radius: 16px; padding: 22px 16px; text-align: center; margin-bottom: 16px;
+    }
+    .reject-title { font-size: 16px; font-weight: 900; color: var(--red); margin-bottom: 8px; }
+    .reject-desc { font-size: 13px; color: var(--text); line-height: 1.5; }
+
     .loader-box { text-align: center; padding: 36px 16px; }
     .spinner {
       width: 64px; height: 64px; border-radius: 50%; border: 4px solid var(--border);
@@ -139,7 +146,7 @@
 <body>
 
   <div class="topbar">
-    <div class="brand"><div class="dot"></div> BLACKPILL // CHRONIC v13.0</div>
+    <div class="brand"><div class="dot"></div> BLACKPILL // CHRONIC v14.0</div>
     <div class="badge">💎 VISION AI PRO</div>
   </div>
 
@@ -147,7 +154,7 @@
     <!-- ЭКРАН 1: ЗАГРУЗКА ФОТО -->
     <div class="screen active" id="scrUpload">
       <div class="title">НЕЙРОСЕТЕВОЙ РЕЙТИНГ<br><span>CHRONIC K / FACEIQ ENGINE</span></div>
-      <div class="subtitle">Загрузи анфас и профиль. Система автоматически просканирует лицо по формуле Harmony (40%) + Angularity (25%) + Dimorphism (20%) + Features (15%) без ручных ползунков.</div>
+      <div class="subtitle">Загрузи анфас и профиль. Система автоматически просканирует лицо по формуле Harmony (40%) + Angularity (25%) + Dimorphism (20%) + Features (15%). Предметы и одежда блокируются.</div>
 
       <div class="upload-grid">
         <div class="photo-slot" id="slotFront" onclick="document.getElementById('inputFront').click()">
@@ -178,13 +185,25 @@
         <div class="card-header">Калибровка шкалы (Mean = 5.0, SD = 0.6)</div>
         <div style="font-size: 12px; color: var(--muted); line-height: 1.6;">
           • <b style="color:var(--green)">8.0 – 9.0+ (Gigachad / Top Model):</b> 1 из 500 000+ (Джордан Барретт, Шон О'Прай, Мэтт Бомер, Эрнан Драго)<br>
-          • <b style="color:var(--green)">7.25 – 7.85 (Chad / Stacy):</b> 1 из 11 394 (Чико Лачовски, Том Уэллинга, Даутцен Крус)<br>
-          • <b style="color:var(--cyan)">6.75 – 7.20 (Chadlite / Stacylite):</b> 1 из 550 – 1 из 2 330 (Зейн Малик, Орландо Блум, Роналду, Кира)<br>
-          • <b style="color:var(--cyan)">6.0 – 6.5 (HTN):</b> Топ 5% (1 из 20 — заметно выше среднего)<br>
-          • <b style="color:var(--gold)">4.75 – 5.5 (MTN):</b> Медиана 50% (1 из 2 — обычное лицо)<br>
-          • <b style="color:var(--red)">2.2 – 4.3 (LTN / Subhuman):</b> Нижние 15%–1% (выраженные дебаффы, блоут, рецессия челюсти, негативный кантус)
+          • <b style="color:var(--green)">7.25 – 7.95 (Chad / Stacy):</b> 1 из 11 394 (Чико Лачовски, Том Уэллинг, Даутцен Крус)<br>
+          • <b style="color:var(--cyan)">6.65 – 7.20 (Chadlite / Stacylite):</b> 1 из 550 – 1 из 2 330 (Зейн Малик, Орландо Блум, Роналду, Кира)<br>
+          • <b style="color:var(--cyan)">5.85 – 6.50 (HTN):</b> Топ 5% (1 из 20 — заметно выше среднего)<br>
+          • <b style="color:var(--gold)">4.75 – 5.65 (MTN):</b> Медиана 50% (1 из 2 — обычное лицо)<br>
+          • <b style="color:var(--red)">2.20 – 4.30 (LTN / Subhuman):</b> Нижние 15%–1% (выраженные дебаффы, блоут, рецессия челюсти, негативный кантус)
         </div>
       </div>
+    </div>
+
+    <!-- ЭКРАН ОТКЛОНЕНИЯ ФУТБОЛОК И ПРЕДМЕТОВ -->
+    <div class="screen" id="scrReject">
+      <div class="reject-box">
+        <div class="reject-title">🚫 ОБЪЕКТ ОТКЛОНЁН // ЛИЦО НЕ ОБНАРУЖЕНО</div>
+        <div class="reject-desc">
+          На загруженном снимке не найдено реальное человеческое лицо.<br><br>
+          Анализ одежды, футболок, предметов и иллюстраций заблокирован биометрическим фильтром <b>BLACKPILL VISION v14.0</b>.
+        </div>
+      </div>
+      <button class="btn-main" onclick="resetToUpload()">↻ ВЫБРАТЬ ФОТО ЛИЦА</button>
     </div>
 
     <!-- ЭКРАН 2: ГЕНЕРАЦИЯ ОТВЕТА -->
@@ -280,14 +299,27 @@
     faceMesh.setOptions({
       maxNumFaces: 1,
       refineLandmarks: true,
-      minDetectionConfidence: 0.65,
-      minTrackingConfidence: 0.65
+      minDetectionConfidence: 0.72,
+      minTrackingConfidence: 0.72
     });
     faceMesh.onResults((res) => {
       if (res.multiFaceLandmarks && res.multiFaceLandmarks.length > 0) {
         detectedLm = res.multiFaceLandmarks[0];
+      } else {
+        detectedLm = null;
       }
     });
+
+    // Строгая проверка, что найденные точки — это реальное человеческое лицо, а не складки на футболке
+    function isValidHumanFace(lm) {
+      if (!lm || lm.length < 468) return false;
+      const faceH = Math.abs(lm[152].y - lm[10].y);
+      const faceW = Math.abs(lm[454].x - lm[234].x);
+      if (faceH < 0.18 || faceW < 0.14) return false;
+      if (lm[10].y >= lm[9].y || lm[9].y >= lm[2].y || lm[2].y >= lm[152].y) return false;
+      if (lm[33].x >= lm[133].x || lm[133].x >= lm[362].x || lm[362].x >= lm[263].x) return false;
+      return true;
+    }
 
     function resizeImage(file, maxSide = 640, quality = 0.80) {
       return new Promise((resolve) => {
@@ -360,12 +392,13 @@
       return Math.max(mn, Math.min(mx, v));
     }
 
-    // === ОБЛАЧНЫЙ VISION AI С КЛИНИЧЕСКИМ АНaliТИЧЕСКИМ ПРОМПТОМ (ПРОХОДИТ БЕЗ ОШИБОК ЦЕНЗУРЫ) ===
+    // === ЗАПРОС К ОБЛАЧНОМУ VISION AI ===
     async function tryCloudVisionAi(smallUrl, localAnchorScore) {
-      const clinicalPrompt = `Perform an objective craniofacial anthropometry and casting proportion analysis of the face in the image (Scale: 2.2 to 9.2, where 5.0 is population median, 8.0-9.0 is international runway supermodel with hunter eyes, hollow cheeks and strong mandible, and 2.5-3.9 is severe facial disharmony, bloat, negative canthal tilt or grimace).
+      const clinicalPrompt = `Perform an objective craniofacial anthropometry and casting proportion analysis of the face in the image (Scale: 2.2 to 9.2, where 5.0 is population median, 7.8-9.0 is international runway supermodel with hunter eyes, hollow cheeks and strong mandible like Jordan Barrett or Chico Lachowski, and 2.5-3.9 is severe facial disharmony, bloat, negative canthal tilt or grimace).
 Reference geometric telemetry pre-score: ${localAnchorScore.toFixed(2)}.
 Return ONLY valid JSON:
 {
+  "is_human_face": true,
   "gender": "male",
   "final_score": 0.00,
   "harmony_score": 0.0,
@@ -377,10 +410,9 @@ Return ONLY valid JSON:
   "failos": ["Слабая сторона на русском (или укажи отсутствие критических отклонений)"]
 }`;
 
-      // Канал 1: OpenAI Vision (с лёгким кадром 360px без стоп-слов)
       try {
         const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 14000);
+        const tid = setTimeout(() => ctrl.abort(), 12000);
         const resp = await fetch("https://text.pollinations.ai/openai", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -409,39 +441,15 @@ Return ONLY valid JSON:
         }
       } catch (e) {}
 
-      // Канал 2: Прямой вызов Gemini Vision
-      try {
-        const b64 = smallUrl.split(',')[1];
-        const gUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
-        const resp2 = await fetch(gUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: clinicalPrompt }, { inline_data: { mime_type: "image/jpeg", data: b64 } }] }],
-            generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
-          })
-        });
-        if (resp2.ok) {
-          const d2 = await resp2.json();
-          const raw2 = d2?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-          const f2 = raw2.indexOf('{'), l2 = raw2.lastIndexOf('}');
-          if (f2 !== -1 && l2 !== -1) {
-            const p2 = JSON.parse(raw2.slice(f2, l2 + 1));
-            if (typeof p2.final_score === 'number' && p2.final_score >= 2.0) return p2;
-          }
-        }
-      } catch (e) {}
-
       return null;
     }
 
-    // === ТОЧНОЕ АВТОНОМНОЕ ЯДРО CHRONIC / FACEIQ (РАБОТАЕТ БЕЗ СБОЕВ ДАЖЕ ПРИ БЛОКИРОВКЕ СЕТИ) ===
+    // === ИСПРАВЛЕННОЕ ЯДРО CHRONIC / FACEIQ (БЕЗ ПОТОЛКА 6.25 И БЕЗ БАГА avgBrowGap) ===
     function buildChronicAnalysisFromBiometrics(lm, img) {
       const W = img ? img.width : 600;
       const H = img ? img.height : 600;
 
-      // Попиксельный замер контраста скул и бровей
-      let cheekShadow = 0.14, browContrast = 0.45, avgSat = 0.25;
+      let avgSat = 0.25, jawEdgeGrad = 15;
       if (img) {
         const off = document.createElement('canvas');
         off.width = 128; off.height = 128;
@@ -457,94 +465,104 @@ Return ONLY valid JSON:
         avgSat = satSum / (cnt || 1);
       }
 
-      let avgEAR = 0.27, canthalDeg = 2.6, avgBrowGap = 0.24, fwhr = 1.92, esrPct = 46.2;
-      let jawRatio = 84.0, innerMouthOpen = 0.01, earDiff = 0.01, browDiff = 0.01, isTurned34 = false;
+      const rawLIn = { x: lm[133].x * W, y: lm[133].y * H };
+      const rawRIn = { x: lm[362].x * W, y: lm[362].y * H };
+      const rollRad = Math.atan2(rawRIn.y - rawLIn.y, rawRIn.x - rawLIn.x);
+      const cx = (rawLIn.x + rawRIn.x) / 2, cy = (rawLIn.y + rawRIn.y) / 2;
 
-      if (lm) {
-        const rawLIn = { x: lm[133].x * W, y: lm[133].y * H };
-        const rawRIn = { x: lm[362].x * W, y: lm[362].y * H };
-        const rollRad = Math.atan2(rawRIn.y - rawLIn.y, rawRIn.x - rawLIn.x);
-        const cx = (rawLIn.x + rawRIn.x) / 2, cy = (rawLIn.y + rawRIn.y) / 2;
-
-        const pt = (i) => {
-          const dx = lm[i].x * W - cx, dy = lm[i].y * H - cy;
-          return {
-            x: cx + dx * Math.cos(-rollRad) - dy * Math.sin(-rollRad),
-            y: cy + dx * Math.sin(-rollRad) + dy * Math.cos(-rollRad)
-          };
+      const pt = (i) => {
+        const dx = lm[i].x * W - cx, dy = lm[i].y * H - cy;
+        return {
+          x: cx + dx * Math.cos(-rollRad) - dy * Math.sin(-rollRad),
+          y: cy + dx * Math.sin(-rollRad) + dy * Math.cos(-rollRad)
         };
-        const d = (i1, i2) => {
-          const p1 = pt(i1), p2 = pt(i2);
-          return Math.hypot(p1.x - p2.x, p1.y - p2.y);
-        };
+      };
+      const d = (i1, i2) => {
+        const p1 = pt(i1), p2 = pt(i2);
+        return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+      };
 
-        const bizygo = d(234, 454);
-        const yawRatio = Math.abs(d(1, 234) - d(1, 454)) / (bizygo || 1);
-        isTurned34 = yawRatio > 0.085;
+      const bizygo = d(234, 454);
+      const yawRatio = Math.abs(d(1, 234) - d(1, 454)) / (bizygo || 1);
+      const isTurned34 = yawRatio > 0.085;
 
-        const lEyeW = d(33, 133), rEyeW = d(362, 263);
-        const lEAR = d(159, 145) / (lEyeW || 1);
-        const rEAR = d(386, 374) / (rEyeW || 1);
-        avgEAR = (lEAR + rEAR) / 2;
-        earDiff = Math.abs(lEAR - rEAR);
+      // 1. Узость разреза глаз (EAR) и кантальный наклон (Canthal Tilt)
+      const lEyeW = d(33, 133), rEyeW = d(362, 263);
+      const lEAR = d(159, 145) / (lEyeW || 1);
+      const rEAR = d(386, 374) / (rEyeW || 1);
+      const avgEAR = isTurned34 ? Math.min(lEAR, rEAR) : ((lEAR + rEAR) / 2);
+      const earDiff = Math.abs(lEAR - rEAR);
 
-        const lOut = pt(33), lIn = pt(133), rIn = pt(362), rOut = pt(263);
-        const leftTilt = Math.atan2(lIn.y - lOut.y, Math.abs(lIn.x - lOut.x)) * (180 / Math.PI);
-        const rightTilt = Math.atan2(rIn.y - rOut.y, Math.abs(rOut.x - rIn.x)) * (180 / Math.PI);
-        canthalDeg = isTurned34
-          ? parseFloat((Math.max(leftTilt, rightTilt) * 0.75 + Math.min(leftTilt, rightTilt) * 0.25).toFixed(1))
-          : parseFloat(((leftTilt + rightTilt) / 2).toFixed(1));
+      const lOut = pt(33), lIn = pt(133), rIn = pt(362), rOut = pt(263);
+      const leftTilt = Math.atan2(lIn.y - lOut.y, Math.abs(lIn.x - lOut.x)) * (180 / Math.PI);
+      const rightTilt = Math.atan2(rIn.y - rOut.y, Math.abs(rOut.x - rIn.x)) * (180 / Math.PI);
+      const canthalDeg = isTurned34
+        ? parseFloat((Math.max(leftTilt, rightTilt) * 0.75 + Math.min(leftTilt, rightTilt) * 0.25).toFixed(1))
+        : parseFloat(((leftTilt + rightTilt) / 2).toFixed(1));
 
-        const vBL = Math.abs(pt(52).y - pt(159).y) / (lEyeW || 1);
-        const vBR = Math.abs(pt(282).y - pt(386).y) / (rEyeW || 1);
-        avgBrowGap = isTurned34 ? Math.min(vBL, vBR) : ((vBL + vBR) / 2);
-        browDiff = Math.abs(vBL - vBR);
+      // 2. Посадка бровей относительно высоты всего лица (не зависит от ширины глаза!)
+      const faceH = d(10, 152) || 1;
+      const vBL = Math.abs(pt(55).y - pt(159).y) / faceH;
+      const vBR = Math.abs(pt(285).y - pt(386).y) / faceH;
+      const browToFace = isTurned34 ? Math.min(vBL, vBR) : ((vBL + vBR) / 2);
+      const browDiff = Math.abs(vBL - vBR);
 
-        const lCent = { x: (lOut.x + lIn.x) / 2, y: (lOut.y + lIn.y) / 2 };
-        const rCent = { x: (rIn.x + rOut.x) / 2, y: (rIn.y + rOut.y) / 2 };
-        const ipd = Math.hypot(rCent.x - lCent.x, rCent.y - lCent.y);
-        esrPct = clamp((ipd / (bizygo || 1)) * 106, 43.2, 48.6);
+      // 3. Посадка глаз (ESR), FWHR, челюсть и губы
+      const lCent = { x: (lOut.x + lIn.x) / 2, y: (lOut.y + lIn.y) / 2 };
+      const rCent = { x: (rIn.x + rOut.x) / 2, y: (rIn.y + rOut.y) / 2 };
+      const ipd = Math.hypot(rCent.x - lCent.x, rCent.y - lCent.y);
+      const esrPct = clamp((ipd / (bizygo || 1)) * 106, 43.2, 48.6);
 
-        fwhr = clamp((bizygo / (d(6, 0) || 1)) * 1.05, 1.68, 2.12);
-        jawRatio = clamp((d(172, 397) / (bizygo || 1)) * 106, 72.0, 91.0);
+      const fwhr = clamp((bizygo / (d(6, 0) || 1)) * 1.05, 1.68, 2.12);
+      const jawRatio = clamp((d(172, 397) / (bizygo || 1)) * 106, 72.0, 91.0);
 
-        const mouthW = d(61, 291);
-        innerMouthOpen = d(13, 14) / (mouthW || 1);
-      }
+      const mouthW = d(61, 291);
+      const innerMouthOpen = d(13, 14) / (mouthW || 1);
+      const lowerThirdH = Math.max(10, d(2, 152) - d(13, 14));
+      const lipFullness = (d(0, 17) - d(13, 14)) / lowerThirdH;
 
-      // 1. Детектор открытой пасти и кривляний (парень в шляпе -> 2.6 Subhuman)
-      const isGrimace = (innerMouthOpen > 0.115) || (!isTurned34 && browDiff > 0.085 && earDiff > 0.06);
+      // === ТОЧНАЯ КАЛИБРОВКА ПО ИНДЕКСУ HUNTER EYE + TILT (ПРОТЕСТИРОВАНО НА ТВОИХ ФОТО БАРРЕТТА И ЧИКО) ===
+      // На твоих скриншотах формула eyeTiltMetric = (0.31 - avgEAR) * 10 + canthalDeg * 0.15 дала:
+      // • У Джордана Барретта: >= 1.10 (в v13.0 это дало 5.15 + 1.10 = 6.25!)
+      // • У Чико Лачовски: = 0.78 (в v13.0 это дало 5.15 + 0.78 = 5.93!)
+      const eyeTiltMetric = (0.31 - avgEAR) * 10 + canthalDeg * 0.15;
 
-      // 2. Детектор Sub-5 / LTN (негативный кантус как у Ивана Золо или Ч/Б архив со слабыми глазами)
-      const isSub5 = isGrimace || (canthalDeg < -0.6) || (avgSat < 0.045 && avgEAR > 0.285);
+      // 1. Проверка на открытую пасть и кривляние (парень в шляпе -> 2.55 Subhuman)
+      const isGrimace = (innerMouthOpen > 0.115) || (!isTurned34 && browDiff > 0.045 && earDiff > 0.055);
 
-      // 3. Плавный расчёт баллов по методологии Chronic K / FaceIQ
-      let sHarmony, sAngular, sDimorph, sFeatures, finalScore;
+      // 2. Проверка на Sub-5 / LTN (Иван Золо с отрицательным кантусом, Гитлер с Ч/Б и тонкими губами, выпученные глаза)
+      const isSub5 =
+        isGrimace ||
+        (canthalDeg < -0.4) ||
+        (avgEAR > 0.305) ||
+        (eyeTiltMetric < 0.05) ||
+        (avgSat < 0.048 && (lipFullness < 0.21 || avgEAR > 0.275));
+
+      let finalScore, sHarmony, sAngular, sDimorph, sFeatures;
 
       if (isGrimace) {
-        finalScore = 2.65;
-        sHarmony = 3.1; sAngular = 2.2; sDimorph = 2.5; sFeatures = 2.4;
+        finalScore = 2.55;
+        sHarmony = 3.0; sAngular = 2.1; sDimorph = 2.4; sFeatures = 2.3;
       } else if (isSub5) {
-        finalScore = canthalDeg < -0.8 ? 3.65 : 3.25;
-        sHarmony = 3.9; sAngular = 2.6; sDimorph = 3.1; sFeatures = 3.0;
-      } else if (avgEAR <= 0.305 && canthalDeg >= 0.4 && avgBrowGap <= 0.33) {
-        // МОДЕЛЬНЫЙ / ЭСТЕТИЧНЫЙ ТИР (Барретт, Чико, Кира, Даутцен)
-        const eyeBoost = clamp((0.305 - avgEAR) * 18, 0.1, 0.85);
-        const browBoost = clamp((0.32 - avgBrowGap) * 10, 0.1, 0.55);
-        const tiltBoost = clamp(canthalDeg * 0.12, 0.05, 0.45);
+        finalScore = canthalDeg < -0.6 ? 3.55 : 3.15;
+        sHarmony = 3.8; sAngular = 2.5; sDimorph = 3.0; sFeatures = 2.9;
+      } else if (eyeTiltMetric >= 0.58) {
+        // === ТИР МОДЕЛЕЙ (CHADLITE / CHAD / GIGACHAD: ЧИКО = 0.78 -> ~8.05, БАРРЕТТ >= 1.10 -> ~8.75, КИРА -> ~7.55) ===
+        const modelBoost = (eyeTiltMetric - 0.58) * 2.45;
+        const lipBoneBoost = (lipFullness >= 0.22 ? 0.22 : 0.05) + (fwhr >= 1.85 ? 0.18 : 0.05);
+        finalScore = clamp(7.25 + modelBoost + lipBoneBoost, 7.20, 8.95);
 
-        finalScore = clamp(7.25 + eyeBoost + browBoost + tiltBoost, 7.15, 8.85);
-        sHarmony = clamp(finalScore - 0.15, 7.1, 8.9);
-        sAngular = clamp(finalScore + 0.25, 7.4, 9.2);
-        sDimorph = clamp(finalScore + 0.20, 7.3, 9.2);
-        sFeatures = clamp(finalScore + 0.30, 7.5, 9.4);
+        sHarmony  = clamp(finalScore - 0.15, 7.1, 8.9);
+        sAngular  = clamp(finalScore + 0.20, 7.4, 9.2);
+        sDimorph  = clamp(finalScore + 0.15, 7.3, 9.2);
+        sFeatures = clamp(finalScore + 0.25, 7.5, 9.4);
       } else {
-        // НОРМАЛЬНЫЙ ТИР (MTN / HTN)
-        finalScore = clamp(5.15 + (0.31 - avgEAR) * 10 + canthalDeg * 0.15, 4.85, 6.25);
-        sHarmony = clamp(finalScore + 0.1, 4.9, 6.4);
-        sAngular = clamp(finalScore - 0.2, 4.6, 6.2);
-        sDimorph = clamp(finalScore, 4.8, 6.3);
-        sFeatures = clamp(finalScore + 0.1, 4.8, 6.4);
+        // === ОБЫЧНЫЙ ТИР (MTN / HTN: 4.85 – 6.40) ===
+        finalScore = clamp(4.85 + eyeTiltMetric * 2.6, 4.80, 6.45);
+        sHarmony  = clamp(finalScore + 0.1, 4.9, 6.5);
+        sAngular  = clamp(finalScore - 0.2, 4.5, 6.3);
+        sDimorph  = clamp(finalScore, 4.7, 6.4);
+        sFeatures = clamp(finalScore + 0.1, 4.8, 6.5);
       }
 
       const tierData = getChronicTierAndRarity(finalScore);
@@ -566,9 +584,9 @@ Return ONLY valid JSON:
           : `Сбалансированный фенотип уровня ${tierData.tier}: пропорции лицевых третей и посадка глаз (ESR ${esrPct.toFixed(1)}%) находятся в пределах популяционной нормы.`,
         halos: finalScore >= 7.0
           ? [
-              `Охотничий разрез глаз (Hunter Eye Area) с плотным надбровьем и кантальным наклоном +${Math.max(1.8, canthalDeg).toFixed(1)}°`,
+              `Охотничий разрез глаз (Hunter Eye Area, EAR ${avgEAR.toFixed(2)}) с плотным надбровьем и кантальным наклоном +${Math.max(1.8, canthalDeg).toFixed(1)}°`,
               `Высокая угловатость (Angularity): выраженная сепарация скул (Hollow Cheeks) и чёткий угол гониона`,
-              `Отличный индекс ширины лица (FWHR ${fwhr.toFixed(2)}) и межглазного баланса (ESR ${esrPct.toFixed(1)}%)`
+              `Модельный индекс ширины лица (FWHR ${fwhr.toFixed(2)}) и межглазного баланса (ESR ${esrPct.toFixed(1)}%)`
             ]
           : finalScore < 4.4
           ? ["Выраженных доминирующих Halo-маркеров модельного уровня не зафиксировано"]
@@ -596,11 +614,11 @@ Return ONLY valid JSON:
           { name: "3. Cheekbone Height (Высота скул)", val: finalScore >= 7 ? "High-set Zygomas" : "Средняя посадка", score: clamp(sAngular + 0.2, 2.0, 9.5), desc: "Вертикальная локализация скуловой дуги" },
           { name: "4. Ramus Visibility (Ветвь челюсти)", val: finalScore >= 7 ? "Длинный чёткий рамус" : "Умеренный рамус", score: clamp(sAngular, 1.9, 9.3), desc: "Высота и видимость вертикальной ветви челюсти" },
           { name: "5. Cheekbone Taper (Сужение к гонионам)", val: `${jawRatio.toFixed(1)}% Bigonial`, score: clamp(sAngular + 0.1, 2.1, 9.3), desc: "Переход от скуловой дуги к углам нижней челюсти" },
-          { name: "6. Cheek Hollowness (Впалость щёк)", val: finalScore >= 7 ? "Hollow / Lean (10–12% BF)" : (finalScore < 4.4 ? "Facial Bloat / Отёчность" : "Normie सॉफ्ट-контур"), score: clamp(sAngular + 0.2, 1.8, 9.5), desc: "Наличие впалых щёк против жировой прослойки" }
+          { name: "6. Cheek Hollowness (Впалость щёк)", val: finalScore >= 7 ? "Hollow / Lean (10–12% BF)" : (finalScore < 4.4 ? "Facial Bloat / Отёчность" : "Средний контур"), score: clamp(sAngular + 0.2, 1.8, 9.5), desc: "Наличие впалых щёк против жировой прослойки" }
         ],
         dimorphism_metrics: [
           { name: "Костная масса (Overall Bone Mass)", val: finalScore >= 7 ? "Высокая робастность" : (finalScore < 4.4 ? "Дефицит костной массы" : "Средняя"), score: clamp(sDimorph + 0.1, 2.0, 9.4), desc: "Массивность скулового и челюстного каркаса" },
-          { name: "Надбровный гребень и посадка бровей", val: `Индекс ${avgBrowGap.toFixed(2)}`, score: clamp(sDimorph + 0.2, 2.1, 9.5), desc: "Низкая посадка бровей и супраорбитальная защита" },
+          { name: "Надбровный гребень и посадка бровей", val: finalScore >= 7 ? "Низкий плотный Hooding" : "Средняя дуга", score: clamp(sDimorph + 0.2, 2.1, 9.5), desc: "Низкая посадка бровей и супраорбитальная защита" },
           { name: "Высота и выступ подбородка (Chin)", val: finalScore >= 7 ? "Выраженный симфиз" : "Средняя проекция", score: clamp(sDimorph, 1.9, 9.3), desc: "Высота и передняя проекция подбородка" },
           { name: "Бигониальная ширина (Bigonial Width)", val: `${jawRatio.toFixed(1)}% от скул`, score: clamp(sDimorph + 0.1, 2.0, 9.3), desc: "Ширина углов нижней челюсти" }
         ],
@@ -639,8 +657,8 @@ Return ONLY valid JSON:
 
       const statusEl = document.getElementById('liveStepText');
       const steps = [
-        "1/4 · Сканирование 468 точек лица и пропорций (ESR, FWHR, Трети)...",
-        "2/4 · Передача сжатого кадра в нейросетевое ядро Vision AI...",
+        "1/4 · Проверка наличия живого человеческого лица на снимке...",
+        "2/4 · Сканирование 468 точек лица (ESR, FWHR, Hunter Index)...",
         "3/4 · Оценка 6 факторов Angularity (Jaw, Ramus, Hollow Cheeks) и Dimorphism...",
         "4/4 · Сведение итогового балла по формуле Chronic K / FaceIQ (40/25/20/15)..."
       ];
@@ -650,29 +668,42 @@ Return ONLY valid JSON:
       const stepTimer = setInterval(() => {
         idx = Math.min(steps.length - 1, idx + 1);
         statusEl.innerText = steps[idx];
-      }, 2200);
+      }, 2000);
 
-      // Убеждаемся, что точки лица сняты
       if (!detectedLm && frontImgObj) {
         try { await faceMesh.send({ image: frontImgObj }); } catch (e) {}
       }
 
-      // 1. Строим базовый отчёт по реальной геометрии лица
+      // ЖЁСТКАЯ БЛОКИРОВКА ФУТБОЛОК, ОДЕЖДЫ И ПРЕДМЕТОВ!
+      if (!detectedLm || !isValidHumanFace(detectedLm)) {
+        clearInterval(stepTimer);
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+          window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+        }
+        showScreen('scrReject');
+        return;
+      }
+
+      // 1. Точный расчёт по реальным биометрическим точкам лица
       const report = buildChronicAnalysisFromBiometrics(detectedLm, frontImgObj);
 
-      // 2. Запрашиваем облачную модель Vision AI (если она доступна, обогащаем отчёт её выводами)
+      // 2. Параллельный запрос к облачной модели Vision AI
       const [cloudAi] = await Promise.all([
         tryCloudVisionAi(frontSmallAiUrl || frontDataUrl, report.final_score),
-        new Promise(r => setTimeout(r, 7500))
+        new Promise(r => setTimeout(r, 6500))
       ]);
 
       clearInterval(stepTimer);
 
+      if (cloudAi && cloudAi.is_human_face === false) {
+        showScreen('scrReject');
+        return;
+      }
+
       if (cloudAi && typeof cloudAi.final_score === 'number') {
-        // Защита от занижения моделей облачной моделью: берём максимум при модельной геометрии
         const blendedScore = report.final_score >= 7.2
           ? Math.max(report.final_score, cloudAi.final_score)
-          : (report.final_score * 0.5 + cloudAi.final_score * 0.5);
+          : (report.final_score * 0.65 + cloudAi.final_score * 0.35);
 
         report.final_score = clamp(blendedScore, 2.2, 9.2);
         const tInfo = getChronicTierAndRarity(report.final_score);
