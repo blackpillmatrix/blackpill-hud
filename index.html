@@ -252,31 +252,15 @@
       });
     }
 
-    function buildCompactApiImage() {
+    function encodeSingleSlotB64(imgObj) {
       const c = document.createElement('canvas');
+      c.width = 250;
+      c.height = 280;
       const ctx = c.getContext('2d');
-      if (frontImgObj && profileImgObj) {
-        c.width = 360;
-        c.height = 190;
-        drawCover(ctx, frontImgObj, 0, 0, 180, 190);
-        drawCover(ctx, profileImgObj, 180, 0, 180, 190);
-      } else {
-        c.width = 260;
-        c.height = 290;
-        drawCover(ctx, frontImgObj, 0, 0, 260, 290);
-      }
-      return c.toDataURL('image/jpeg', 0.70);
-    }
-
-    function drawCover(ctx, img, x, y, w, h) {
-      const r = Math.max(w / img.width, h / img.height);
-      const nw = img.width * r, nh = img.height * r;
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(x, y, w, h);
-      ctx.clip();
-      ctx.drawImage(img, x + (w - nw) / 2, y + (h - nh) / 2, nw, nh);
-      ctx.restore();
+      const r = Math.max(c.width / imgObj.width, c.height / imgObj.height);
+      const nw = imgObj.width * r, nh = imgObj.height * r;
+      ctx.drawImage(imgObj, (c.width - nw) / 2, (c.height - nh) / 2, nw, nh);
+      return c.toDataURL('image/jpeg', 0.70).split(',')[1];
     }
 
     async function onPhotoSelected(which, event) {
@@ -317,14 +301,26 @@
       return Math.max(mn, Math.min(mx, v));
     }
 
-    const VISION_PROMPT = `Ты — строгий эксперт краниофациальной эстетики и модельный скаут системы BLACKPILL VISION (методология Chronic K / FaceIQ, нормальное распределение: среднее = 5.0, SD = 0.6).
-Внимательно посмотри на фотографию (если склеены два ракурса — оцени и анфас, и профиль).
+    function buildVisionPrompt(hasProfile) {
+      const dualSlotRule = hasProfile
+        ? `1. СТРОГАЯ ПРОВЕРКА ОБОИХ СЛОТОВ (ФОТО 1 И ФОТО 2):
+Тебе переданы ДВА отдельных изображения: ФОТО 1 (Слот Анфас) и ФОТО 2 (Слот Профиль / 3/4).
+- Сначала проверь ФОТО 1: есть ли на нём чётко видимое, открытое живое человеческое лицо (поставь "front_ok": true или false).
+- Затем ОТДЕЛЬНО проверь ФОТО 2: есть ли на ФОТО 2 чётко видимое, открытое живое человеческое лицо или голова в профиль/полупрофиль (поставь "profile_ok": true или false).
+- КРИТИЧЕСКОЕ ПРАВИЛО: Если на ФОТО 2 изображена одежда (например, белая футболка, кофта), любой неодушевлённый предмет, мем, текст, силуэт со спины/затылка, ИЛИ лицо на ФОТО 2 закрыто руками/волосами/предметом, ИЛИ на ФОТО 2 совершенно другой человек — ЗАПРЕЩЕНО оценивать внешность! Ты ОБЯЗАН поставить "profile_ok": false, "face": false и вернуть ТОЛЬКО:
+{"front_ok":true,"profile_ok":false,"face":false,"reason":"Во втором слоте (Профиль / 3/4) не обнаружено открытое лицо (загружен посторонний предмет, одежда или лицо закрыто руками)."}
+- Если на ФОТО 1 нет открытого лица — верни:
+{"front_ok":false,"profile_ok":true,"face":false,"reason":"В первом слоте (Анфас) не обнаружено открытое человеческое лицо."}`
+        : `1. ПРОВЕРКА ФОТО 1 (АНФАС):
+Если на фото НЕТ чётко видимого, открытого живого человеческого лица (например, одежда, футболка, предмет, пейзаж, лицо закрыто руками), верни ТОЛЬКО:
+{"front_ok":false,"profile_ok":true,"face":false,"reason":"На снимке предмет, одежда или лицо закрыто."}`;
 
-ЖЁСТКАЯ КАЛИБРОВКА ПО УРОВНЯМ (НЕ ЗАНИЖАЙ ТОП-МОДЕЛЕЙ И НЕ ЗАВЫШАЙ НЕПРИВЛЕКАТЕЛЬНЫХ):
-1. Если на фото НЕТ живого человеческого лица (например, одежда, футболка, предмет, пейзаж, мем без лица), верни ТОЛЬКО:
-{"face":false,"reason":"На снимке предмет или одежда, а не человеческое лицо."}
+      return `Ты — строгий эксперт краниофациальной эстетики и модельный скаут системы BLACKPILL VISION (методология Chronic K / FaceIQ, нормальное распределение: среднее = 5.0, SD = 0.6).
 
-2. Оценивай лицо строго по 4 блокам (Harmony 40%, Angularity 25%, Dimorphism 20%, Features 15%):
+${dualSlotRule}
+
+2. ЖЁСТКАЯ КАЛИБРОВКА ПО УРОВНЯМ (ТОЛЬКО ЕСЛИ ОБА СЛОТА ПРОШЛИ ПРОВЕРКУ — front_ok:true и profile_ok:true):
+Оценивай лицо строго по 4 блокам (Harmony 40%, Angularity 25%, Dimorphism 20%, Features 15%):
 - 8.3 – 9.1 (Gigachad / Top Model): элитные супермодели с идеальным костным каркасом, hunter eyes, полыми щеками и мощным профилем (Jordan Barrett = 8.7–8.9, Sean O'Pry = 8.8, Hernan Drago = 8.7, Matt Bomer = 8.6). Все 4 блока (h, a, d, f) у них должны быть от 8.3 до 9.2!
 - 7.5 – 8.2 (Chad / High-Fashion Model): топ-модели подиума и красивейшие актёры с выдающейся челюстью, скулами и зоной глаз (Chico Lachowski = 8.1–8.3, Lorenzo Zurzolo = 7.7–8.0, Elias de Poot и подиумные модели с впалыми щеками = 7.6–8.1, Tom Welling = 7.9, Doutzen Kroes = 8.1).
 - 6.7 – 7.35 (Chadlite / Stacylite): очень красивые и эстетичные лица с отличным рельефом, но лёгкими индивидуальными отклонениями (Timothee Chalamet = 6.9–7.2 из-за чуть близкой посадки глаз, Zayn Malik = 7.2, Cristiano Ronaldo = 7.0, Kira = 6.9).
@@ -334,7 +330,8 @@
 - 1.5 – 3.1 (Sub-5 / Subhuman): тяжёлые деформации черепа, микроцефалия (Шлитци = 1.6–2.0), гнилые/разрушенные зубы (мужчина с разрушенными зубами = 1.9–2.3), сильные уродливые гримасы с разинутым ртом (= 2.1–2.6).
 
 Верни ТОЛЬКО 1 строку валидного JSON без markdown (все тексты на русском):
-{"face":true,"sex":"m","score":0.00,"h":0.0,"a":0.0,"d":0.0,"f":0.0,"sum":"Точный профессиональный разбор именно этого человека на фото (3 предложения): костная структура, глазная зона, скулы, челюсть и особенности лица.","halos":["Конкретная сильная сторона этого лица 1","Сильная сторона 2","Сильная сторона 3"],"failos":["Конкретный недостаток / точка роста 1","Недостаток 2"],"m":{"esr":["оценка посадки глаз (эталон 45.5-47.7%)",0.0],"fwhr":["оценка FWHR (эталон 1.90-2.05)",0.0],"thirds":["баланс верхней, средней и нижней трети",0.0],"midface":["компактность средней зоны",0.0],"profile":["проекция максиллы и профиля",0.0],"jaw":["чёткость углов нижней челюсти",0.0],"cheek_h":["высота и выступ скул",0.0],"ramus":["высота ветви челюсти",0.0],"hollow":["Hollow Cheeks / Lean / Facial Bloat",0.0],"bone":["общая массивность костного каркаса",0.0],"brow":["посадка бровей и надбровье (Hooding)",0.0],"chin":["проекция и форма подбородка",0.0],"eyes":["кантальный наклон и разрез глаз",0.0],"brows_f":["густота и форма бровей",0.0],"nose_lips":["форма носа, полнота губ и зубы",0.0],"sym_skin":["симметрия лица и состояние кожи",0.0]}}`;
+{"front_ok":true,"profile_ok":true,"face":true,"sex":"m","score":0.00,"h":0.0,"a":0.0,"d":0.0,"f":0.0,"sum":"Точный профессиональный разбор именно этого человека на фото (3 предложения): костная структура, глазная зона, скулы, челюсть и профиль.","halos":["Конкретная сильная сторона этого лица 1","Сильная сторона 2","Сильная сторона 3"],"failos":["Конкретный недостаток / точка роста 1","Недостаток 2"],"m":{"esr":["оценка посадки глаз (эталон 45.5-47.7%)",0.0],"fwhr":["оценка FWHR (эталон 1.90-2.05)",0.0],"thirds":["баланс верхней, средней и нижней трети",0.0],"midface":["компактность средней зоны",0.0],"profile":["проекция максиллы и профиля",0.0],"jaw":["чёткость углов нижней челюсти",0.0],"cheek_h":["высота и выступ скул",0.0],"ramus":["высота ветви челюсти",0.0],"hollow":["Hollow Cheeks / Lean / Facial Bloat",0.0],"bone":["общая массивность костного каркаса",0.0],"brow":["посадка бровей и надбровье (Hooding)",0.0],"chin":["проекция и форма подбородка",0.0],"eyes":["кантальный наклон и разрез глаз",0.0],"brows_f":["густота и форма бровей",0.0],"nose_lips":["форма носа, полнота губ и зубы",0.0],"sym_skin":["симметрия лица и состояние кожи",0.0]}}`;
+    }
 
     const SAFETY_OFF = [
       { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
@@ -352,7 +349,7 @@
           const candidate = str.slice(startIdx, endIdx + 1);
           try {
             const parsed = JSON.parse(candidate.replace(/,\s*([}\]])/g, '$1'));
-            if (parsed && (parsed.face !== undefined || parsed.score !== undefined)) {
+            if (parsed && (parsed.face !== undefined || parsed.score !== undefined || parsed.front_ok !== undefined)) {
               return parsed;
             }
           } catch (e) {}
@@ -375,18 +372,24 @@
 
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-    async function callVisionNode(nodeName, b64, timeoutMs) {
+    async function callVisionNode(nodeName, frontB64, profileB64, timeoutMs) {
+      const hasProfile = Boolean(profileB64);
+      const parts = [
+        { text: buildVisionPrompt(hasProfile) },
+        { text: "ФОТО 1 (СЛОТ 1 — АНФАС):" },
+        { inline_data: { mime_type: "image/jpeg", data: frontB64 } }
+      ];
+      if (hasProfile) {
+        parts.push({ text: "ФОТО 2 (СЛОТ 2 — ПРОФИЛЬ / 3/4, ПРОВЕРЬ ЧТО ЭТО РЕАЛЬНОЕ ОТКРЫТОЕ ЛИЦО/ГОЛОВА, А НЕ ФУТБОЛКА, ПРЕДМЕТ ИЛИ ЗАКРЫТОЕ РУКАМИ ЛИЦО):" });
+        parts.push({ inline_data: { mime_type: "image/jpeg", data: profileB64 } });
+      }
+
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${nodeName}:generateContent?key=${encodeURIComponent(API_KEY)}`;
       const r = await withTimeout(fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: VISION_PROMPT },
-              { inline_data: { mime_type: "image/jpeg", data: b64 } }
-            ]
-          }],
+          contents: [{ parts }],
           safetySettings: SAFETY_OFF,
           generationConfig: { temperature: 0.15 }
         })
@@ -398,19 +401,19 @@
 
       const txt = await withTimeout(r.text(), 4000);
       const j = JSON.parse(txt);
-      const parts = j?.candidates?.[0]?.content?.parts || [];
-      const clean = parts.filter(p => !p.thought).map(p => p.text || "").join("\n") || parts.map(p => p.text || "").join("\n");
+      const cParts = j?.candidates?.[0]?.content?.parts || [];
+      const clean = cParts.filter(p => !p.thought).map(p => p.text || "").join("\n") || cParts.map(p => p.text || "").join("\n");
       const parsed = extractValidJsonFromEnd(clean);
       if (!parsed) throw new Error("Empty JSON");
       return parsed;
     }
 
-    async function askBlackpillVisionCluster(b64, setStatus) {
+    async function askBlackpillVisionCluster(frontB64, profileB64, setStatus) {
       setStatus("Сканирование пропорций в BLACKPILL VISION...");
       try {
         return await Promise.any([
-          callVisionNode("gemini-2.5-flash-lite", b64, 9000),
-          callVisionNode("gemini-flash-lite-latest", b64, 9000)
+          callVisionNode("gemini-2.5-flash-lite", frontB64, profileB64, 9500),
+          callVisionNode("gemini-flash-lite-latest", frontB64, profileB64, 9500)
         ]);
       } catch (e1) {}
 
@@ -418,14 +421,14 @@
       await sleep(1500);
       try {
         return await Promise.any([
-          callVisionNode("gemini-2.5-flash-lite", b64, 12000),
-          callVisionNode("gemini-3.8-flash", b64, 24000)
+          callVisionNode("gemini-2.5-flash-lite", frontB64, profileB64, 12000),
+          callVisionNode("gemini-3.8-flash", frontB64, profileB64, 24000)
         ]);
       } catch (e2) {}
 
       setStatus("Формирование итогового вердикта BLACKPILL VISION...");
       await sleep(1500);
-      return await callVisionNode("gemini-flash-lite-latest", b64, 14000);
+      return await callVisionNode("gemini-flash-lite-latest", frontB64, profileB64, 14000);
     }
 
     async function runBlackpillAnalysis() {
@@ -435,15 +438,25 @@
       const statusEl = document.getElementById('liveStepText');
       const setStatus = (msg) => { statusEl.innerText = msg; };
 
-      const apiUrl = buildCompactApiImage();
-      const b64 = apiUrl.split(',')[1];
+      const frontB64 = encodeSingleSlotB64(frontImgObj);
+      const profileB64 = profileImgObj ? encodeSingleSlotB64(profileImgObj) : null;
+      const hasProfile = Boolean(profileB64);
 
       try {
-        const res = await askBlackpillVisionCluster(b64, setStatus);
+        const res = await askBlackpillVisionCluster(frontB64, profileB64, setStatus);
 
-        if (res.face === false || res.is_human_face === false) {
+        if (
+          res.face === false ||
+          res.is_human_face === false ||
+          res.front_ok === false ||
+          (hasProfile && res.profile_ok === false)
+        ) {
           document.getElementById('rejectTitleText').innerText = "🚫 ОТКЛОНЕНО BLACKPILL VISION";
-          document.getElementById('rejectReasonText').innerText = res.reason || "На снимке не обнаружено человеческое лицо.";
+          document.getElementById('rejectReasonText').innerText =
+            res.reason ||
+            (hasProfile && res.profile_ok === false
+              ? "Во втором слоте (Профиль / 3/4) не обнаружено открытое человеческое лицо (загружен посторонний предмет, одежда или лицо закрыто)."
+              : "На снимке не обнаружено реальное человеческое лицо.");
           showScreen('scrReject');
           return;
         }
