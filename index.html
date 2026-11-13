@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <title>BLACKPILL // GEMINI 3.8 v17.0</title>
+  <title>BLACKPILL // VISION</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
@@ -104,14 +104,14 @@
 <body>
 
   <div class="topbar">
-    <div class="brand"><div class="dot"></div> GEMINI 3.8 // v17.0</div>
-    <div class="status-pill">✓ GEMINI 3.8 FLASH</div>
+    <div class="brand"><div class="dot"></div> BLACKPILL // VISION</div>
+    <div class="status-pill">✓ GEMINI AI ACTIVE</div>
   </div>
 
   <div class="container">
     <div class="screen active" id="scrUpload">
-      <div class="title">ПРЯМОЙ РАЗБОР ЛИЦА<br><span>ОТ GEMINI 3.8 FLASH</span></div>
-      <div class="subtitle">Загрузи анфас и профиль. Твои фотографии напрямую оценивает мультимодальная нейросеть Google Gemini 3.8 по методологии Chronic K / FaceIQ (40% Harmony, 25% Angularity, 20% Dimorphism, 15% Features).</div>
+      <div class="title">НЕЙРОСЕТЕВОЙ РАЗБОР<br><span>ПО СИСТЕМЕ CHRONIC / FACEIQ</span></div>
+      <div class="subtitle">Загрузи анфас и профиль. Твои фотографии напрямую оценивает мультимодальная нейросеть Google Gemini по методологии Harmony (40%) + Angularity (25%) + Dimorphism (20%) + Features (15%).</div>
 
       <div class="upload-grid">
         <div class="photo-slot" id="slotFront" onclick="document.getElementById('inputFront').click()">
@@ -136,7 +136,7 @@
       <input type="file" id="inputFront" accept="image/*" style="display:none" onchange="onPhotoSelected('front', event)">
       <input type="file" id="inputProfile" accept="image/*" style="display:none" onchange="onPhotoSelected('profile', event)">
 
-      <button class="btn-main" id="startBtn" disabled onclick="runPureGeminiAnalysis()">⚡️ ОТПРАВИТЬ ФОТО В GEMINI 3.8</button>
+      <button class="btn-main" id="startBtn" disabled onclick="runPureGeminiAnalysis()">⚡️ ЗАПУСТИТЬ АНАЛИЗ ЛИЦА</button>
 
       <div class="card" style="margin-top: 16px;">
         <div class="card-header">Эталонная шкала (Mean = 5.0, SD = 0.6)</div>
@@ -162,8 +162,9 @@
     <div class="screen" id="scrLoading">
       <div class="card loader-box">
         <div class="spinner"></div>
-        <div style="font-size:16px; font-weight:900; margin-bottom:8px;">Gemini 3.8 Flash изучает лицо...</div>
-        <div style="font-size:12px; color:var(--cyan); font-family:monospace; line-height:1.5;" id="liveStepText">Передача снимков в Google Gemini Vision...</div>
+        <div style="font-size:16px; font-weight:900; margin-bottom:8px;">Нейросеть изучает лицо...</div>
+        <div style="font-size:12px; color:var(--cyan); font-family:monospace; line-height:1.5;" id="liveStepText">Передача снимков в Google Gemini...</div>
+        <div style="font-size:11px; color:var(--muted); margin-top:10px; font-family:monospace;" id="elapsedTimerText">Время анализа: 0 сек</div>
       </div>
     </div>
 
@@ -173,7 +174,7 @@
           <img id="resImgFront" class="avatar-img" src="" alt="Front">
           <img id="resImgProfile" class="avatar-img second" src="" alt="Profile">
         </div>
-        <div style="font-size:10px; font-weight:800; letter-spacing:1.5px; color:var(--green);" id="engineLabel">ВЕРДИКТ: GEMINI-3.8-FLASH</div>
+        <div style="font-size:10px; font-weight:800; letter-spacing:1.5px; color:var(--green);" id="engineLabel">НЕЙРОСЕТЕВОЙ ВЕРДИКТ</div>
         <div class="big-score" id="resFinalScore">0.00</div>
         <div><span class="tier-badge" id="resTierBadge">---</span></div>
         <div class="rarity-line" id="resRarityLine">---</div>
@@ -226,7 +227,7 @@
     let frontDataUrl = null;
     let profileDataUrl = null;
 
-    function compressPhoto(file, maxSide = 680, q = 0.82) {
+    function compressPhoto(file, maxSide = 512, q = 0.78) {
       return new Promise((resolve) => {
         const r = new FileReader();
         r.onload = (e) => {
@@ -251,7 +252,7 @@
     async function onPhotoSelected(which, event) {
       const file = event.target.files[0];
       if (!file) return;
-      const url = await compressPhoto(file, 680, 0.82);
+      const url = await compressPhoto(file, 512, 0.78);
       if (which === 'front') {
         frontDataUrl = url;
         const el = document.getElementById('previewFront');
@@ -279,28 +280,28 @@
       document.querySelectorAll('.pane').forEach((p, i) => p.classList.toggle('active', i === idx));
     }
 
-    const AI_PROMPT = `Ты — экспертный аналитик внешности и кастинг-директор по системе Chronic K / FaceIQ (нормальное распределение: среднее = 5.0, стандартное отклонение SD = 0.6).
-Внимательно изучи прикрепленные фотографии человека (анфас и профиль/второй ракурс).
+    const AI_PROMPT = `Ты — профессиональный краниофациальный аналитик и модельный кастинг-эксперт по системе Chronic K / FaceIQ (нормальное распределение: среднее = 5.0, стандартное отклонение SD = 0.6).
+Изучи прикрепленные фотографии человека (анфас и профиль/второй ракурс).
 
-СТРОГИЕ ПРАВИЛА КАЛИБРОВКИ:
-1. Если на фото НЕ живое человеческое лицо (например, футболка, одежда, предмет, скелет, мем-рисунок), верни ТОЛЬКО:
+ПРАВИЛА КАЛИБРОВКИ:
+1. Если на фото НЕ живое человеческое лицо (например, футболка, одежда, предмет, рисунок), верни ТОЛЬКО:
    {"is_human_face": false, "reject_reason": "На снимке предмет или одежда, а не живое человеческое лицо."}
-2. Оценивай реальную эстетику лица без занижения красивых людей и без завышения непривлекательных:
-   - Уровень 8.1 – 9.2 (Gigachad / Top Model, 7.5–8.5 PSL, редкость 1 из 500 000+): эталонные супермодели с идеальным костным каркасом, hunter eyes, высокими скулами и полыми щеками (Jordan Barrett, Sean O'Pry, Matt Bomer, Hernan Drago, David Gandy).
-   - Уровень 7.3 – 8.0 (Chad / Stacy, 6.5–7.5 PSL, редкость 1 из 11 394): топ-модели и красивейшие актёры с гармоничными пропорциями, выраженной челюстью и отличной зоной глаз (Francisco Lachowski / Chico, Lorenzo Zurzolo, Tom Welling, Taylor Lautner, Doutzen Kroes).
-   - Уровень 6.7 – 7.25 (Chadlite / Stacylite, 5.5–6.2 PSL, редкость 1 из 600): очень привлекательные люди с сухими скулами и чёткой челюстью (Zayn Malik, Orlando Bloom, Cristiano Ronaldo, Kira, Ana de Armas).
-   - Уровень 5.9 – 6.5 (HTN, 4.5–5.2 PSL, Топ 5%, 1 из 20): привлекательное лицо заметно выше среднего.
-   - Уровень 4.8 – 5.6 (MTN, 3.5–4.2 PSL, Медиана 50%, 1 из 2): обычное среднестатистическое лицо.
-   - Уровень 2.3 – 4.2 (LTN / Subhuman, 1.0–2.5 PSL, Нижние 15%–1%): лица с выраженными дебаффами — отёчные/пухлые щёки (bloated), скошенный подбородок, невидимая челюсть, отрицательный кантальный наклон, выпученные глаза или глупая гримаса с открытым ртом (Иван Золо и ниже).
+2. Оценивай объективно:
+   - 8.1 – 9.2 (Gigachad / Top Model, 7.5–8.5 PSL, Топ 0.0001%, 1 из 1 000 000+): эталонные супермодели (Jordan Barrett, Sean O'Pry, Matt Bomer, Hernan Drago, David Gandy).
+   - 7.3 – 8.0 (Chad / Stacy, 6.5–7.5 PSL, Топ 0.0088%, 1 из 11 394): топ-модели и актёры с отличной гармонией, челюстью и зоной глаз (Francisco Lachowski / Chico, Lorenzo Zurzolo, Tom Welling, Doutzen Kroes).
+   - 6.7 – 7.25 (Chadlite / Stacylite, 5.5–6.2 PSL, Топ 0.15%, 1 из 600): очень привлекательные лица с выраженными скулами и чёткой челюстью (Zayn Malik, Orlando Bloom, Cristiano Ronaldo, Kira, Ana de Armas).
+   - 5.9 – 6.5 (HTN, 4.5–5.2 PSL, Топ 5%, 1 из 20): заметно выше среднего.
+   - 4.8 – 5.6 (MTN, 3.5–4.2 PSL, Медиана 50%, 1 из 2): обычное среднестатистическое лицо.
+   - 2.3 – 4.2 (LTN / Sub-5, 1.0–2.5 PSL, Нижние 15%–1%): лица с выраженными диспропорциями, отёчностью щёк (facial bloat), слабым скошенным подбородком, отрицательным кантальным наклоном, выпученными глазами или гримасой с открытым ртом.
 
 ФОРМУЛА ВЕСОВ:
 - Мужчины: Harmony (40%) + Angularity (25%) + Dimorphism (20%) + Features (15%)
 - Женщины: Harmony (32%) + Features (28%) + Dimorphism (20%) + Angularity (20%)
 
-Верни ТОЛЬКО чистый JSON (без markdown) строго по этой структуре:
+Верни ТОЛЬКО валидный JSON строго по этой структуре:
 {
   "is_human_face": true,
-  "gender": "male или female",
+  "gender": "male",
   "final_score": 0.00,
   "tier": "Gigachad / Chad / Chadlite / HTN / MTN / LTN / Subhuman",
   "psl_equivalent": "X.X–X.X PSL",
@@ -345,6 +346,38 @@
       { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
     ];
 
+    // Безопасное извлечение JSON из всех блоков ответа Gemini (с учётом скрытых блоков размышлений thought)
+    function extractJsonFromCandidate(candidate) {
+      const parts = candidate?.content?.parts || [];
+      for (let i = parts.length - 1; i >= 0; i--) {
+        const txt = parts[i]?.text || "";
+        const f = txt.indexOf('{');
+        const l = txt.lastIndexOf('}');
+        if (f !== -1 && l !== -1 && l > f) {
+          try {
+            const parsed = JSON.parse(txt.slice(f, l + 1));
+            if (typeof parsed.is_human_face === 'boolean' || typeof parsed.final_score === 'number') {
+              return parsed;
+            }
+          } catch (e) {}
+        }
+      }
+      return null;
+    }
+
+    async function fetchWithTimeout(url, options, timeoutMs = 28000) {
+      const ctrl = new AbortController();
+      const id = setTimeout(() => ctrl.abort(), timeoutMs);
+      try {
+        const resp = await fetch(url, { ...options, signal: ctrl.signal });
+        clearTimeout(id);
+        return resp;
+      } catch (err) {
+        clearTimeout(id);
+        throw err;
+      }
+    }
+
     async function callGeminiDirect(frontUrl, profileUrl) {
       const parts = [
         { text: AI_PROMPT },
@@ -354,29 +387,13 @@
         parts.push({ inline_data: { mime_type: "image/jpeg", data: profileUrl.split(',')[1] } });
       }
 
-      // 1. Сначала вызываем актуальную модель gemini-3.8-flash, которую указал сервер Google
-      let models = ["gemini-3.8-flash", "gemini-3.8-pro", "gemini-4-argon"];
-
-      // Автоматически подгружаем список доступных моделей с сервера Google на случай обновлений
-      try {
-        const listResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(GEMINI_KEY)}`);
-        if (listResp.ok) {
-          const listData = await listResp.json();
-          const serverModels = (listData.models || [])
-            .filter(m => (m.supportedGenerationMethods || []).includes("generateContent") && m.name.includes("gemini"))
-            .map(m => m.name.replace("models/", ""));
-          for (const sm of serverModels) {
-            if (!models.includes(sm)) models.push(sm);
-          }
-        }
-      } catch (e) {}
-
+      const models = ["gemini-3.8-flash", "gemini-3.8-pro"];
       let lastError = "";
 
       for (const mName of models) {
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${encodeURIComponent(GEMINI_KEY)}`;
-          const r = await fetch(url, {
+          const r = await fetchWithTimeout(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -387,7 +404,7 @@
                 responseMimeType: "application/json"
               }
             })
-          });
+          }, 28000);
 
           const j = await r.json();
           if (!r.ok) {
@@ -395,19 +412,19 @@
             continue;
           }
 
-          const txt = j?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-          const f = txt.indexOf('{'), l = txt.lastIndexOf('}');
-          if (f !== -1 && l !== -1) {
-            const parsed = JSON.parse(txt.slice(f, l + 1));
-            parsed._engine = mName.toUpperCase();
+          const parsed = extractJsonFromCandidate(j?.candidates?.[0]);
+          if (parsed) {
             return parsed;
+          } else {
+            const blockReason = j?.promptFeedback?.blockReason || j?.candidates?.[0]?.finishReason || "Пустой ответ";
+            lastError = `Ответ не распознан (${blockReason})`;
           }
         } catch (e) {
-          lastError = e.message;
+          lastError = e.name === 'AbortError' ? 'Превышено время ожидания ответа от сервера (проверьте VPN)' : e.message;
         }
       }
 
-      throw new Error(`Ошибка ответа Gemini API: ${lastError}`);
+      throw new Error(lastError || "Не удалось получить ответ от нейросети.");
     }
 
     async function runPureGeminiAnalysis() {
@@ -415,18 +432,26 @@
       showScreen('scrLoading');
 
       const statusEl = document.getElementById('liveStepText');
+      const timerEl = document.getElementById('elapsedTimerText');
       const msgs = [
-        "Прямая передача снимков в Google Gemini 3.8 Flash...",
-        "Нейросеть оценивает костную структуру, глазную зону и FWHR...",
+        "Передача снимков в нейросеть Google Gemini...",
+        "Оценка костной структуры, глазной зоны и FWHR...",
         "Расчёт Angularity (Jaw, Ramus, Hollow Cheeks) и Dimorphism...",
-        "Формирование вердикта по методологии Chronic K / FaceIQ..."
+        "Формирование итогового вердикта по формуле 40/25/20/15..."
       ];
       let idx = 0;
+      let sec = 0;
       statusEl.innerText = msgs[0];
+      timerEl.innerText = "Время анализа: 0 сек";
+
       const t = setInterval(() => {
-        idx = (idx + 1) % msgs.length;
-        statusEl.innerText = msgs[idx];
-      }, 2400);
+        sec++;
+        timerEl.innerText = `Время анализа: ${sec} сек`;
+        if (sec % 3 === 0) {
+          idx = (idx + 1) % msgs.length;
+          statusEl.innerText = msgs[idx];
+        }
+      }, 1000);
 
       try {
         const res = await callGeminiDirect(frontDataUrl, profileDataUrl);
@@ -442,7 +467,7 @@
         showScreen('scrResult');
       } catch (err) {
         clearInterval(t);
-        alert(err.message);
+        alert("Ошибка связи с нейросетью: " + err.message);
         showScreen('scrUpload');
       }
     }
@@ -479,8 +504,6 @@
       const pImg = document.getElementById('resImgProfile');
       if (profileDataUrl) { pImg.src = profileDataUrl; pImg.style.display = 'block'; }
       else { pImg.style.display = 'none'; }
-
-      document.getElementById('engineLabel').innerText = `ВЕРДИКТ НЕЙРОСЕТИ: ${d._engine || 'GEMINI-3.8-FLASH'}`;
 
       const h = Number(d.harmony_score || d.final_score || 5.0);
       const a = Number(d.angularity_score || d.final_score || 5.0);
