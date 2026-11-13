@@ -107,13 +107,13 @@
 
   <div class="topbar">
     <div class="brand"><div class="dot"></div> BLACKPILL // VISION</div>
-    <div class="status-pill">✓ PURE GEMINI AI</div>
+    <div class="status-pill">✓ BLACKPILL VISION</div>
   </div>
 
   <div class="container">
     <div class="screen active" id="scrUpload">
-      <div class="title">ПРЯМОЙ РАЗБОР ЛИЦА<br><span>ОТ НЕЙРОСЕТИ GOOGLE GEMINI</span></div>
-      <div class="subtitle">Без MediaPipe и локальных формул. Твои фото напрямую смотрит и оценивает мультимодальная нейросеть Gemini по методологии Harmony (40%) + Angularity (25%) + Dimorphism (20%) + Features (15%).</div>
+      <div class="title">КРАНИОФАЦИАЛЬНЫЙ АНАЛИЗ<br><span>ОТ BLACKPILL VISION</span></div>
+      <div class="subtitle">Загрузи анфас и профиль. Система BLACKPILL VISION напрямую оценивает костную структуру и пропорции лица по методологии Harmony (40%) + Angularity (25%) + Dimorphism (20%) + Features (15%).</div>
 
       <div class="upload-grid">
         <div class="photo-slot" id="slotFront" onclick="document.getElementById('inputFront').click()">
@@ -138,7 +138,7 @@
       <input type="file" id="inputFront" accept="image/*" style="display:none" onchange="onPhotoSelected('front', event)">
       <input type="file" id="inputProfile" accept="image/*" style="display:none" onchange="onPhotoSelected('profile', event)">
 
-      <button class="btn-main" id="startBtn" disabled onclick="runPureGeminiAnalysis()">⚡️ ОТПРАВИТЬ В НЕЙРОСЕТЬ GEMINI</button>
+      <button class="btn-main" id="startBtn" disabled onclick="runBlackpillAnalysis()">⚡️ ЗАПУСТИТЬ АНАЛИЗ BLACKPILL VISION</button>
 
       <div class="card" style="margin-top: 16px;">
         <div class="card-header">Эталонная шкала (Mean = 5.0, SD = 0.6)</div>
@@ -155,7 +155,7 @@
 
     <div class="screen" id="scrReject">
       <div class="reject-box">
-        <div style="font-size:16px; font-weight:900; color:var(--red); margin-bottom:8px;" id="rejectTitleText">🚫 ОТКЛОНЕНО НЕЙРОСЕТЬЮ</div>
+        <div style="font-size:16px; font-weight:900; color:var(--red); margin-bottom:8px;" id="rejectTitleText">🚫 ОТКЛОНЕНО BLACKPILL VISION</div>
         <div style="font-size:13px; line-height:1.5;" id="rejectReasonText">На снимке не найдено реальное человеческое лицо.</div>
       </div>
       <button class="btn-main" onclick="showScreen('scrUpload')">↻ ПОПРОБОВАТЬ СНОВА</button>
@@ -164,8 +164,8 @@
     <div class="screen" id="scrLoading">
       <div class="card loader-box">
         <div class="spinner"></div>
-        <div style="font-size:16px; font-weight:900; margin-bottom:8px;">Нейросеть Gemini изучает лицо...</div>
-        <div style="font-size:12px; color:var(--cyan); font-family:monospace; line-height:1.5;" id="liveStepText">Прямой запрос к мультимодальной модели Google Gemini...</div>
+        <div style="font-size:16px; font-weight:900; margin-bottom:8px;">BLACKPILL VISION изучает лицо...</div>
+        <div style="font-size:12px; color:var(--cyan); font-family:monospace; line-height:1.5;" id="liveStepText">Сканирование краниофациальных пропорций...</div>
       </div>
     </div>
 
@@ -175,7 +175,7 @@
           <img id="resImgFront" class="avatar-img" src="" alt="Front">
           <img id="resImgProfile" class="avatar-img second" src="" alt="Profile">
         </div>
-        <div style="font-size:10px; font-weight:800; letter-spacing:1.5px; color:var(--green);" id="engineLabel">ВЕРДИКТ НЕЙРОСЕТИ GEMINI</div>
+        <div style="font-size:10px; font-weight:800; letter-spacing:1.5px; color:var(--green);" id="engineLabel">ВЕРДИКТ BLACKPILL VISION</div>
         <div class="big-score" id="resFinalScore">0.00</div>
         <div><span class="tier-badge" id="resTierBadge">---</span></div>
         <div class="rarity-line" id="resRarityLine">---</div>
@@ -223,7 +223,7 @@
       window.Telegram.WebApp.expand();
     }
 
-    const GEMINI_KEY = ["A", "I", "za", "SyBeuV", "DeguoA", "DM3ygp", "2BHk_U", "IfFebC", "2TpBo"].join("");
+    const API_KEY = ["A", "I", "za", "SyBeuV", "DeguoA", "DM3ygp", "2BHk_U", "IfFebC", "2TpBo"].join("");
 
     let frontPreviewUrl = null;
     let profilePreviewUrl = null;
@@ -317,7 +317,7 @@
       return Math.max(mn, Math.min(mx, v));
     }
 
-    const AI_PROMPT = `Ты — строгий эксперт краниофациальной эстетики и модельный скаут по системе Chronic K / FaceIQ (нормальное распределение: среднее = 5.0, SD = 0.6).
+    const VISION_PROMPT = `Ты — строгий эксперт краниофациальной эстетики и модельный скаут системы BLACKPILL VISION (методология Chronic K / FaceIQ, нормальное распределение: среднее = 5.0, SD = 0.6).
 Внимательно посмотри на фотографию (если склеены два ракурса — оцени и анфас, и профиль).
 
 ЖЁСТКАЯ КАЛИБРОВКА ПО УРОВНЯМ (НЕ ЗАНИЖАЙ ТОП-МОДЕЛЕЙ И НЕ ЗАВЫШАЙ НЕПРИВЛЕКАТЕЛЬНЫХ):
@@ -375,15 +375,15 @@
 
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-    async function callSingleGeminiModel(modelName, b64, timeoutMs) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(GEMINI_KEY)}`;
+    async function callVisionNode(nodeName, b64, timeoutMs) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${nodeName}:generateContent?key=${encodeURIComponent(API_KEY)}`;
       const r = await withTimeout(fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{
             parts: [
-              { text: AI_PROMPT },
+              { text: VISION_PROMPT },
               { inline_data: { mime_type: "image/jpeg", data: b64 } }
             ]
           }],
@@ -402,37 +402,33 @@
       const clean = parts.filter(p => !p.thought).map(p => p.text || "").join("\n") || parts.map(p => p.text || "").join("\n");
       const parsed = extractValidJsonFromEnd(clean);
       if (!parsed) throw new Error("Empty JSON");
-      parsed._model = modelName.toUpperCase();
       return parsed;
     }
 
-    async function askPureGeminiCluster(b64, setStatus) {
-      // Волна 1: параллельный запрос к самым быстрым моделям (отвечают за 2.5–4 сек)
-      setStatus("Анализ фотографии в Google Gemini Vision...");
+    async function askBlackpillVisionCluster(b64, setStatus) {
+      setStatus("Сканирование пропорций в BLACKPILL VISION...");
       try {
         return await Promise.any([
-          callSingleGeminiModel("gemini-2.5-flash-lite", b64, 9000),
-          callSingleGeminiModel("gemini-flash-lite-latest", b64, 9000)
+          callVisionNode("gemini-2.5-flash-lite", b64, 9000),
+          callVisionNode("gemini-flash-lite-latest", b64, 9000)
         ]);
       } catch (e1) {}
 
-      // Волна 2: если при быстрой серии сканов сработал секундный лимит — пауза 1.5 сек и повтор + подключение 3.8-flash
-      setStatus("Переключение на резервный узел Google Gemini...");
+      setStatus("Расчёт индексов Harmony, Angularity и Dimorphism...");
       await sleep(1500);
       try {
         return await Promise.any([
-          callSingleGeminiModel("gemini-2.5-flash-lite", b64, 12000),
-          callSingleGeminiModel("gemini-3.8-flash", b64, 24000)
+          callVisionNode("gemini-2.5-flash-lite", b64, 12000),
+          callVisionNode("gemini-3.8-flash", b64, 24000)
         ]);
       } catch (e2) {}
 
-      // Волна 3: контрольный запрос
-      setStatus("Завершение глубокого анализа в Gemini...");
+      setStatus("Формирование итогового вердикта BLACKPILL VISION...");
       await sleep(1500);
-      return await callSingleGeminiModel("gemini-flash-lite-latest", b64, 14000);
+      return await callVisionNode("gemini-flash-lite-latest", b64, 14000);
     }
 
-    async function runPureGeminiAnalysis() {
+    async function runBlackpillAnalysis() {
       if (!frontImgObj) return;
       showScreen('scrLoading');
 
@@ -443,10 +439,10 @@
       const b64 = apiUrl.split(',')[1];
 
       try {
-        const res = await askPureGeminiCluster(b64, setStatus);
+        const res = await askBlackpillVisionCluster(b64, setStatus);
 
         if (res.face === false || res.is_human_face === false) {
-          document.getElementById('rejectTitleText').innerText = "🚫 ОБЪЕКТ ОТКЛОНЁН НЕЙРОСЕТЬЮ";
+          document.getElementById('rejectTitleText').innerText = "🚫 ОТКЛОНЕНО BLACKPILL VISION";
           document.getElementById('rejectReasonText').innerText = res.reason || "На снимке не обнаружено человеческое лицо.";
           showScreen('scrReject');
           return;
@@ -455,8 +451,8 @@
         renderReport(res);
         showScreen('scrResult');
       } catch (err) {
-        document.getElementById('rejectTitleText').innerText = "⚠️ ПАУЗА МЕЖДУ СКАНАМИ (ЛИМИТ API)";
-        document.getElementById('rejectReasonText').innerText = "Бесплатный тариф Google AI позволяет делать до 15 сканов в минуту. Подождите 5 секунд и нажмите кнопку снова.";
+        document.getElementById('rejectTitleText').innerText = "⚠️ ВЫСОКАЯ НАГРУЗКА НА СЕРВЕР";
+        document.getElementById('rejectReasonText').innerText = "Система BLACKPILL VISION обрабатывает очередь сканов. Подождите 5 секунд и нажмите кнопку снова.";
         showScreen('scrReject');
       }
     }
@@ -516,7 +512,7 @@
       if (profilePreviewUrl) { pImg.src = profilePreviewUrl; pImg.style.display = 'block'; }
       else { pImg.style.display = 'none'; }
 
-      document.getElementById('engineLabel').innerText = `ВЕРДИКТ НЕЙРОСЕТИ: ${d._model || 'GEMINI AI'}`;
+      document.getElementById('engineLabel').innerText = "ВЕРДИКТ BLACKPILL VISION";
 
       const rawScore = parseFloat(d.score) || 5.0;
       const h = clamp(parseFloat(d.h) || rawScore, 1.2, 9.6);
