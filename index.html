@@ -86,6 +86,23 @@
     .f-val { font-size: 16px; font-weight: 900; font-family: monospace; }
     .f-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
 
+    /* Блок графика Normal Distribution of Facial Attractiveness */
+    .dist-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+      padding: 14px 12px 12px 12px; margin-bottom: 14px;
+    }
+    .dist-top {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+    }
+    .dist-title {
+      font-size: 11px; font-weight: 900; letter-spacing: 0.6px; color: var(--text); text-transform: uppercase;
+    }
+    .dist-tag {
+      font-size: 11px; font-weight: 900; font-family: monospace; padding: 3px 8px;
+      border-radius: 8px; background: rgba(0, 255, 102, 0.12); color: var(--green); border: 1px solid rgba(0,255,102,0.3);
+    }
+    .dist-svg-wrap { width: 100%; overflow: hidden; }
+
     .tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; scrollbar-width: none; }
     .tabs::-webkit-scrollbar { display: none; }
     .tab { flex: 0 0 auto; padding: 8px 13px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--muted); font-size: 12px; font-weight: 800; cursor: pointer; }
@@ -143,7 +160,7 @@
       <div class="card" style="margin-top: 16px;">
         <div class="card-header">Эталонная шкала (Mean = 5.0, SD = 0.6)</div>
         <div style="font-size: 12px; color: var(--muted); line-height: 1.65;">
-          • <b style="color:var(--green)">8.10 – 9.20 (Gigachad / Top Model):</b> Эталонный костный каркас и гармония (Топ 0.0001%)<br>
+          • <b style="color:var(--green)">8.10 – 9.20 (True Adam / Top Model):</b> Эталонный костный каркас и гармония (Топ 0.0001%)<br>
           • <b style="color:var(--green)">7.40 – 8.05 (Chad / Stacy):</b> Выдающаяся модельная эстетика и рельеф (Топ 0.0088%)<br>
           • <b style="color:var(--cyan)">6.70 – 7.35 (Chadlite / Stacylite):</b> Высокая привлекательность и чёткие углы (Топ 0.15%)<br>
           • <b style="color:var(--cyan)">5.85 – 6.65 (HTN):</b> Заметно привлекательнее среднего уровня (Топ 5%, 1 из 20)<br>
@@ -191,6 +208,15 @@
         </div>
       </div>
 
+      <!-- График Normal Distribution of Facial Attractiveness -->
+      <div class="dist-card">
+        <div class="dist-top">
+          <div class="dist-title">Normal Distribution of Facial Attractiveness</div>
+          <div class="dist-tag" id="distUserTag">RATING: 5.00</div>
+        </div>
+        <div class="dist-svg-wrap" id="bellCurveContainer"></div>
+      </div>
+
       <div class="tabs">
         <div class="tab active" onclick="switchTab(0)">Обзор</div>
         <div class="tab" onclick="switchTab(1)">Harmony (40%)</div>
@@ -233,7 +259,6 @@
     let profileImgObj = null;
     const memoryScanCache = new Map();
 
-    // Новый префикс кэша bpv3_ автоматически сбрасывает старые закэшированные оценки 6.17 / 6.25
     function computePhotoHash(str) {
       let h = 2166136261 >>> 0;
       const step = Math.max(1, Math.floor(str.length / 4000));
@@ -241,7 +266,7 @@
         h ^= str.charCodeAt(i);
         h = Math.imul(h, 16777619);
       }
-      return "bpv3_" + (h >>> 0).toString(16) + "_" + str.length;
+      return "bpv4_" + (h >>> 0).toString(16) + "_" + str.length;
     }
 
     function getCachedResult(hashKey) {
@@ -353,21 +378,28 @@
 
 ${dualSlotRule}
 
-2. СТРОГАЯ КАЛИБРОВКА ПО РЕАЛЬНОЙ КРИВОЙ ГАУССА (НЕ ЗАВЫШАЙ ОБЫЧНЫХ ПАРНЕЙ С СЕЛФИ ДО HTN И НЕ ЗАНИЖАЙ ПОДИУМНЫХ МОДЕЛЕЙ!):
-Оценивай КАЖДОЕ лицо индивидуально (не используй одинаковые шаблонные числа!) по 4 блокам: Harmony (40%) + Angularity (25%) + Dimorphism (20%) + Features (15%).
+2. ИДЕНТИФИКАЦИЯ ПО БАЗЕ LOOKSMAXXING / BLACKPILL LORE И ПРОВЕРКА СТАТУСА ЧЕЛОВЕКА:
+Перед выставлением оценки мысленно определи, кто именно изображён на фото:
+- ШАГ А (Известные модели, актёры и интернет-персонажи): Проверь по своей базе знаний, является ли человек на фото мировой топ-моделью подиума, иконой луксмаксинга, известным актёром или известным мемом/стримером:
+  * Если ты узнал мировую топ-модель / икону блэкпила (например: Jordan Barrett, Sean O'Pry, Hernan Drago, David Gandy, Matt Bomer, Elias de Poot, Chico Lachowski, Marlon Teixeira, Lucky Blue Smith и др.) — обязательно учитывай их статус мировой модели и выставляй им каноничный высокий рейтинг: True Adam (8.15 – 9.10) или верхний Chad (7.65 – 8.10). Никогда не занижай признанных мировых моделей!
+  * Если ты узнал известного актёра/модель (например: Lorenzo Zurzolo = 7.8–8.0 Chad, Timothée Chalamet = 6.95–7.15 Chadlite, Zayn Malik = 7.2 Chadlite, Tom Welling = 7.9 Chad, Doutzen Kroes = 8.1, Adriana Lima = 8.4) — выставляй оценку строго в соответствии с их консенсусным PSL/FaceIQ-рейтингом.
+  * Если ты узнал известного анти-эталона, фрика или мем-персонажа (например: Иван Золо = 3.6–4.0 LTN, Гитлер = 3.7–4.0 LTN, Шлитци с микроцефалией = 0.4–0.9 Sub-0, люди с тяжёлыми уродствами или гнилыми зубами = 0.5–1.4 Sub-0 / Sub-5) — ставь им соответствующий низкий балл.
+- ШАГ Б (Неизвестный обычный человек с бытового фото/селфи):
+  * Если на фото обычный неизвестный парень или девушка, про которого нет информации в базе моделей/знаменитостей (обычное селфи из жизни, соцсетей, улицы или комнаты) — оценивай его СТРОГО без поблажек!
+  * Помни: 85% обычных неизвестных людей с повседневных фото — это LTN (3.40 – 4.65) или MTN (4.75 – 5.45)! Не ставь неизвестным обычным парням с селфи HTN (6.0+), если у них нет сухого рельефа скул и острой модельной челюсти!
 
-ПРАВИЛА РАЗДЕЛЕНИЯ КАТЕГОРИЙ:
-- 8.15 – 9.15 (Gigachad / Top Model — Топ 0.0001%): элитные супермодели мирового подиума с экстремально выраженным костным каркасом, полыми щеками (hollow cheeks), высокими скулами, мощной челюстью и плотной посадкой бровей (уровень Jordan Barrett = 8.8, Sean O'Pry = 8.8, Elias de Poot = 8.15–8.35, Hernan Drago = 8.7). Никогда не занижай настоящих подиумных моделей с полыми щеками и hunter eyes!
-- 7.40 – 8.10 (Chad / Stacy — Топ 0.0088%): топ-модели и актёры с выдающейся гармонией и костным рельефом (уровень Chico Lachowski = 8.1, Lorenzo Zurzolo = 7.9, Tom Welling = 7.9).
-- 6.70 – 7.35 (Chadlite / Stacylite — Топ 0.15%): очень редкая модельная или актёрская эстетика с выраженными скулами и минимальным отклонением (уровень Timothee Chalamet = 7.0, Zayn Malik = 7.2).
-- 5.85 – 6.60 (HTN / High-Tier Normie — Топ 5%, 1 из 20): только для лиц, которые ЗАМЕТНО красивее обычного прохожего за счёт сухого рельефа скул и острой линии челюсти (например, парень с длинными волосами и острым углом челюсти в профиль, но уставшей зоной глаз в анфас = 6.05–6.25).
-- 4.75 – 5.65 (MTN / Mid-Tier Normie — Медиана 50%, 1 из 2): обычные нормальные парни на повседневных фото/селфи без модельных полых щёк и без hunter eyes. Если у парня на обычном селфи средние пропорции, мягкие ткани щёк, обычная челюсть или слегка уставшие глаза — ставь ему честные 4.75 – 5.25 (MTN), КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО ставить обычным парням с селфи 6.0+ (HTN)!
-- 3.20 – 4.70 (LTN / Low-Tier Normie — Нижние 15%, 1 из 7): лица ниже среднего на обычных селфи — заметная асимметрия, круглое/одутловатое лицо (facial bloat), слабый или скошенный подбородок, открытые верхние веки (upper eyelid exposure), мешки под глазами, непропорциональный нос или вытянутая средняя треть (ставь от 3.50 до 4.65 в зависимости от выраженности дебаффов!).
-- 1.50 – 3.15 (Sub-5 / Subhuman — Нижние 1%): тяжёлые краниофациальные диспропорции, сильная рецессия челюсти, выраженное ожирение лица, уродливые гримасы.
-- 0.10 – 1.45 (Sub-0 / Defective — Вне шкалы): экстремальные врождённые дефекты черепа (микроцефалия и т.п.), полностью гнилые/разрушенные зубы, тяжёлые патологии, на которые невозможно смотреть (ставь 0.30 – 1.25).
+3. ШКАЛА ТИРОВ (по 4 блокам: Harmony 40% + Angularity 25% + Dimorphism 20% + Features 15%):
+- 8.10 – 9.20 (True Adam / Top Model — Топ 0.0001%): элитные мировые супермодели с безупречным костным каркасом, полыми щеками (hollow cheeks) и hunter eyes.
+- 7.40 – 8.05 (Chad / Stacy — Топ 0.0088%): подиумные модели и красивейшие актёры с выдающейся гармонией и челюстью.
+- 6.70 – 7.35 (Chadlite / Stacylite — Топ 0.15%): очень редкая модельная или актёрская эстетика с минимальным отклонением.
+- 5.85 – 6.65 (HTN — Топ 5%, 1 из 20): заметно привлекательнее среднего за счёт сухого костного рельефа челюсти и скул, но с лёгкими несовершенствами глазной зоны или пропорций в анфас.
+- 4.75 – 5.80 (MTN — Медиана 50%, 1 из 2): обычный среднестатистический человек без модельного рельефа.
+- 3.20 – 4.70 (LTN — Нижние 15%, 1 из 7): лицо ниже среднего, одутловатость щёк (facial bloat), мягкий контур челюсти, открытые верхние веки, асимметрия, вытянутая средняя зона.
+- 1.50 – 3.15 (Sub-5 / Subhuman — Нижние 1%): выраженные краниофациальные дебаффы и рецессия.
+- 0.10 – 1.45 (Sub-0 / Defective — Вне шкалы): критические дефекты черепа, разрушенные зубы, экстремальные уродства.
 
-Верни ТОЛЬКО 1 строку валидного JSON без markdown (все тексты на русском, оценки каждого блока должны быть индивидуальными для конкретного фото):
-{"front_ok":true,"profile_ok":true,"face":true,"sex":"m","score":0.00,"h":0.0,"a":0.0,"d":0.0,"f":0.0,"sum":"Точный объективный разбор именно этого человека на фото (3 предложения): гармония анфаса, глазная зона, скулы, мягкие ткани и челюсть.","halos":["Конкретная сильная сторона 1","Сильная сторона 2"],"failos":["Конкретный недостаток / дебафф 1","Недостаток 2"],"m":{"esr":["оценка посадки глаз (эталон 45.5-47.7%)",0.0],"fwhr":["оценка FWHR (эталон 1.90-2.05)",0.0],"thirds":["баланс верхней, средней и нижней трети",0.0],"midface":["компактность средней зоны",0.0],"profile":["проекция максиллы и профиля",0.0],"jaw":["чёткость углов нижней челюсти",0.0],"cheek_h":["высота и выступ скул",0.0],"ramus":["высота ветви челюсти",0.0],"hollow":["Hollow Cheeks / Lean / Facial Bloat",0.0],"bone":["общая массивность костного каркаса",0.0],"brow":["посадка бровей и надбровье (Hooding)",0.0],"chin":["проекция и форма подбородка",0.0],"eyes":["кантальный наклон и разрез глаз",0.0],"brows_f":["густота и форма бровей",0.0],"nose_lips":["форма носа, полнота губ и зубы",0.0],"sym_skin":["симметрия лица и состояние кожи",0.0]}}`;
+Верни ТОЛЬКО 1 строку валидного JSON без markdown (все тексты на русском, в тексте sum не называй имя человека, а описывай его анатомию и черты):
+{"front_ok":true,"profile_ok":true,"face":true,"sex":"m","score":0.00,"h":0.0,"a":0.0,"d":0.0,"f":0.0,"sum":"Точный объективный разбор именно этого лица (3 предложения): гармония анфаса, глазная зона, скулы, мягкие ткани и челюсть.","halos":["Конкретная сильная сторона 1","Сильная сторона 2"],"failos":["Конкретный недостаток / дебафф 1","Недостаток 2"],"m":{"esr":["оценка посадки глаз (эталон 45.5-47.7%)",0.0],"fwhr":["оценка FWHR (эталон 1.90-2.05)",0.0],"thirds":["баланс верхней, средней и нижней трети",0.0],"midface":["компактность средней зоны",0.0],"profile":["проекция максиллы и профиля",0.0],"jaw":["чёткость углов нижней челюсти",0.0],"cheek_h":["высота и выступ скул",0.0],"ramus":["высота ветви челюсти",0.0],"hollow":["Hollow Cheeks / Lean / Facial Bloat",0.0],"bone":["общая массивность костного каркаса",0.0],"brow":["посадка бровей и надбровье (Hooding)",0.0],"chin":["проекция и форма подбородка",0.0],"eyes":["кантальный наклон и разрез глаз",0.0],"brows_f":["густота и форма бровей",0.0],"nose_lips":["форма носа, полнота губ и зубы",0.0],"sym_skin":["симметрия лица и состояние кожи",0.0]}}`;
     }
 
     const SAFETY_OFF = [
@@ -540,9 +572,17 @@ ${dualSlotRule}
       return "var(--crimson)";
     }
 
+    function getScoreHexColor(v) {
+      if (v >= 6.70) return "#00ff66";
+      if (v >= 5.85) return "#00f0ff";
+      if (v >= 4.75) return "#ffaa00";
+      if (v >= 1.50) return "#ff2a5f";
+      return "#b800ff";
+    }
+
     function getTierAndRarity(score) {
       if (score >= 8.10) {
-        return { tier: "Gigachad / Top Model", psl: "7.5–8.5 PSL", rarity: "Топ 0.0001% (1 из 1 000 000+ · эталон)" };
+        return { tier: "True Adam / Top Model", psl: "7.5–8.5 PSL", rarity: "Топ 0.0001% (1 из 1 000 000+ · эталон)" };
       }
       if (score >= 7.40) {
         return { tier: "Chad / Stacy (Model)", psl: "6.5–7.5 PSL", rarity: "Топ 0.0088% (1 из 11 394 · модельный уровень)" };
@@ -563,6 +603,82 @@ ${dualSlotRule}
         return { tier: "Sub-5 / Subhuman", psl: "1.0–1.8 PSL", rarity: "Нижние 1% (выраженные дебаффы)" };
       }
       return { tier: "Sub-0 / Defective", psl: "0.0–0.8 PSL", rarity: "Вне шкалы (< 0.01% · критические дефекты)" };
+    }
+
+    // Отрисовка графика Normal Distribution of Facial Attractiveness (со всеми делениями 0.25..10 и 0%..60% и подсветкой балла)
+    function renderNormalDistributionChart(userScore) {
+      const tagEl = document.getElementById('distUserTag');
+      const hex = getScoreHexColor(userScore);
+      tagEl.innerText = `ВЫ ЗДЕСЬ: ${userScore.toFixed(2)}`;
+      tagEl.style.color = hex;
+      tagEl.style.borderColor = hex;
+
+      // 39 столбцов с шагом 0.25 от 0.25 до 9.75 (в точности как на оригинальной диаграмме)
+      const bars = [];
+      for (let r = 0.25; r <= 9.75; r += 0.25) {
+        const pct = 49.5 * Math.exp(-0.5 * Math.pow((r - 4.875) / 0.82, 2));
+        bars.push({ r: parseFloat(r.toFixed(2)), pct: Math.max(0.4, pct) });
+      }
+
+      // Находим ближайший к оценке пользователя столбец
+      let closestIdx = 0;
+      let minDiff = 999;
+      bars.forEach((b, idx) => {
+        const diff = Math.abs(b.r - userScore);
+        if (diff < minDiff) { minDiff = diff; closestIdx = idx; }
+      });
+
+      const W = 400, H = 195;
+      const padL = 32, padR = 14, padT = 26, padB = 28;
+      const plotW = W - padL - padR;
+      const plotH = H - padT - padB;
+
+      const xForRating = (val) => padL + ((clamp(val, 0.25, 10) - 0.25) / 9.75) * plotW;
+      const yForPct = (pct) => padT + plotH - (pct / 60) * plotH;
+
+      const yGrid = [0, 10, 20, 30, 40, 50, 60].map(p => {
+        const y = yForPct(p).toFixed(1);
+        return `
+          <line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#182230" stroke-width="1" />
+          <text x="${padL - 5}" y="${parseFloat(y) + 3}" text-anchor="end" fill="#7088a3" font-size="8.5" font-family="monospace">${p}%</text>
+        `;
+      }).join('');
+
+      const xLabels = [0.25, 1, 1.75, 2.5, 3.25, 4, 4.75, 5.5, 6.25, 7, 7.75, 8.5, 9.25, 10].map(lbl => {
+        const x = xForRating(lbl).toFixed(1);
+        return `<text x="${x}" y="${H - 8}" text-anchor="middle" fill="#8fa6c0" font-size="8" font-weight="700" font-family="monospace">${lbl}</text>`;
+      }).join('');
+
+      const barW = 4.6;
+      const barsSvg = bars.map((b, idx) => {
+        const cx = xForRating(b.r);
+        const bx = (cx - barW / 2).toFixed(1);
+        const by = yForPct(b.pct).toFixed(1);
+        const bh = Math.max(2, (padT + plotH - by)).toFixed(1);
+        const isUser = idx === closestIdx;
+        const fill = isUser ? hex : "rgba(0, 240, 255, 0.16)";
+        const stroke = isUser ? hex : "#3b6998";
+        const sw = isUser ? "1.6" : "1";
+        return `<rect x="${bx}" y="${by}" width="${barW}" height="${bh}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" rx="1" />`;
+      }).join('');
+
+      const userX = xForRating(userScore).toFixed(1);
+      const activeBarY = yForPct(bars[closestIdx].pct);
+      const pinTopY = Math.max(13, activeBarY - 14).toFixed(1);
+
+      const svg = `
+        <svg viewBox="0 0 ${W} ${H}" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
+          ${yGrid}
+          ${barsSvg}
+          <line x1="${userX}" y1="${padT - 6}" x2="${userX}" y2="${padT + plotH}" stroke="${hex}" stroke-width="1.5" stroke-dasharray="3,2" />
+          <circle cx="${userX}" cy="${pinTopY}" r="3.5" fill="${hex}" />
+          <text x="${clamp(parseFloat(userX), 52, W - 52)}" y="${Math.max(10, parseFloat(pinTopY) - 6)}" text-anchor="middle" fill="${hex}" font-size="9" font-weight="900" font-family="monospace">▼ ${userScore.toFixed(2)}</text>
+          <text x="${W - padR - 2}" y="${padT + plotH - 8}" text-anchor="end" fill="#7088a3" font-size="8.5" font-weight="700">Rating</text>
+          ${xLabels}
+        </svg>
+      `;
+
+      document.getElementById('bellCurveContainer').innerHTML = svg;
     }
 
     function renderMetricsList(arr) {
@@ -623,6 +739,9 @@ ${dualSlotRule}
         el.style.color = getScoreColor(v);
       };
       setP('fHarmony', h); setP('fAngular', a); setP('fDimorph', dm); setP('fFeatures', f);
+
+      // Отрисовка колокола нормального распределения с точкой пользователя
+      renderNormalDistributionChart(finalVal);
 
       document.getElementById('resHalos').innerHTML = Array.isArray(d.halos) && d.halos.length
         ? d.halos.map(x => `• ${x}`).join('<br>') : "• Выраженных доминирующих Halo-маркеров не выделено.";
