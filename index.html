@@ -146,7 +146,7 @@
           • <b style="color:var(--cyan)">6.65 – 7.20 (Chadlite / Stacylite):</b> Зейн Малик, Орландо Блум, Роналду, Кира, Ана де Армас<br>
           • <b style="color:var(--cyan)">5.85 – 6.50 (HTN):</b> Заметно привлекательнее среднего (Топ 5%, 1 из 20)<br>
           • <b style="color:var(--gold)">4.75 – 5.65 (MTN):</b> Обычное среднестатистическое лицо (1 из 2)<br>
-          • <b style="color:var(--red)">2.20 – 4.30 (LTN / Subhuman):</b> Выраженные дебаффы, блоут, скошенный подбородок, негативный кантус
+          • <b style="color:var(--red)">2.20 – 4.30 (LTN / Sub-5):</b> Выраженные дебаффы, блоут, скошенный подбородок, негативный кантус
         </div>
       </div>
     </div>
@@ -164,7 +164,7 @@
         <div class="spinner"></div>
         <div style="font-size:16px; font-weight:900; margin-bottom:8px;">Нейросеть изучает лицо...</div>
         <div style="font-size:12px; color:var(--cyan); font-family:monospace; line-height:1.5;" id="liveStepText">Передача снимков в Google Gemini...</div>
-        <div style="font-size:11px; color:var(--muted); margin-top:10px; font-family:monospace;" id="elapsedTimerText">Время анализа: 0 сек</div>
+        <div style="font-size:11px; color:var(--muted); margin-top:10px; font-family:monospace;" id="elapsedTimerText">Идёт глубокий анализ: 0 сек</div>
       </div>
     </div>
 
@@ -227,7 +227,7 @@
     let frontDataUrl = null;
     let profileDataUrl = null;
 
-    function compressPhoto(file, maxSide = 512, q = 0.78) {
+    function compressPhoto(file, maxSide = 480, q = 0.76) {
       return new Promise((resolve) => {
         const r = new FileReader();
         r.onload = (e) => {
@@ -252,7 +252,7 @@
     async function onPhotoSelected(which, event) {
       const file = event.target.files[0];
       if (!file) return;
-      const url = await compressPhoto(file, 512, 0.78);
+      const url = await compressPhoto(file, 480, 0.76);
       if (which === 'front') {
         frontDataUrl = url;
         const el = document.getElementById('previewFront');
@@ -280,62 +280,58 @@
       document.querySelectorAll('.pane').forEach((p, i) => p.classList.toggle('active', i === idx));
     }
 
-    const AI_PROMPT = `Ты — профессиональный краниофациальный аналитик и модельный кастинг-эксперт по системе Chronic K / FaceIQ (нормальное распределение: среднее = 5.0, стандартное отклонение SD = 0.6).
-Изучи прикрепленные фотографии человека (анфас и профиль/второй ракурс).
+    const AI_PROMPT = `Ты — профессиональный краниофациальный аналитик и эксперт модельного кастинга по системе Chronic K / FaceIQ (нормальное распределение: среднее = 5.0, SD = 0.6).
+Изучи прикрепленные фотографии (анфас и профиль/второй ракурс).
 
 ПРАВИЛА КАЛИБРОВКИ:
-1. Если на фото НЕ живое человеческое лицо (например, футболка, одежда, предмет, рисунок), верни ТОЛЬКО:
+1. Если на фото НЕ живое человеческое лицо (футболка, одежда, предмет, рисунок), верни ТОЛЬКО:
    {"is_human_face": false, "reject_reason": "На снимке предмет или одежда, а не живое человеческое лицо."}
-2. Оценивай объективно:
+2. Оценивай объективно без занижения моделей:
    - 8.1 – 9.2 (Gigachad / Top Model, 7.5–8.5 PSL, Топ 0.0001%, 1 из 1 000 000+): эталонные супермодели (Jordan Barrett, Sean O'Pry, Matt Bomer, Hernan Drago, David Gandy).
    - 7.3 – 8.0 (Chad / Stacy, 6.5–7.5 PSL, Топ 0.0088%, 1 из 11 394): топ-модели и актёры с отличной гармонией, челюстью и зоной глаз (Francisco Lachowski / Chico, Lorenzo Zurzolo, Tom Welling, Doutzen Kroes).
    - 6.7 – 7.25 (Chadlite / Stacylite, 5.5–6.2 PSL, Топ 0.15%, 1 из 600): очень привлекательные лица с выраженными скулами и чёткой челюстью (Zayn Malik, Orlando Bloom, Cristiano Ronaldo, Kira, Ana de Armas).
    - 5.9 – 6.5 (HTN, 4.5–5.2 PSL, Топ 5%, 1 из 20): заметно выше среднего.
    - 4.8 – 5.6 (MTN, 3.5–4.2 PSL, Медиана 50%, 1 из 2): обычное среднестатистическое лицо.
-   - 2.3 – 4.2 (LTN / Sub-5, 1.0–2.5 PSL, Нижние 15%–1%): лица с выраженными диспропорциями, отёчностью щёк (facial bloat), слабым скошенным подбородком, отрицательным кантальным наклоном, выпученными глазами или гримасой с открытым ртом.
+   - 2.3 – 4.2 (LTN / Sub-5, 1.0–2.5 PSL, Нижние 15%–1%): выраженные диспропорции, отёчность щёк (facial bloat), скошенный подбородок, отрицательный кантальный наклон, выпученные глаза или гримаса.
 
-ФОРМУЛА ВЕСОВ:
-- Мужчины: Harmony (40%) + Angularity (25%) + Dimorphism (20%) + Features (15%)
-- Женщины: Harmony (32%) + Features (28%) + Dimorphism (20%) + Angularity (20%)
-
-Верни ТОЛЬКО валидный JSON строго по этой структуре:
+Верни ТОЛЬКО валидный JSON строго по этой схеме:
 {
   "is_human_face": true,
   "gender": "male",
   "final_score": 0.00,
-  "tier": "Gigachad / Chad / Chadlite / HTN / MTN / LTN / Subhuman",
+  "tier": "Gigachad / Chad / Chadlite / HTN / MTN / LTN / Sub-5",
   "psl_equivalent": "X.X–X.X PSL",
   "rarity": "Топ X% (1 из X)",
   "harmony_score": 0.0,
   "angularity_score": 0.0,
   "dimorphism_score": 0.0,
   "features_score": 0.0,
-  "summary": "Подробный разбор именно этого лица на русском языке (3-4 предложения): гармония, глазная зона, рельеф скул, челюсть и профиль.",
+  "summary": "Подробный разбор именно этого лица на русском языке (3 предложения): гармония, глазная зона, скулы, челюсть и профиль.",
   "halos": ["Сильная сторона 1", "Сильная сторона 2", "Сильная сторона 3"],
-  "failos": ["Слабая сторона / точка роста (или укажи, что критических недостатков нет)"],
+  "failos": ["Слабая сторона / точка роста (или укажи отсутствие критических недостатков)"],
   "harmony_metrics": [
     {"name": "ESR (Eye Separation Ratio)", "val": "оценка в % (идеал 45.5–47.7%)", "score": 0.0, "desc": "Межзрачковая дистанция относительно ширины скул"},
     {"name": "FWHR (Индекс ширины лица)", "val": "оценка (идеал 1.90–2.07)", "score": 0.0, "desc": "Отношение ширины скул к высоте средней зоны"},
-    {"name": "Баланс лицевых третей (Facial Thirds)", "val": "соотношение третей", "score": 0.0, "desc": "Гармония верхней, средней и нижней трети лица"},
-    {"name": "Компактность средней зоны (Midface Ratio)", "val": "оценка", "score": 0.0, "desc": "Компактность центральной части лица"},
-    {"name": "Гармония профиля (Maxilla & E-Line)", "val": "оценка проекции", "score": 0.0, "desc": "Вектор роста верхней челюсти и положение губ"}
+    {"name": "Баланс лицевых третей", "val": "соотношение третей", "score": 0.0, "desc": "Гармония верхней, средней и нижней трети"},
+    {"name": "Компактность средней зоны (Midface)", "val": "оценка", "score": 0.0, "desc": "Компактность центральной части лица"},
+    {"name": "Гармония профиля (Maxilla & E-Line)", "val": "оценка проекции", "score": 0.0, "desc": "Проекция верхней челюсти и положение губ"}
   ],
   "angularity_metrics": [
-    {"name": "1. Jaw Angularity (Чёткость челюсти)", "val": "оценка", "score": 0.0, "desc": "Острота гониального угла и рельеф тела нижней челюсти"},
+    {"name": "1. Jaw Angularity (Чёткость челюсти)", "val": "оценка", "score": 0.0, "desc": "Острота гониального угла и рельеф нижней челюсти"},
     {"name": "2. Cheekbone Height & Projection", "val": "оценка скул", "score": 0.0, "desc": "Высота посадки и выступ скуловой дуги"},
-    {"name": "3. Ramus Visibility (Высота ветви челюсти)", "val": "оценка рамуса", "score": 0.0, "desc": "Длина и вертикальная опора ветви нижней челюсти"},
-    {"name": "4. Cheek Hollowness (Впалость щёк / Блоут)", "val": "Hollow / Lean / Bloated", "score": 0.0, "desc": "Сепарация щёк и процент подкожного жира на лице"}
+    {"name": "3. Ramus Visibility (Ветвь челюсти)", "val": "оценка рамуса", "score": 0.0, "desc": "Длина вертикальной ветви нижней челюсти"},
+    {"name": "4. Cheek Hollowness (Впалость щёк)", "val": "Hollow / Lean / Bloated", "score": 0.0, "desc": "Сепарация щёк и уровень жировой прослойки"}
   ],
   "dimorphism_metrics": [
-    {"name": "Костная масса (Overall Bone Mass)", "val": "оценка", "score": 0.0, "desc": "Общая робастность и массивность лицевого скелета"},
-    {"name": "Надбровье и посадка бровей (Hooding)", "val": "оценка", "score": 0.0, "desc": "Супраорбитальная защита и плотность верхнего века"},
-    {"name": "Проекция и ширина подбородка", "val": "оценка", "score": 0.0, "desc": "Выступ симфиза подбородка и бигониальная ширина"}
+    {"name": "Костная масса (Bone Mass)", "val": "оценка", "score": 0.0, "desc": "Общая массивность лицевого скелета"},
+    {"name": "Надбровье и посадка бровей (Hooding)", "val": "оценка", "score": 0.0, "desc": "Супраорбитальная дуга и плотность верхнего века"},
+    {"name": "Проекция и ширина подбородка", "val": "оценка", "score": 0.0, "desc": "Выступ подбородка и бигониальная ширина"}
   ],
   "features_metrics": [
-    {"name": "Eye Area & Canthal Tilt (45.5% веса блока)", "val": "наклон и форма глаз", "score": 0.0, "desc": "Кантальный наклон, форма разреза глаз и отсутствие scleral show"},
-    {"name": "Густота, наклон и контраст бровей", "val": "оценка", "score": 0.0, "desc": "Форма и плотность надбровных дуг"},
-    {"name": "Форма носа и ротовой зоны (Губы)", "val": "оценка", "score": 0.0, "desc": "Прямизна спинки носа и полнота вермилиона губ"},
-    {"name": "Симметрия и качество кожи", "val": "оценка", "score": 0.0, "desc": "Билатеральная соосность черт и состояние кожи"}
+    {"name": "Eye Area & Canthal Tilt (45.5%)", "val": "наклон и форма глаз", "score": 0.0, "desc": "Кантальный наклон, разрез глаз и отсутствие scleral show"},
+    {"name": "Густота и форма бровей", "val": "оценка", "score": 0.0, "desc": "Форма, контраст и плотность бровей"},
+    {"name": "Нос и ротовая зона (Губы)", "val": "оценка", "score": 0.0, "desc": "Спинка носа и полнота вермилиона губ"},
+    {"name": "Симметрия и качество кожи", "val": "оценка", "score": 0.0, "desc": "Билатеральная симметрия и состояние кожи"}
   ]
 }`;
 
@@ -346,36 +342,35 @@
       { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
     ];
 
-    // Безопасное извлечение JSON из всех блоков ответа Gemini (с учётом скрытых блоков размышлений thought)
+    function tryParseLooseJson(rawText) {
+      if (!rawText || typeof rawText !== "string") return null;
+      const f = rawText.indexOf('{');
+      const l = rawText.lastIndexOf('}');
+      if (f === -1 || l === -1 || l <= f) return null;
+      let sub = rawText.slice(f, l + 1);
+      try {
+        return JSON.parse(sub);
+      } catch (e1) {
+        try {
+          sub = sub.replace(/,\s*([}\]])/g, '$1');
+          return JSON.parse(sub);
+        } catch (e2) {
+          return null;
+        }
+      }
+    }
+
     function extractJsonFromCandidate(candidate) {
       const parts = candidate?.content?.parts || [];
       for (let i = parts.length - 1; i >= 0; i--) {
-        const txt = parts[i]?.text || "";
-        const f = txt.indexOf('{');
-        const l = txt.lastIndexOf('}');
-        if (f !== -1 && l !== -1 && l > f) {
-          try {
-            const parsed = JSON.parse(txt.slice(f, l + 1));
-            if (typeof parsed.is_human_face === 'boolean' || typeof parsed.final_score === 'number') {
-              return parsed;
-            }
-          } catch (e) {}
+        if (parts[i]?.thought) continue;
+        const parsed = tryParseLooseJson(parts[i]?.text || "");
+        if (parsed && (parsed.is_human_face !== undefined || parsed.final_score !== undefined)) {
+          return parsed;
         }
       }
-      return null;
-    }
-
-    async function fetchWithTimeout(url, options, timeoutMs = 28000) {
-      const ctrl = new AbortController();
-      const id = setTimeout(() => ctrl.abort(), timeoutMs);
-      try {
-        const resp = await fetch(url, { ...options, signal: ctrl.signal });
-        clearTimeout(id);
-        return resp;
-      } catch (err) {
-        clearTimeout(id);
-        throw err;
-      }
+      const combined = parts.map(p => p?.text || "").join("\n");
+      return tryParseLooseJson(combined);
     }
 
     async function callGeminiDirect(frontUrl, profileUrl) {
@@ -387,44 +382,33 @@
         parts.push({ inline_data: { mime_type: "image/jpeg", data: profileUrl.split(',')[1] } });
       }
 
-      const models = ["gemini-3.8-flash", "gemini-3.8-pro"];
-      let lastError = "";
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${encodeURIComponent(GEMINI_KEY)}`;
 
-      for (const mName of models) {
-        try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${encodeURIComponent(GEMINI_KEY)}`;
-          const r = await fetchWithTimeout(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts }],
-              safetySettings: SAFETY_OFF,
-              generationConfig: {
-                temperature: 0.1,
-                responseMimeType: "application/json"
-              }
-            })
-          }, 28000);
-
-          const j = await r.json();
-          if (!r.ok) {
-            lastError = j?.error?.message || `HTTP ${r.status}`;
-            continue;
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts }],
+          safetySettings: SAFETY_OFF,
+          generationConfig: {
+            temperature: 0.1,
+            responseMimeType: "application/json"
           }
+        })
+      });
 
-          const parsed = extractJsonFromCandidate(j?.candidates?.[0]);
-          if (parsed) {
-            return parsed;
-          } else {
-            const blockReason = j?.promptFeedback?.blockReason || j?.candidates?.[0]?.finishReason || "Пустой ответ";
-            lastError = `Ответ не распознан (${blockReason})`;
-          }
-        } catch (e) {
-          lastError = e.name === 'AbortError' ? 'Превышено время ожидания ответа от сервера (проверьте VPN)' : e.message;
-        }
+      const j = await r.json();
+      if (!r.ok) {
+        throw new Error(j?.error?.message || `HTTP ${r.status}`);
       }
 
-      throw new Error(lastError || "Не удалось получить ответ от нейросети.");
+      const parsed = extractJsonFromCandidate(j?.candidates?.[0]);
+      if (parsed) {
+        return parsed;
+      }
+
+      const reason = j?.promptFeedback?.blockReason || j?.candidates?.[0]?.finishReason || "Формат ответа не распознан";
+      throw new Error(`Не удалось разобрать ответ модели (${reason})`);
     }
 
     async function runPureGeminiAnalysis() {
@@ -437,17 +421,17 @@
         "Передача снимков в нейросеть Google Gemini...",
         "Оценка костной структуры, глазной зоны и FWHR...",
         "Расчёт Angularity (Jaw, Ramus, Hollow Cheeks) и Dimorphism...",
-        "Формирование итогового вердикта по формуле 40/25/20/15..."
+        "Сведение всех метрик по формуле Chronic / FaceIQ (40/25/20/15)..."
       ];
       let idx = 0;
       let sec = 0;
       statusEl.innerText = msgs[0];
-      timerEl.innerText = "Время анализа: 0 сек";
+      timerEl.innerText = "Идёт глубокий анализ: 0 сек";
 
       const t = setInterval(() => {
         sec++;
-        timerEl.innerText = `Время анализа: ${sec} сек`;
-        if (sec % 3 === 0) {
+        timerEl.innerText = `Идёт глубокий анализ: ${sec} сек`;
+        if (sec % 4 === 0) {
           idx = (idx + 1) % msgs.length;
           statusEl.innerText = msgs[idx];
         }
@@ -482,7 +466,7 @@
     function renderMetricsList(arr) {
       if (!Array.isArray(arr)) return "";
       return arr.map(it => {
-        const sc = Number(it.score || 5.0);
+        const sc = parseFloat(it.score) || 5.0;
         const col = getScoreColor(sc);
         const pct = Math.max(8, Math.min(100, Math.round(sc * 10)));
         return `
@@ -505,16 +489,16 @@
       if (profileDataUrl) { pImg.src = profileDataUrl; pImg.style.display = 'block'; }
       else { pImg.style.display = 'none'; }
 
-      const h = Number(d.harmony_score || d.final_score || 5.0);
-      const a = Number(d.angularity_score || d.final_score || 5.0);
-      const dm = Number(d.dimorphism_score || d.final_score || 5.0);
-      const f = Number(d.features_score || d.final_score || 5.0);
+      const finalVal = parseFloat(d.final_score) || 5.0;
+      const h = parseFloat(d.harmony_score) || finalVal;
+      const a = parseFloat(d.angularity_score) || finalVal;
+      const dm = parseFloat(d.dimorphism_score) || finalVal;
+      const f = parseFloat(d.features_score) || finalVal;
 
       const isFem = String(d.gender).toLowerCase() === 'female';
       document.getElementById('fHarmonyLbl').innerText = isFem ? "Harmony (32%)" : "Harmony (40%)";
       document.getElementById('fFeaturesLbl').innerText = isFem ? "Features (28%)" : "Features (15%)";
 
-      const finalVal = Number(d.final_score || 5.0);
       const col = getScoreColor(finalVal);
       document.getElementById('resFinalScore').innerText = finalVal.toFixed(2);
       document.getElementById('resFinalScore').style.color = col;
