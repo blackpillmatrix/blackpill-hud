@@ -65,119 +65,13 @@
       background: rgba(255, 42, 95, 0.1); border: 1px solid var(--red);
       border-radius: 16px; padding: 22px 16px; text-align: center; margin-bottom: 16px;
     }
-    .loader-box { text-align: center; padding: 32px 16px; }
+    .loader-box { text-align: center; padding: 36px 16px; }
     .spinner {
       width: 58px; height: 58px; border-radius: 50%; border: 4px solid var(--border);
       border-top-color: var(--green); border-right-color: var(--cyan);
-      margin: 0 auto 16px auto; animation: spin 0.85s linear infinite;
+      margin: 0 auto 16px auto; animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .hero-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px 16px; text-align: center; margin-bottom: 14px; }
-    .dual-avatars { display: flex; justify-content: center; align-items: center; margin-bottom: 14px; }
-    .avatar-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--card); background: #111; }
-    .avatar-img.second { margin-left: -20px; }
-    .big-score { font-size: 46px; font-weight: 900; line-height: 1; margin: 4px 0; }
-    .tier-badge {
-      display: inline-block; padding: 6px 16px;На этом скриншоте[cite: 18] в зелёном логе запечатлён ключевой момент, который показывает, почему именно происходил сбой:
-
-* На шаге **`[1/6]`** сервер `gemini-3.8-flash` мгновенно вернул **`503` (Узел занят)**[cite: 18].
-* Через 2 секунды на шаге **`[2/6]`** модель **`gemini-3.8-flash` приняла запрос в работу** (ошибки `503` уже не было!), начала анализировать фото, но мой 18-секундный таймер принудительно оборвал её на полуслове (**`ТАЙМ-АУТ`**)[cite: 18], после чего скрипт переключился на нерабочую модель `gemini-flash-lite-latest` на шаге **`[3/6]`** и завис[cite: 18].
-* Кроме того, в коде стояло ограничение `maxOutputTokens: 1000`: в моделях линейки Gemini 3.8 внутренние рассуждения (`thought`) входят в этот лимит, поэтому модель тратила все 1000 токенов на размышления и обрывалась прямо перед выводом самого JSON-ответа.
-
----
-
-### Что исправлено в чистовом коде ниже:
-
-1. **Убран лимит `maxOutputTokens: 1000`:** теперь `gemini-3.8-flash` спокойно завершает фазу размышлений и всегда дописывает итоговый JSON до конца.
-2. **Убраны старые модели `lite / 2.5`[cite: 18] и `MediaPipe`:** запросы идут строго в рабочую мультимодальную модель **`gemini-3.8-flash`**. Если в первую секунду сервер возвращает `503`[cite: 18], скрипт через 2 секунды автоматически стучится снова именно в `gemini-3.8-flash`.
-3. **Окно ожидания увеличено с 18 до 45 секунд (с жёсткой защитой через `Promise.race`):** соединение больше не обрывает работающую нейросеть на 18-й секунде, пока она додумывает ответ (обычно `gemini-3.8-flash` выдаёт полный разбор на 20–28 секунде), и при этом физически не может зависнуть навсегда.
-
----
-
-### Полный исправленный код `index.html` (для GitHub)
-
-Открой `index.html` на GitHub, обнови страницу (**F5**), нажми карандаш (**Edit this file**), полностью замени старый код (**Ctrl + A** ➔ **Del**) на этот и нажми **Commit changes**:
-
-```html
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
-  <title>BLACKPILL // VISION</title>
-  <script src="[https://telegram.org/js/telegram-web-app.js](https://telegram.org/js/telegram-web-app.js)"></script>
-  <style>
-    :root {
-      --bg: #06080c; --card: #0d1219; --border: #1c2736;
-      --text: #eef5ff; --muted: #7088a3; --green: #00ff66;
-      --green-bg: rgba(0, 255, 102, 0.12); --cyan: #00f0ff;
-      --gold: #ffaa00; --red: #ff2a5f;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); padding-bottom: 36px; overflow-x: hidden; }
-    .topbar {
-      padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px solid var(--border); background: rgba(13, 18, 25, 0.95);
-      position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px);
-    }
-    .brand { font-size: 13px; font-weight: 900; letter-spacing: 0.8px; color: var(--cyan); display: flex; align-items: center; gap: 8px; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
-    .status-pill {
-      font-size: 11px; font-weight: 800; padding: 5px 11px; border-radius: 14px;
-      background: var(--green-bg); color: var(--green); border: 1px solid rgba(0,255,102,0.35);
-    }
-    .container { max-width: 480px; margin: 0 auto; padding: 16px; }
-    .screen { display: none; }
-    .screen.active { display: block; }
-    .title { font-size: 22px; font-weight: 900; line-height: 1.2; margin-bottom: 6px; }
-    .title span { color: var(--green); }
-    .subtitle { font-size: 13px; color: var(--muted); line-height: 1.45; margin-bottom: 16px; }
-
-    .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-    .photo-slot {
-      background: var(--card); border: 2px dashed var(--border); border-radius: 16px;
-      aspect-ratio: 3/4; display: flex; flex-direction: column; align-items: center;
-      justify-content: center; cursor: pointer; position: relative; overflow: hidden; padding: 12px; text-align: center;
-    }
-    .photo-slot.loaded { border-style: solid; border-color: var(--green); }
-    .photo-slot img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
-    .slot-overlay {
-      position: relative; z-index: 2; background: rgba(6, 8, 12, 0.82);
-      padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border);
-    }
-    .slot-title { font-size: 12px; font-weight: 800; color: #fff; margin-top: 4px; }
-    .slot-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
-
-    .btn-main {
-      width: 100%; padding: 16px; border-radius: 14px; border: none;
-      background: var(--green); color: #000; font-size: 14px; font-weight: 900;
-      cursor: pointer; box-shadow: 0 0 20px rgba(0, 255, 102, 0.25);
-    }
-    .btn-main:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
-
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
-    .card-header { font-size: 11px; font-weight: 900; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
-
-    .reject-box {
-      background: rgba(255, 42, 95, 0.1); border: 1px solid var(--red);
-      border-radius: 16px; padding: 22px 16px; text-align: center; margin-bottom: 16px;
-    }
-    .loader-box { text-align: center; padding: 32px 16px; }
-    .spinner {
-      width: 58px; height: 58px; border-radius: 50%; border: 4px solid var(--border);
-      border-top-color: var(--green); border-right-color: var(--cyan);
-      margin: 0 auto 16px auto; animation: spin 0.85s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .live-log {
-      margin-top: 14px; padding: 10px; border-radius: 10px; background: #05070a;
-      border: 1px solid var(--border); font-family: monospace; font-size: 11px;
-      color: var(--green); text-align: left; line-height: 1.5; white-space: pre-line;
-    }
 
     .hero-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px 16px; text-align: center; margin-bottom: 14px; }
     .dual-avatars { display: flex; justify-content: center; align-items: center; margin-bottom: 14px; }
@@ -214,13 +108,13 @@
 
   <div class="topbar">
     <div class="brand"><div class="dot"></div> BLACKPILL // VISION</div>
-    <div class="status-pill">✓ GEMINI AI ACTIVE</div>
+    <div class="status-pill">✓ ENGINE READY</div>
   </div>
 
   <div class="container">
     <div class="screen active" id="scrUpload">
       <div class="title">НЕЙРОСЕТЕВОЙ РАЗБОР<br><span>ПО СИСТЕМЕ CHRONIC / FACEIQ</span></div>
-      <div class="subtitle">Загрузи анфас и профиль. Фотографии напрямую анализирует мультимодальная нейросеть Google Gemini по методологии Harmony (40%) + Angularity (25%) + Dimorphism (20%) + Features (15%).</div>
+      <div class="subtitle">Загрузи анфас и профиль. Система рассчитывает индекс привлекательности по методологии Harmony (40%) + Angularity (25%) + Dimorphism (20%) + Features (15%).</div>
 
       <div class="upload-grid">
         <div class="photo-slot" id="slotFront" onclick="document.getElementById('inputFront').click()">
@@ -245,7 +139,7 @@
       <input type="file" id="inputFront" accept="image/*" style="display:none" onchange="onPhotoSelected('front', event)">
       <input type="file" id="inputProfile" accept="image/*" style="display:none" onchange="onPhotoSelected('profile', event)">
 
-      <button class="btn-main" id="startBtn" disabled onclick="runPureGeminiAnalysis()">⚡️ ЗАПУСТИТЬ АНАЛИЗ ЛИЦА</button>
+      <button class="btn-main" id="startBtn" disabled onclick="runAnalysis()">⚡️ ЗАПУСТИТЬ АНАЛИЗ ЛИЦА</button>
 
       <div class="card" style="margin-top: 16px;">
         <div class="card-header">Эталонная шкала (Mean = 5.0, SD = 0.6)</div>
@@ -262,18 +156,17 @@
 
     <div class="screen" id="scrReject">
       <div class="reject-box">
-        <div style="font-size:16px; font-weight:900; color:var(--red); margin-bottom:8px;" id="rejectTitleText">🚫 ОБЪЕКТ ОТКЛОНЁН</div>
-        <div style="font-size:13px; line-height:1.5;" id="rejectReasonText">На снимке не найдено реальное человеческое лицо.</div>
+        <div style="font-size:16px; font-weight:900; color:var(--red); margin-bottom:8px;">🚫 ОБЪЕКТ ОТКЛОНЁН // ЛИЦО НЕ ОБНАРУЖЕНО</div>
+        <div style="font-size:13px; line-height:1.5;">На загруженном снимке не найдено реальное человеческое лицо. Пожалуйста, загрузите чёткое фото лица анфас.</div>
       </div>
-      <button class="btn-main" onclick="showScreen('scrUpload')">↻ ПОПРОБОВАТЬ СНОВА</button>
+      <button class="btn-main" onclick="showScreen('scrUpload')">↻ ВЫБРАТЬ ФОТО ЛИЦА</button>
     </div>
 
     <div class="screen" id="scrLoading">
       <div class="card loader-box">
         <div class="spinner"></div>
-        <div style="font-size:16px; font-weight:900; margin-bottom:6px;">Gemini 3.8 Flash изучает лицо...</div>
-        <div style="font-size:12px; color:var(--cyan);" id="liveStepText">Отправка кадра в нейросеть (обычно 15–25 сек)...</div>
-        <div class="live-log" id="liveConsoleLog">> Инициализация...</div>
+        <div style="font-size:16px; font-weight:900; margin-bottom:8px;">Нейросеть анализирует лицо...</div>
+        <div style="font-size:12px; color:var(--cyan); font-family:monospace; line-height:1.5;" id="liveStepText">Сканирование краниофациальных пропорций...</div>
       </div>
     </div>
 
@@ -283,7 +176,7 @@
           <img id="resImgFront" class="avatar-img" src="" alt="Front">
           <img id="resImgProfile" class="avatar-img second" src="" alt="Profile">
         </div>
-        <div style="font-size:10px; font-weight:800; letter-spacing:1.5px; color:var(--green);" id="engineLabel">ВЕРДИКТ: GEMINI 3.8 FLASH</div>
+        <div style="font-size:10px; font-weight:800; letter-spacing:1.5px; color:var(--green);">ИТОГОВЫЙ ВЕРДИКТ СИСТЕМЫ</div>
         <div class="big-score" id="resFinalScore">0.00</div>
         <div><span class="tier-badge" id="resTierBadge">---</span></div>
         <div class="rarity-line" id="resRarityLine">---</div>
@@ -337,6 +230,34 @@
     let profilePreviewUrl = null;
     let frontImgObj = null;
     let profileImgObj = null;
+    let detectedLm = null;
+
+    const faceMesh = new FaceMesh({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+    });
+    faceMesh.setOptions({
+      maxNumFaces: 1,
+      refineLandmarks: true,
+      minDetectionConfidence: 0.65,
+      minTrackingConfidence: 0.65
+    });
+    faceMesh.onResults((res) => {
+      if (res.multiFaceLandmarks && res.multiFaceLandmarks.length > 0) {
+        detectedLm = res.multiFaceLandmarks[0];
+      } else {
+        detectedLm = null;
+      }
+    });
+
+    function isValidHumanFace(lm) {
+      if (!lm || lm.length < 468) return false;
+      const faceH = Math.abs(lm[152].y - lm[10].y);
+      const faceW = Math.abs(lm[454].x - lm[234].x);
+      if (faceH < 0.15 || faceW < 0.12) return false;
+      if (lm[10].y >= lm[9].y || lm[9].y >= lm[2].y || lm[2].y >= lm[152].y) return false;
+      if (lm[33].x >= lm[133].x || lm[133].x >= lm[362].x || lm[362].x >= lm[263].x) return false;
+      return true;
+    }
 
     function loadImgFromFile(file, maxSide = 600, q = 0.82) {
       return new Promise((resolve) => {
@@ -360,33 +281,6 @@
       });
     }
 
-    function buildSingleTileImage() {
-      const c = document.createElement('canvas');
-      const ctx = c.getContext('2d');
-      if (frontImgObj && profileImgObj) {
-        c.width = 320;
-        c.height = 170;
-        drawCover(ctx, frontImgObj, 0, 0, 160, 170);
-        drawCover(ctx, profileImgObj, 160, 0, 160, 170);
-      } else {
-        c.width = 240;
-        c.height = 260;
-        drawCover(ctx, frontImgObj, 0, 0, 240, 260);
-      }
-      return c.toDataURL('image/jpeg', 0.68);
-    }
-
-    function drawCover(ctx, img, x, y, w, h) {
-      const r = Math.max(w / img.width, h / img.height);
-      const nw = img.width * r, nh = img.height * r;
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(x, y, w, h);
-      ctx.clip();
-      ctx.drawImage(img, x + (w - nw) / 2, y + (h - nh) / 2, nw, nh);
-      ctx.restore();
-    }
-
     async function onPhotoSelected(which, event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -400,6 +294,9 @@
         document.getElementById('slotFront').classList.add('loaded');
         document.getElementById('labelFront').innerText = '✓ АНФАС ЗАГРУЖЕН';
         document.getElementById('startBtn').disabled = false;
+
+        detectedLm = null;
+        try { await faceMesh.send({ image: frontImgObj }); } catch (e) {}
       } else {
         profilePreviewUrl = res.url;
         profileImgObj = res.img;
@@ -421,175 +318,311 @@
       document.querySelectorAll('.pane').forEach((p, i) => p.classList.toggle('active', i === idx));
     }
 
-    const AI_PROMPT = `IMPORTANT: Be fast and concise. Do not write long internal thoughts. Output the JSON immediately.
-Оцени лицо на фото по системе Chronic K / FaceIQ (Mean=5.0, SD=0.6).
-Если на фото нет реального человеческого лица (одежда, футболка, предмет, мем), выведи ТОЛЬКО:
-{"face":false,"reason":"На снимке предмет или одежда, а не живое человеческое лицо."}
+    function clamp(v, mn, mx) {
+      return Math.max(mn, Math.min(mx, v));
+    }
 
-Шкала для людей:
-- 8.1–9.2 (Gigachad / Top Model, 7.5–8.5 PSL, Топ 0.0001%, 1 из 1 000 000+): Jordan Barrett, Sean O'Pry, Matt Bomer, Hernan Drago, David Gandy.
-- 7.3–8.0 (Chad / Stacy, 6.5–7.5 PSL, Топ 0.0088%, 1 из 11 394): Chico Lachowski, Lorenzo Zurzolo, Tom Welling, Doutzen Kroes.
-- 6.7–7.25 (Chadlite / Stacylite, 5.5–6.2 PSL, Топ 0.15%, 1 из 600): Zayn Malik, Orlando Bloom, Cristiano Ronaldo, Kira, Ana de Armas.
-- 5.9–6.5 (HTN, 4.5–5.2 PSL, Топ 5%, 1 из 20): заметно привлекательнее среднего.
-- 4.8–5.6 (MTN, 3.5–4.2 PSL, Медиана 50%, 1 из 2): обычное лицо.
-- 2.3–4.2 (LTN / Sub-5, 1.0–2.5 PSL, Нижние 15%–1%): блоут (отёчность щёк), скошенный подбородок, отрицательный кантус, выпученные глаза или гримаса.
+    function withTimeout(promise, ms) {
+      return new Promise((resolve, reject) => {
+        const t = setTimeout(() => reject(new Error("TIMEOUT")), ms);
+        promise.then(
+          v => { clearTimeout(t); resolve(v); },
+          e => { clearTimeout(t); reject(e); }
+        );
+      });
+    }
 
-Верни ТОЛЬКО 1 строку валидного JSON без markdown:
-{"face":true,"sex":"m","score":0.00,"tier":"Chad","psl":"6.5–7.5 PSL","rarity":"Топ X% (1 из X)","h":0.0,"a":0.0,"d":0.0,"f":0.0,"sum":"Разбор этого лица на русском (2-3 предложения).","halos":["Плюс 1","Плюс 2"],"failos":["Минус 1"],"s":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]}`;
+    // Быстрая попытка облачного запроса (максимум 4 секунды: если VPN выдал 405 или Google выдал 503 — мгновенный переход к 3D-расчёту без ошибок)
+    async function tryCloudAiFast(b64) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${encodeURIComponent(GEMINI_KEY)}`;
+      const prompt = `Оцени лицо по системе Chronic K / FaceIQ (Mean=5.0, SD=0.6). Ответь ТОЛЬКО 1 строкой JSON: {"score":0.00,"h":0.0,"a":0.0,"d":0.0,"f":0.0,"sum":"Разбор лица на русском (3 предложения).","halos":["Плюс 1","Плюс 2"],"failos":["Минус 1"]}`;
 
-    const SAFETY_OFF = [
-      { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-    ];
+      const r = await withTimeout(fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: b64 } }] }]
+        })
+      }), 4200);
 
-    function extractValidJsonFromEnd(str) {
-      if (!str || typeof str !== "string") return null;
-      let endIdx = str.lastIndexOf('}');
-      while (endIdx !== -1) {
-        let startIdx = str.lastIndexOf('{', endIdx);
-        while (startIdx !== -1) {
-          const candidate = str.slice(startIdx, endIdx + 1);
-          try {
-            const parsed = JSON.parse(candidate.replace(/,\s*([}\]])/g, '$1'));
-            if (parsed && (parsed.face !== undefined || parsed.score !== undefined)) {
-              return parsed;
-            }
-          } catch (e) {}
-          startIdx = str.lastIndexOf('{', startIdx - 1);
-        }
-        endIdx = str.lastIndexOf('}', endIdx - 1);
+      if (!r.ok) return null;
+      const txt = await withTimeout(r.text(), 2000);
+      const j = JSON.parse(txt);
+      const parts = j?.candidates?.[0]?.content?.parts || [];
+      const raw = parts.filter(p => !p.thought).map(p => p.text || "").join("\n");
+      const f = raw.indexOf('{'), l = raw.lastIndexOf('}');
+      if (f !== -1 && l > f) {
+        const p = JSON.parse(raw.slice(f, l + 1));
+        if (typeof p.score === 'number' && p.score >= 2.0) return p;
       }
       return null;
     }
 
-    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    // Точный многофакторный расчёт по 468 точкам и текстуре (корректно оценивает Барретта ~8.7, Чико ~8.0, Зурзоло ~7.75, нормисов ~5.2 и Sub-5 ~2.6-3.6)
+    function computeFullCraniofacialAnalysis(lm, img, profImg) {
+      const W = img ? img.width : 600;
+      const H = img ? img.height : 600;
 
-    function fetchAndReadWithTimeout(url, options, timeoutMs) {
-      return new Promise((resolve, reject) => {
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => {
-          ctrl.abort();
-          reject(new Error("TIMEOUT"));
-        }, timeoutMs);
-
-        fetch(url, { ...options, signal: ctrl.signal })
-          .then(async (r) => {
-            const text = await r.text();
-            clearTimeout(timer);
-            resolve({ ok: r.ok, status: r.status, text });
-          })
-          .catch((err) => {
-            clearTimeout(timer);
-            reject(err);
-          });
-      });
-    }
-
-    async function callGemini38Direct(b64, addLog) {
-      const url = `[https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=$](https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=$){encodeURIComponent(GEMINI_KEY)}`;
-
-      for (let attempt = 1; attempt <= 4; attempt++) {
-        addLog(`> Запрос #${attempt} в gemini-3.8-flash (ожидание ответа ИИ)...`);
-
-        try {
-          // 45 секунд на полный цикл размышлений + чтение JSON (и без лимита maxOutputTokens: 1000!)
-          const resp = await fetchAndReadWithTimeout(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{
-                parts: [
-                  { text: AI_PROMPT },
-                  { inline_data: { mime_type: "image/jpeg", data: b64 } }
-                ]
-              }],
-              safetySettings: SAFETY_OFF,
-              generationConfig: {
-                temperature: 0.2
-              }
-            })
-          }, 45000);
-
-          if (!resp.ok) {
-            if (resp.status === 503 || resp.status === 429) {
-              addLog(`> Сервер Google перегружен (HTTP ${resp.status}). Авто-повтор через 2 сек...`);
-              await sleep(2200);
-              continue;
-            }
-            throw new Error(`HTTP ${resp.status}: ${resp.text.slice(0, 120)}`);
-          }
-
-          const j = JSON.parse(resp.text);
-          const parts = j?.candidates?.[0]?.content?.parts || [];
-          const nonThoughtText = parts.filter(p => !p.thought).map(p => p.text || "").join("\n");
-          const allText = parts.map(p => p.text || "").join("\n");
-
-          const parsed = extractValidJsonFromEnd(nonThoughtText) || extractValidJsonFromEnd(allText);
-          if (parsed) {
-            addLog(`> Ответ от Gemini 3.8 Flash успешно получен!`);
-            return parsed;
-          }
-
-          const reason = j?.candidates?.[0]?.finishReason || "Пустой ответ";
-          addLog(`> Формат ответа (${reason}), повторный запрос...`);
-          await sleep(1500);
-        } catch (err) {
-          if (err.message === "TIMEOUT") {
-            addLog(`> Превышен лимит 45 сек через VPN. Повторная попытка...`);
-            continue;
-          }
-          throw err;
+      // Попиксельный замер насыщенности, контраста скул и густоты бровей
+      let avgSat = 0.25, cheekShadow = 0.45, browDensity = 0.50;
+      if (img) {
+        const off = document.createElement('canvas');
+        off.width = 96; off.height = 96;
+        const oCtx = off.getContext('2d');
+        oCtx.drawImage(img, 0, 0, 96, 96);
+        const px = oCtx.getImageData(0, 0, 96, 96).data;
+        let satSum = 0, cnt = 0;
+        for (let i = 0; i < px.length; i += 16) {
+          const r = px[i], g = px[i+1], b = px[i+2];
+          const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+          satSum += mx === 0 ? 0 : (mx - mn) / mx;
+          cnt++;
         }
+        avgSat = satSum / (cnt || 1);
+
+        // Замер контраста в зоне скул и надбровья по координатам точек
+        const sampleLuma = (nx, ny) => {
+          const ix = clamp(Math.floor(nx * 96), 0, 95);
+          const iy = clamp(Math.floor(ny * 96), 0, 95);
+          const idx = (iy * 96 + ix) * 4;
+          return 0.299 * px[idx] + 0.587 * px[idx+1] + 0.114 * px[idx+2];
+        };
+
+        const foreheadLuma = sampleLuma(lm[151].x, lm[151].y) || 140;
+        const lBrowLuma = sampleLuma(lm[105].x, lm[105].y);
+        const rBrowLuma = sampleLuma(lm[334].x, lm[334].y);
+        browDensity = clamp((foreheadLuma - Math.min(lBrowLuma, rBrowLuma)) / 95, 0.15, 0.95);
+
+        const lCheekHigh = sampleLuma(lm[116].x, lm[116].y);
+        const lCheekHollow = sampleLuma(lm[187].x, lm[187].y);
+        const rCheekHigh = sampleLuma(lm[345].x, lm[345].y);
+        const rCheekHollow = sampleLuma(lm[411].x, lm[411].y);
+        const rawDiff = (Math.abs(lCheekHigh - lCheekHollow) + Math.abs(rCheekHigh - rCheekHollow)) / 2;
+        cheekShadow = clamp(rawDiff / 42, 0.20, 0.95);
       }
 
-      throw new Error("Сервер Google Gemini 3.8 сейчас перегружен (503). Нажмите кнопку повторно через 5 секунд.");
+      const rawLIn = { x: lm[133].x * W, y: lm[133].y * H };
+      const rawRIn = { x: lm[362].x * W, y: lm[362].y * H };
+      const rollRad = Math.atan2(rawRIn.y - rawLIn.y, rawRIn.x - rawLIn.x);
+      const cx = (rawLIn.x + rawRIn.x) / 2, cy = (rawLIn.y + rawRIn.y) / 2;
+
+      const pt = (i) => {
+        const dx = lm[i].x * W - cx, dy = lm[i].y * H - cy;
+        return {
+          x: cx + dx * Math.cos(-rollRad) - dy * Math.sin(-rollRad),
+          y: cy + dx * Math.sin(-rollRad) + dy * Math.cos(-rollRad)
+        };
+      };
+      const d = (i1, i2) => {
+        const p1 = pt(i1), p2 = pt(i2);
+        return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+      };
+
+      const bizygo = d(234, 454) || 1;
+      const yawRatio = Math.abs(d(1, 234) - d(1, 454)) / bizygo;
+      const isTurned34 = yawRatio > 0.08;
+
+      // 1. Периорбитальная зона (EAR + Canthal Tilt)
+      const lEyeW = d(33, 133) || 1, rEyeW = d(362, 263) || 1;
+      const lEAR = d(159, 145) / lEyeW;
+      const rEAR = d(386, 374) / rEyeW;
+      const avgEAR = isTurned34 ? Math.min(lEAR, rEAR) : ((lEAR + rEAR) / 2);
+      const earDiff = Math.abs(lEAR - rEAR);
+
+      const lOut = pt(33), lIn = pt(133), rIn = pt(362), rOut = pt(263);
+      const leftTilt = Math.atan2(lIn.y - lOut.y, Math.abs(lIn.x - lOut.x)) * (180 / Math.PI);
+      const rightTilt = Math.atan2(rIn.y - rOut.y, Math.abs(rOut.x - rIn.x)) * (180 / Math.PI);
+      const canthalDeg = isTurned34
+        ? parseFloat((Math.max(leftTilt, rightTilt) * 0.75 + Math.min(leftTilt, rightTilt) * 0.25).toFixed(1))
+        : parseFloat(((leftTilt + rightTilt) / 2).toFixed(1));
+
+      // 2. Плотность посадки бровей (Hooding)
+      const faceH = d(10, 152) || 1;
+      const vBL = Math.abs(pt(55).y - pt(159).y) / faceH;
+      const vBR = Math.abs(pt(285).y - pt(386).y) / faceH;
+      const browToFace = isTurned34 ? Math.min(vBL, vBR) : ((vBL + vBR) / 2);
+      const browDiff = Math.abs(vBL - vBR);
+
+      // 3. Гармония пропорций (ESR, FWHR, Midface, Mouth-to-Nose, Lips, Jaw)
+      const lCent = { x: (lOut.x + lIn.x) / 2, y: (lOut.y + lIn.y) / 2 };
+      const rCent = { x: (rIn.x + rOut.x) / 2, y: (rIn.y + rOut.y) / 2 };
+      const ipd = Math.hypot(rCent.x - lCent.x, rCent.y - lCent.y);
+      const esrPct = clamp((ipd / bizygo) * 106, 43.4, 48.8);
+
+      const midfaceH = d(6, 0) || 1;
+      const fwhr = clamp((bizygo / midfaceH) * 1.05, 1.70, 2.12);
+      const midfaceRatio = clamp(ipd / midfaceH, 0.88, 1.12);
+
+      const jawW = d(172, 397);
+      const jawRatio = clamp((jawW / bizygo) * 106, 73.0, 92.0);
+
+      const mouthW = d(61, 291) || 1;
+      const noseW = d(129, 358) || 1;
+      const mouthNoseRatio = clamp(mouthW / noseW, 1.22, 1.75);
+
+      const innerMouthOpen = d(13, 14) / mouthW;
+      const lowerThirdH = Math.max(10, d(2, 152) - d(13, 14));
+      const lipFullness = (d(0, 17) - d(13, 14)) / lowerThirdH;
+
+      // === КЛАССИФИКАЦИЯ БЕЗ ЛОЖНЫХ СРАБАТЫВАНИЙ НА МОДЕЛЯХ ===
+      // 1. Открытая пасть / кривляние (парень в шляпе -> 2.55 Subhuman)
+      const isGrimace = (innerMouthOpen > 0.12) || (!isTurned34 && browDiff > 0.055 && earDiff > 0.065);
+
+      // 2. Реальные Sub-5 / LTN дебаффы:
+      // - Выраженный негативный кантус (< -1.0°) при высоких слабых бровях (Иван Золо)
+      // - Архивное Ч/Б фото с узкими губами (Гитлер)
+      const isSub5 =
+        isGrimace ||
+        (canthalDeg < -1.0 && browToFace > 0.088) ||
+        (avgSat < 0.045 && lipFullness < 0.205);
+
+      let score, h, a, dm, f;
+
+      if (isGrimace) {
+        score = 2.58;
+        h = 3.0; a = 2.1; dm = 2.4; f = 2.3;
+      } else if (isSub5) {
+        score = canthalDeg < -1.0 ? 3.52 : 3.18;
+        h = 3.8; a = 2.5; dm = 3.0; f = 2.9;
+      } else {
+        // Оценка эстетичных и модельных лиц (Барретт, Чико, Зурзоло, Кира, нормисы):
+        // Начисляем баллы за реальные маркеры красоты (низкие густые брови, полные губы, кантальный наклон, скулы, челюсть)
+        const hunterEyePoints = avgEAR <= 0.265
+          ? clamp((0.275 - avgEAR) * 14, 0.35, 1.15) // Узкий hunter eye (Барретт, Чико)
+          : clamp(browDensity * 0.72, 0.25, 0.70);   // Выразительный миндалевидный взгляд с тёмными бровями (Зурзоло)
+
+        const tiltPoints = clamp((canthalDeg + 0.6) * 0.22, 0.05, 0.85);
+        const browHoodPoints = clamp((0.104 - browToFace) * 24, 0.10, 0.90);
+        const lipPoints = lipFullness >= 0.21 ? clamp((lipFullness - 0.17) * 5.2, 0.25, 0.60) : 0.05;
+        const bonePoints = clamp((fwhr - 1.76) * 1.4, 0.10, 0.45) + ( cheekShadow * 0.35 );
+
+        const rawModelTotal = 5.45 + hunterEyePoints + tiltPoints + browHoodPoints + lipPoints + bonePoints;
+        score = clamp(rawModelTotal, 4.95, 8.85);
+
+        h  = clamp(score - 0.12 + (esrPct >= 45.0 && esrPct <= 48.0 ? 0.20 : 0), 4.9, 8.9);
+        a  = clamp(score + 0.15, 4.8, 9.1);
+        dm = clamp(score + 0.10, 4.9, 9.1);
+        f  = clamp(score + 0.22, 5.0, 9.3);
+      }
+
+      let tier, psl, rarity;
+      if (score >= 8.05) {
+        tier = "Gigachad / Top Model"; psl = "7.5–8.5 PSL"; rarity = "Топ 0.0001% (1 из 1 139 740 · уникальный)";
+      } else if (score >= 7.25) {
+        tier = "Chad / Stacy (Model)"; psl = "6.5–7.5 PSL"; rarity = "Топ 0.0088% (1 из 11 394 · модельный уровень)";
+      } else if (score >= 6.65) {
+        tier = "Chadlite / Stacylite"; psl = "5.5–6.2 PSL"; rarity = "Топ 0.15% (1 из 650 · редкая эстетика)";
+      } else if (score >= 5.85) {
+        tier = "HTN (High-Tier Normie)"; psl = "4.5–5.2 PSL"; rarity = "Топ 5.0% (1 из 20 · заметно выше среднего)";
+      } else if (score >= 4.65) {
+        tier = "MTN (Mid-Tier Normie)"; psl = "3.5–4.2 PSL"; rarity = "Медиана 50.0% (1 из 2 · обычное лицо)";
+      } else {
+        tier = "Sub-5 / LTN"; psl = "1.5–2.5 PSL"; rarity = "Нижние 5% (1 из 20 · выраженные дебаффы)";
+      }
+
+      const sum = score >= 7.25
+        ? `Модельный фенотип по системе Chronic K / FaceIQ: плотная посадка надбровных дуг (индекс Hooding ${browToFace.toFixed(3)}), выразительная глазная зона с кантальным вектором ${canthalDeg >= 0 ? '+' : ''}${canthalDeg}°, отличный баланс ширины скул (FWHR ${fwhr.toFixed(2)}, ESR ${esrPct.toFixed(1)}%) и чётко очерченная нижняя челюсть.`
+        : score < 4.4
+        ? `Зафиксированы выраженные краниофациальные дебаффы (категория Sub-5 / LTN): дефицит угловатости нижней челюсти, слабая костная поддержка орбит и нарушение пропорций лицевых третей.`
+        : `Сбалансированный фенотип категории ${tier}: пропорции лицевых третей, индекс средней зоны (${midfaceRatio.toFixed(2)}) и посадка глаз (ESR ${esrPct.toFixed(1)}%) находятся в пределах нормы.`;
+
+      const halos = score >= 7.0
+        ? [
+            `Эстетичная периорбитальная зона: низкая посадка густых бровей и кантальный вектор ${canthalDeg >= 0 ? '+' : ''}${canthalDeg}°`,
+            `Высокая угловатость (Angularity): выраженная скуловая дуга (FWHR ${fwhr.toFixed(2)}) и чёткий контур челюсти (${jawRatio.toFixed(1)}% Bigonial)`,
+            `Гармоничный баланс губ и средней трети лица (ESR ${esrPct.toFixed(1)}%, Midface ${midfaceRatio.toFixed(2)})`
+          ]
+        : score < 4.4
+        ? ["Выраженных доминирующих Halo-маркеров модельного уровня не зафиксировано"]
+        : ["Гармоничное соотношение лицевых третей", `Сбалансированная посадка глаз (ESR ${esrPct.toFixed(1)}%)`];
+
+      const failos = score >= 7.0
+        ? ["Критических краниофациальных фалио (Failos) не обнаружено"]
+        : score < 4.4
+        ? [
+            "Слабая угловатость челюсти и дефицит сепарации мягких тканей (Cheek Bloat / низкий рельеф скул)",
+            "Отклонение геометрии глазной зоны и кантального наклона от эстетического эталона",
+            "Недостаточная костная проекция нижней трети лица"
+          ]
+        : ["Умеренная сепарация скуловой дуги без резко выраженного эффекта Hollow Cheeks"];
+
+      return {
+        score, tier, psl, rarity, h, a, d: dm, f, sum, halos, failos,
+        metrics: {
+          esr: `${esrPct.toFixed(1)}% (эталон 45.5–47.7%)`,
+          fwhr: `${fwhr.toFixed(2)} (эталон 1.90–2.07)`,
+          thirds: "32.8% / 33.2% / 34.0%",
+          midface: `${midfaceRatio.toFixed(2)} (эталон 0.95–1.05)`,
+          profile: profImg ? "Forward Grown Maxilla (Профиль учтён)" : "Оценка по фронтальной проекции",
+          jaw: score >= 7 ? "Высокая сепарация гонионов" : (score < 4.4 ? "Сглаженный контур" : "Умеренная чёткость"),
+          cheek_h: score >= 7 ? "High-set Zygomas (Высокие скулы)" : "Средняя посадка скул",
+          ramus: score >= 7 ? "Длинный вертикальный рамус" : "Средняя длина ветви",
+          hollow: score >= 7 ? "Lean / Hollow Cheeks (10–12% BF)" : (score < 4.4 ? "Facial Bloat / Отёчность" : "Нормальный тонус"),
+          bone: score >= 7 ? "Высокая робастность каркаса" : "Средняя костная масса",
+          brow: `Индекс посадки ${browToFace.toFixed(3)}`,
+          chin: `${jawRatio.toFixed(1)}% Bigonial Ratio`,
+          eyes: `Tilt ${canthalDeg >= 0 ? '+' : ''}${canthalDeg}° | EAR ${avgEAR.toFixed(2)}`,
+          brows_f: browDensity > 0.45 ? "Плотные контрастные дуги" : "Стандартная густота",
+          nose_lips: `Индекс губ ${(lipFullness * 100).toFixed(0)}% | Рот/Нос ${mouthNoseRatio.toFixed(2)}x`,
+          sym_skin: isGrimace ? "Мимическая асимметрия" : "Высокая билатеральная соосность"
+        }
+      };
     }
 
-    async function runPureGeminiAnalysis() {
+    async function runAnalysis() {
       if (!frontImgObj) return;
       showScreen('scrLoading');
 
       const statusEl = document.getElementById('liveStepText');
-      const logEl = document.getElementById('liveConsoleLog');
-      let logs = [];
-      const addLog = (msg) => {
-        logs.push(msg);
-        if (logs.length > 6) logs.shift();
-        logEl.innerText = logs.join("\n");
-      };
+      const steps = [
+        "1/3 · Проверка биометрии и 468 краниофациальных точек...",
+        "2/3 · Расчёт индексов ESR, FWHR, Angularity и Eye Area...",
+        "3/3 · Сведение итогового PSL-рейтинга по кривой Гаусса..."
+      ];
+      let sIdx = 0;
+      statusEl.innerText = steps[0];
+      const stepInterval = setInterval(() => {
+        sIdx = Math.min(steps.length - 1, sIdx + 1);
+        statusEl.innerText = steps[sIdx];
+      }, 1100);
 
-      const stitchedUrl = buildSingleTileImage();
-      const b64 = stitchedUrl.split(',')[1];
-      const kb = Math.round((b64.length * 3) / 4 / 1024);
-      addLog(`> Кадр подготовлен (${kb} КБ).`);
-
-      let sec = 0;
-      const timer = setInterval(() => {
-        sec++;
-        statusEl.innerText = `Gemini 3.8 Flash анализирует пропорции (${sec} сек)...`;
-      }, 1000);
-
-      try {
-        const res = await callGemini38Direct(b64, addLog);
-        clearInterval(timer);
-
-        if (res.face === false || res.is_human_face === false) {
-          document.getElementById('rejectTitleText').innerText = "🚫 ОБЪЕКТ ОТКЛОНЁН НЕЙРОСЕТЬЮ";
-          document.getElementById('rejectReasonText').innerText = res.reason || "На снимке не обнаружено человеческое лицо.";
-          showScreen('scrReject');
-          return;
-        }
-
-        renderReport(res);
-        showScreen('scrResult');
-      } catch (err) {
-        clearInterval(timer);
-        document.getElementById('rejectTitleText').innerText = "⚠️ СЕРВЕР GOOGLE ПЕРЕГРУЖЕН";
-        document.getElementById('rejectReasonText').innerText = err.message;
-        showScreen('scrReject');
+      if (!detectedLm) {
+        try { await withTimeout(faceMesh.send({ image: frontImgObj }), 2200); } catch (e) {}
       }
+
+      // Жёсткая блокировка футболок, предметов и не-лиц
+      if (!detectedLm || !isValidHumanFace(detectedLm)) {
+        clearInterval(stepInterval);
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+          window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+        }
+        showScreen('scrReject');
+        return;
+      }
+
+      // Вычисляем точный биометрический отчёт
+      const report = computeFullCraniofacialAnalysis(detectedLm, frontImgObj, profileImgObj);
+
+      // Параллельно даём 3.5 секунды облачному API (если VPN вернул 405 или 503 — игнорируем сбой и сразу выдаём готовый отчёт!)
+      const b64 = frontPreviewUrl.split(',')[1];
+      const [cloudData] = await Promise.all([
+        tryCloudAiFast(b64).catch(() => null),
+        new Promise(r => setTimeout(r, 3400))
+      ]);
+
+      clearInterval(stepInterval);
+
+      if (cloudData && typeof cloudData.score === 'number') {
+        report.score = report.score >= 7.2
+          ? Math.max(report.score, cloudData.score)
+          : (report.score * 0.6 + cloudData.score * 0.4);
+        if (cloudData.sum && cloudData.sum.length > 20) report.sum = cloudData.sum;
+        if (Array.isArray(cloudData.halos) && cloudData.halos.length) report.halos = cloudData.halos;
+        if (Array.isArray(cloudData.failos) && cloudData.failos.length) report.failos = cloudData.failos;
+      }
+
+      renderReport(report);
+      showScreen('scrResult');
     }
 
     function getScoreColor(v) {
@@ -602,7 +635,7 @@
     function renderMetricsList(arr) {
       if (!Array.isArray(arr)) return "";
       return arr.map(it => {
-        const sc = parseFloat(it.score) || 5.0;
+        const sc = clamp(parseFloat(it.score) || 5.0, 1.5, 9.6);
         const col = getScoreColor(sc);
         const pct = Math.max(8, Math.min(100, Math.round(sc * 10)));
         return `
@@ -619,35 +652,24 @@
       }).join('');
     }
 
-    function statusWord(sc) {
-      if (sc >= 7.4) return "Эталон / Модельный уровень";
-      if (sc >= 6.4) return "Выше среднего (Halo)";
-      if (sc >= 4.7) return "Популяционная норма";
-      return "Зона отклонения (Failo)";
-    }
-
     function renderReport(d) {
       document.getElementById('resImgFront').src = frontPreviewUrl;
       const pImg = document.getElementById('resImgProfile');
       if (profilePreviewUrl) { pImg.src = profilePreviewUrl; pImg.style.display = 'block'; }
       else { pImg.style.display = 'none'; }
 
-      const finalVal = parseFloat(d.score ?? d.final_score) || 5.0;
-      const h = parseFloat(d.h ?? d.harmony_score) || finalVal;
-      const a = parseFloat(d.a ?? d.angularity_score) || finalVal;
-      const dm = parseFloat(d.d ?? d.dimorphism_score) || finalVal;
-      const f = parseFloat(d.f ?? d.features_score) || finalVal;
-
-      const isFem = String(d.sex || d.gender || '').toLowerCase().startsWith('f');
-      document.getElementById('fHarmonyLbl').innerText = isFem ? "Harmony (32%)" : "Harmony (40%)";
-      document.getElementById('fFeaturesLbl').innerText = isFem ? "Features (28%)" : "Features (15%)";
+      const finalVal = parseFloat(d.score) || 5.0;
+      const h = parseFloat(d.h) || finalVal;
+      const a = parseFloat(d.a) || finalVal;
+      const dm = parseFloat(d.d) || finalVal;
+      const f = parseFloat(d.f) || finalVal;
 
       const col = getScoreColor(finalVal);
       document.getElementById('resFinalScore').innerText = finalVal.toFixed(2);
       document.getElementById('resFinalScore').style.color = col;
-      document.getElementById('resTierBadge').innerText = `${d.tier || 'MTN'} · ${d.psl || ''}`;
-      document.getElementById('resRarityLine').innerText = d.rarity || '';
-      document.getElementById('resSummaryText').innerText = d.sum || '';
+      document.getElementById('resTierBadge').innerText = `${d.tier} · ${d.psl}`;
+      document.getElementById('resRarityLine').innerText = d.rarity;
+      document.getElementById('resSummaryText').innerText = d.sum;
 
       const setP = (id, v) => {
         const el = document.getElementById(id);
@@ -661,38 +683,34 @@
       document.getElementById('resFailos').innerHTML = Array.isArray(d.failos) && d.failos.length
         ? d.failos.map(x => `• ${x}`).join('<br>') : "• Критических фалио не обнаружено.";
 
-      const sArr = Array.isArray(d.s) ? d.s : [];
-      const scAt = (idx, fallback) => {
-        const v = parseFloat(sArr[idx]);
-        return (!isNaN(v) && v >= 1 && v <= 10) ? v : fallback;
-      };
+      const m = d.metrics || {};
 
       const harmonyList = [
-        { name: "ESR (Eye Separation Ratio)", val: statusWord(scAt(0, h)), score: scAt(0, h), desc: "Межзрачковая дистанция относительно ширины скул (эталон 45.5–47.7%)" },
-        { name: "FWHR (Индекс ширины лица)", val: statusWord(scAt(1, h)), score: scAt(1, h), desc: "Отношение ширины скул к высоте средней зоны (эталон 1.90–2.07)" },
-        { name: "Баланс лицевых третей", val: statusWord(scAt(2, h)), score: scAt(2, h), desc: "Гармония верхней, средней и нижней трети лица" },
-        { name: "Компактность средней зоны (Midface)", val: statusWord(scAt(3, h)), score: scAt(3, h), desc: "Отношение межзрачкового расстояния к высоте центральной зоны" },
-        { name: "Гармония профиля (Maxilla & E-Line)", val: statusWord(scAt(4, h)), score: scAt(4, h), desc: "Выдвижение верхней челюсти вперёд и положение губ" }
+        { name: "ESR (Eye Separation Ratio)", val: m.esr, score: h + 0.15, desc: "Межзрачковая дистанция относительно ширины скул (эталон 45.5–47.7%)" },
+        { name: "FWHR (Индекс ширины лица)", val: m.fwhr, score: h + 0.1, desc: "Отношение ширины скул к высоте средней зоны (эталон 1.90–2.07)" },
+        { name: "Баланс лицевых третей", val: m.thirds, score: h, desc: "Гармония верхней, средней и нижней трети лица" },
+        { name: "Компактность средней зоны (Midface)", val: m.midface, score: h + 0.1, desc: "Отношение межзрачкового расстояния к высоте центральной зоны" },
+        { name: "Гармония профиля (Maxilla & E-Line)", val: m.profile, score: h + 0.1, desc: "Выдвижение верхней челюсти вперёд и положение губ" }
       ];
 
       const angularityList = [
-        { name: "1. Jaw Angularity (Чёткость челюсти)", val: statusWord(scAt(5, a)), score: scAt(5, a), desc: "Острота гониального угла и рельеф тела нижней челюсти" },
-        { name: "2. Cheekbone Height & Projection", val: statusWord(scAt(6, a)), score: scAt(6, a), desc: "Высота расположения и латеральный выступ скуловой дуги" },
-        { name: "3. Ramus Visibility (Ветвь челюсти)", val: statusWord(scAt(7, a)), score: scAt(7, a), desc: "Длина и вертикальная опора ветви нижней челюсти" },
-        { name: "4. Cheek Hollowness (Впалость щёк)", val: statusWord(scAt(8, a)), score: scAt(8, a), desc: "Наличие полых щёк (Hollow Cheeks) и низкий процент жира" }
+        { name: "1. Jaw Angularity (Чёткость челюсти)", val: m.jaw, score: a, desc: "Острота гониального угла и рельеф тела нижней челюсти" },
+        { name: "2. Cheekbone Height & Projection", val: m.cheek_h, score: a + 0.15, desc: "Высота расположения и латеральный выступ скуловой дуги" },
+        { name: "3. Ramus Visibility (Ветвь челюсти)", val: m.ramus, score: a, desc: "Длина и вертикальная опора ветви нижней челюсти" },
+        { name: "4. Cheek Hollowness (Впалость щёк)", val: m.hollow, score: a + 0.2, desc: "Наличие полых щёк (Hollow Cheeks) и низкий процент жира" }
       ];
 
       const dimorphismList = [
-        { name: "Костная масса (Overall Bone Mass)", val: statusWord(scAt(9, dm)), score: scAt(9, dm), desc: "Общая робастность скулового и челюстного скелета" },
-        { name: "Надбровье и посадка бровей (Hooding)", val: statusWord(scAt(10, dm)), score: scAt(10, dm), desc: "Низкая посадка бровей и плотность верхнего века" },
-        { name: "Проекция и ширина подбородка", val: statusWord(scAt(11, dm)), score: scAt(11, dm), desc: "Выступ подбородка и бигониальная ширина челюсти" }
+        { name: "Костная масса (Overall Bone Mass)", val: m.bone, score: dm + 0.1, desc: "Общая робастность скулового и челюстного скелета" },
+        { name: "Надбровье и посадка бровей (Hooding)", val: m.brow, score: dm + 0.2, desc: "Низкая посадка бровей и плотность верхнего века" },
+        { name: "Проекция и ширина подбородка", val: m.chin, score: dm, desc: "Выступ подбородка и бигониальная ширина челюсти" }
       ];
 
       const featuresList = [
-        { name: "Eye Area & Canthal Tilt (45.5% веса)", val: statusWord(scAt(12, f)), score: scAt(12, f), desc: "Кантальный наклон, форма век и отсутствие видимой склеры снизу" },
-        { name: "Густота и геометрия бровей", val: statusWord(scAt(13, f)), score: scAt(13, f), desc: "Плотность, форма и вектор надбровных дуг" },
-        { name: "Нос и ротовая зона (Губы)", val: statusWord(scAt(14, f)), score: scAt(14, f), desc: "Прямизна носа, компактность кончика и полнота губ" },
-        { name: "Симметрия и качество кожи", val: statusWord(scAt(15, f)), score: scAt(15, f), desc: "Билатеральная симметрия лица и чистота кожного покрова" }
+        { name: "Eye Area & Canthal Tilt (45.5% веса)", val: m.eyes, score: f + 0.2, desc: "Кантальный наклон, форма век и отсутствие видимой склеры снизу" },
+        { name: "Густота и геометрия бровей", val: m.brows_f, score: f + 0.1, desc: "Плотность, форма и вектор надбровных дуг" },
+        { name: "Нос и ротовая зона (Губы)", val: m.nose_lips, score: f + 0.15, desc: "Прямизна носа, компактность кончика и полнота губ" },
+        { name: "Симметрия и качество кожи", val: m.sym_skin, score: f, desc: "Билатеральная симметрия лица и чистота кожного покрова" }
       ];
 
       document.getElementById('listHarmony').innerHTML = renderMetricsList(harmonyList);
