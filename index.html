@@ -163,8 +163,8 @@
       <div class="card loader-box">
         <div class="spinner"></div>
         <div style="font-size:16px; font-weight:900; margin-bottom:8px;">Нейросеть изучает лицо...</div>
-        <div style="font-size:12px; color:var(--cyan); font-family:monospace; line-height:1.5;" id="liveStepText">Установка потокового канала с Google Gemini...</div>
-        <div style="font-size:11px; color:var(--muted); margin-top:10px; font-family:monospace;" id="elapsedTimerText">Время анализа: 0 сек</div>
+        <div style="font-size:12px; color:var(--cyan); font-family:monospace; line-height:1.5;" id="liveStepText">Отправка фотографий в Google Gemini...</div>
+        <div style="font-size:11px; color:var(--muted); margin-top:10px; font-family:monospace;" id="elapsedTimerText">Генерация вердикта...</div>
       </div>
     </div>
 
@@ -229,7 +229,7 @@
     let frontApiUrl = null;
     let profileApiUrl = null;
 
-    function compressPhoto(file, maxSide = 380, q = 0.72) {
+    function compressPhoto(file, maxSide = 280, q = 0.68) {
       return new Promise((resolve) => {
         const r = new FileReader();
         r.onload = (e) => {
@@ -254,12 +254,12 @@
     async function onPhotoSelected(which, event) {
       const file = event.target.files[0];
       if (!file) return;
-      const hdUrl = await compressPhoto(file, 640, 0.82);
-      const compactUrl = await compressPhoto(file, 360, 0.70);
+      const hdUrl = await compressPhoto(file, 600, 0.82);
+      const fastUrl = await compressPhoto(file, 260, 0.68);
 
       if (which === 'front') {
         frontPreviewUrl = hdUrl;
-        frontApiUrl = compactUrl;
+        frontApiUrl = fastUrl;
         const el = document.getElementById('previewFront');
         el.src = hdUrl; el.style.display = 'block';
         document.getElementById('slotFront').classList.add('loaded');
@@ -267,7 +267,7 @@
         document.getElementById('startBtn').disabled = false;
       } else {
         profilePreviewUrl = hdUrl;
-        profileApiUrl = compactUrl;
+        profileApiUrl = fastUrl;
         const el = document.getElementById('previewProfile');
         el.src = hdUrl; el.style.display = 'block';
         document.getElementById('slotProfile').classList.add('loaded');
@@ -286,55 +286,20 @@
       document.querySelectorAll('.pane').forEach((p, i) => p.classList.toggle('active', i === idx));
     }
 
-    // Компактный промпт: модель тратит токены только на оценки и суть разбора (отвечает в 5 раз быстрее)
-    const AI_PROMPT = `Ты — эксперт краниофациального анализа по методологии Chronic K / FaceIQ (Mean = 5.0, SD = 0.6).
-Оцени лицо на фото (анфас и профиль/второй ракурс).
-
-КАЛИБРОВКА:
-1. Если на фото НЕ живое человеческое лицо (футболка, одежда, предмет, мем-рисунок), верни ТОЛЬКО:
+    const AI_PROMPT = `Оцени лицо на фото по системе Chronic K / FaceIQ (Mean=5.0, SD=0.6).
+Если на фото НЕ живое человеческое лицо (футболка, одежда, предмет, рисунок), верни ТОЛЬКО:
 {"face":false,"reason":"На снимке предмет или одежда, а не живое человеческое лицо."}
-2. Шкала для людей:
+
+Шкала:
 - 8.1–9.2 (Gigachad / Top Model, 7.5–8.5 PSL, Топ 0.0001%, 1 из 1 000 000+): Jordan Barrett, Sean O'Pry, Matt Bomer, Hernan Drago, David Gandy.
 - 7.3–8.0 (Chad / Stacy, 6.5–7.5 PSL, Топ 0.0088%, 1 из 11 394): Chico Lachowski, Lorenzo Zurzolo, Tom Welling, Doutzen Kroes.
 - 6.7–7.25 (Chadlite / Stacylite, 5.5–6.2 PSL, Топ 0.15%, 1 из 600): Zayn Malik, Orlando Bloom, Cristiano Ronaldo, Kira, Ana de Armas.
 - 5.9–6.5 (HTN, 4.5–5.2 PSL, Топ 5%, 1 из 20): заметно привлекательнее среднего.
-- 4.8–5.6 (MTN, 3.5–4.2 PSL, Медиана 50%, 1 из 2): обычное среднестатистическое лицо.
-- 2.3–4.2 (LTN / Sub-5, 1.0–2.5 PSL, Нижние 15%–1%): отёчность щёк (bloat), скошенный подбородок, негативный кантус, выпученные глаза или гримаса.
+- 4.8–5.6 (MTN, 3.5–4.2 PSL, Медиана 50%, 1 из 2): обычное лицо.
+- 2.3–4.2 (LTN / Sub-5, 1.0–2.5 PSL, Нижние 15%–1%): блоут (отёчность щёк), скошенный подбородок, отрицательный кантус, выпученные глаза или гримаса.
 
-Верни ТОЛЬКО чистый JSON без markdown по этой компактной схеме (все тексты на русском):
-{
-  "face": true,
-  "sex": "m",
-  "score": 0.00,
-  "tier": "Gigachad / Chad / Chadlite / HTN / MTN / LTN / Sub-5",
-  "psl": "X.X–X.X PSL",
-  "rarity": "Топ X% (1 из X)",
-  "h": 0.0,
-  "a": 0.0,
-  "d": 0.0,
-  "f": 0.0,
-  "sum": "Подробный разбор именно этого лица (3 предложения): глазная зона, скулы, челюсть, гармония.",
-  "halos": ["Плюс 1", "Плюс 2", "Плюс 3"],
-  "failos": ["Минус 1 (или укажи отсутствие критических недостатков)"],
-  "m": {
-    "esr": ["46.2% (норма 45.5-47.7%)", 0.0],
-    "fwhr": ["1.94 (норма 1.90-2.07)", 0.0],
-    "thirds": ["баланс третей", 0.0],
-    "midface": ["индекс средней зоны", 0.0],
-    "profile": ["оценка максиллы и профиля", 0.0],
-    "jaw": ["чёткость углов челюсти", 0.0],
-    "cheek_h": ["высота и выступ скул", 0.0],
-    "ramus": ["длина ветви челюсти", 0.0],
-    "hollow": ["Hollow / Lean / Bloated", 0.0],
-    "bone": ["костная масса скелета", 0.0],
-    "brow": ["надбровье и hooding", 0.0],
-    "chin": ["проекция подбородка", 0.0],
-    "eyes": ["кантус и разрез глаз", 0.0],
-    "brows_f": ["густота и форма бровей", 0.0],
-    "nose_lips": ["форма носа и полнота губ", 0.0],
-    "sym_skin": ["симметрия и чистота кожи", 0.0]
-  }
-}`;
+Верни ТОЛЬКО валидный JSON без markdown:
+{"face":true,"sex":"m","score":0.00,"tier":"Chad","psl":"6.5–7.5 PSL","rarity":"Топ X% (1 из X)","h":0.0,"a":0.0,"d":0.0,"f":0.0,"sum":"Разбор этого лица на русском (2-3 предложения).","halos":["Плюс 1","Плюс 2"],"failos":["Минус 1"],"s":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]}`;
 
     const SAFETY_OFF = [
       { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
@@ -361,8 +326,18 @@
       }
     }
 
-    // Потоковое чтение SSE: держит VPN-канал активным каждую секунду и не даёт соединению зависнуть
-    async function callGeminiStream(frontUrl, profileUrl, onStatus) {
+    function extractCandidateJson(j) {
+      const parts = j?.candidates?.[0]?.content?.parts || [];
+      for (let i = parts.length - 1; i >= 0; i--) {
+        if (parts[i]?.thought) continue;
+        const p = tryParseLooseJson(parts[i]?.text || "");
+        if (p && (p.face !== undefined || p.score !== undefined)) return p;
+      }
+      const allText = parts.map(p => p?.text || "").join("\n");
+      return tryParseLooseJson(allText);
+    }
+
+    async function callGeminiFast(frontUrl, profileUrl, onStatus) {
       const parts = [
         { text: AI_PROMPT },
         { inline_data: { mime_type: "image/jpeg", data: frontUrl.split(',')[1] } }
@@ -371,89 +346,50 @@
         parts.push({ inline_data: { mime_type: "image/jpeg", data: profileUrl.split(',')[1] } });
       }
 
-      const payload = {
-        contents: [{ parts }],
-        safetySettings: SAFETY_OFF,
-        generationConfig: {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${encodeURIComponent(GEMINI_KEY)}`;
+
+      // Конфигурация 1: Быстрый ответ без длительной фазы внутренних размышлений (thinkingBudget: 0)
+      const configsToTry = [
+        {
           temperature: 0.1,
-          maxOutputTokens: 1500
+          responseMimeType: "application/json",
+          thinkingConfig: { thinkingBudget: 0 }
+        },
+        {
+          temperature: 0.1,
+          responseMimeType: "application/json"
         }
-      };
+      ];
 
-      const streamUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:streamGenerateContent?alt=sse&key=${encodeURIComponent(GEMINI_KEY)}`;
-      const ctrl = new AbortController();
-      const timeoutId = setTimeout(() => ctrl.abort(), 40000);
+      let lastErr = "";
+      for (let i = 0; i < configsToTry.length; i++) {
+        try {
+          onStatus(i === 0 ? "Быстрый запрос в Gemini 3.8 Flash..." : "Глубокий расчёт пропорций в Gemini 3.8 Flash...");
+          const r = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts }],
+              safetySettings: SAFETY_OFF,
+              generationConfig: configsToTry[i]
+            })
+          });
 
-      try {
-        onStatus("Отправка сжатых кадров в Gemini...");
-        const r = await fetch(streamUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: ctrl.signal,
-          body: JSON.stringify(payload)
-        });
-
-        if (!r.ok) {
-          clearTimeout(timeoutId);
-          const errJson = await r.json().catch(() => ({}));
-          throw new Error(errJson?.error?.message || `HTTP ${r.status}`);
-        }
-
-        if (!r.body || !r.body.getReader) {
-          const fullJson = await r.json();
-          clearTimeout(timeoutId);
-          const cParts = fullJson?.candidates?.[0]?.content?.parts || [];
-          const txt = cParts.filter(p => !p.thought).map(p => p.text || "").join("\n");
-          const parsed = tryParseLooseJson(txt);
-          if (parsed) return parsed;
-          throw new Error("Пустой ответ от сервера.");
-        }
-
-        const reader = r.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-        let buffer = "";
-        let collectedText = "";
-        let thoughtSteps = 0;
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed.startsWith("data:")) continue;
-            const dataStr = trimmed.slice(5).trim();
-            if (!dataStr || dataStr === "[DONE]") continue;
-            try {
-              const chunkObj = JSON.parse(dataStr);
-              const cParts = chunkObj?.candidates?.[0]?.content?.parts || [];
-              for (const p of cParts) {
-                if (p.thought) {
-                  thoughtSteps++;
-                  onStatus(`Нейросеть рассчитывает пропорции (блок ${thoughtSteps})...`);
-                } else if (p.text) {
-                  collectedText += p.text;
-                  onStatus(`Приём готового вердикта (${collectedText.length} симв.)...`);
-                }
-              }
-            } catch (e) {}
+          const j = await r.json();
+          if (!r.ok) {
+            lastErr = j?.error?.message || `HTTP ${r.status}`;
+            continue;
           }
-        }
-        clearTimeout(timeoutId);
 
-        const parsed = tryParseLooseJson(collectedText);
-        if (parsed) return parsed;
-        throw new Error("Не удалось распознать структуру ответа. Попробуйте нажать кнопку ещё раз.");
-      } catch (err) {
-        clearTimeout(timeoutId);
-        if (err.name === 'AbortError') {
-          throw new Error("Соединение прервано по тайм-ауту VPN (40 сек). Нажмите кнопку запуска повторно.");
+          const parsed = extractCandidateJson(j);
+          if (parsed) return parsed;
+          lastErr = j?.promptFeedback?.blockReason || j?.candidates?.[0]?.finishReason || "Пустой ответ";
+        } catch (e) {
+          lastErr = e.message;
         }
-        throw err;
       }
+
+      throw new Error(lastErr || "Не удалось получить ответ от Gemini API.");
     }
 
     async function runPureGeminiAnalysis() {
@@ -462,23 +398,29 @@
 
       const statusEl = document.getElementById('liveStepText');
       const timerEl = document.getElementById('elapsedTimerText');
-      let sec = 0;
-      timerEl.innerText = "Время анализа: 0 сек";
+      const stages = [
+        "Анализ костного каркаса и пропорций (ESR, FWHR)...",
+        "Оценка 6 факторов Angularity (Jaw, Ramus, Hollow Cheeks)...",
+        "Проверка Eye Area (Canthal Tilt, Hooding) и Dimorphism...",
+        "Формирование итогового PSL-рейтинга по кривой Гаусса..."
+      ];
+      let stIdx = 0;
+      timerEl.innerText = stages[0];
 
-      const t = setInterval(() => {
-        sec++;
-        timerEl.innerText = `Время анализа: ${sec} сек`;
-      }, 1000);
+      const stageInterval = setInterval(() => {
+        stIdx = (stIdx + 1) % stages.length;
+        timerEl.innerText = stages[stIdx];
+      }, 3000);
 
       try {
-        const res = await callGeminiStream(frontApiUrl, profileApiUrl, (msg) => {
+        const res = await callGeminiFast(frontApiUrl, profileApiUrl, (msg) => {
           statusEl.innerText = msg;
         });
-        clearInterval(t);
+        clearInterval(stageInterval);
 
         if (res.face === false || res.is_human_face === false) {
           document.getElementById('rejectTitleText').innerText = "🚫 ОБЪЕКТ ОТКЛОНЁН НЕЙРОСЕТЬЮ";
-          document.getElementById('rejectReasonText').innerText = res.reason || res.reject_reason || "На снимке не обнаружено человеческое лицо.";
+          document.getElementById('rejectReasonText').innerText = res.reason || "На снимке не обнаружено человеческое лицо.";
           showScreen('scrReject');
           return;
         }
@@ -486,8 +428,8 @@
         renderReport(res);
         showScreen('scrResult');
       } catch (err) {
-        clearInterval(t);
-        document.getElementById('rejectTitleText').innerText = "⚠️ ОШИБКА СОЕДИНЕНИЯ";
+        clearInterval(stageInterval);
+        document.getElementById('rejectTitleText').innerText = "⚠️ ОШИБКА ЗАПРОСА";
         document.getElementById('rejectReasonText').innerText = err.message;
         showScreen('scrReject');
       }
@@ -520,6 +462,13 @@
       }).join('');
     }
 
+    function statusWord(sc) {
+      if (sc >= 7.5) return "Эталон / Модельный уровень";
+      if (sc >= 6.4) return "Выше среднего (Halo)";
+      if (sc >= 4.7) return "Популяционная норма";
+      return "Зона отклонения (Failo)";
+    }
+
     function renderReport(d) {
       document.getElementById('resImgFront').src = frontPreviewUrl;
       const pImg = document.getElementById('resImgProfile');
@@ -539,9 +488,9 @@
       const col = getScoreColor(finalVal);
       document.getElementById('resFinalScore').innerText = finalVal.toFixed(2);
       document.getElementById('resFinalScore').style.color = col;
-      document.getElementById('resTierBadge').innerText = `${d.tier || 'MTN'} · ${d.psl || d.psl_equivalent || ''}`;
+      document.getElementById('resTierBadge').innerText = `${d.tier || 'MTN'} · ${d.psl || ''}`;
       document.getElementById('resRarityLine').innerText = d.rarity || '';
-      document.getElementById('resSummaryText').innerText = d.sum || d.summary || '';
+      document.getElementById('resSummaryText').innerText = d.sum || '';
 
       const setP = (id, v) => {
         const el = document.getElementById(id);
@@ -555,38 +504,38 @@
       document.getElementById('resFailos').innerHTML = Array.isArray(d.failos) && d.failos.length
         ? d.failos.map(x => `• ${x}`).join('<br>') : "• Критических фалио не обнаружено.";
 
-      const m = d.m || {};
-      const pick = (key, defVal, defScore) => {
-        const arr = m[key];
-        return Array.isArray(arr) ? { val: arr[0] || defVal, score: parseFloat(arr[1]) || defScore } : { val: defVal, score: defScore };
+      const sArr = Array.isArray(d.s) ? d.s : [];
+      const scAt = (idx, fallback) => {
+        const v = parseFloat(sArr[idx]);
+        return (!isNaN(v) && v >= 1 && v <= 10) ? v : fallback;
       };
 
       const harmonyList = [
-        { name: "ESR (Eye Separation Ratio)", ...pick("esr", "Оценка посадки", h), desc: "Межзрачковая дистанция относительно ширины скул (эталон 45.5–47.7%)" },
-        { name: "FWHR (Индекс ширины лица)", ...pick("fwhr", "Оценка ширины", h), desc: "Отношение ширины скул к высоте средней зоны (эталон 1.90–2.07)" },
-        { name: "Баланс лицевых третей", ...pick("thirds", "33% / 33% / 34%", h), desc: "Гармония верхней, средней и нижней трети лица" },
-        { name: "Компактность средней зоны (Midface)", ...pick("midface", "Оценка компактности", h), desc: "Отношение межзрачкового расстояния к высоте центральной зоны" },
-        { name: "Гармония профиля (Maxilla & E-Line)", ...pick("profile", "Вектор максиллы", h), desc: "Выдвижение верхней челюсти вперёд и положение губ" }
+        { name: "ESR (Eye Separation Ratio)", val: statusWord(scAt(0, h)), score: scAt(0, h), desc: "Межзрачковая дистанция относительно ширины скул (эталон 45.5–47.7%)" },
+        { name: "FWHR (Индекс ширины лица)", val: statusWord(scAt(1, h)), score: scAt(1, h), desc: "Отношение ширины скул к высоте средней зоны (эталон 1.90–2.07)" },
+        { name: "Баланс лицевых третей", val: statusWord(scAt(2, h)), score: scAt(2, h), desc: "Гармония верхней, средней и нижней трети лица" },
+        { name: "Компактность средней зоны (Midface)", val: statusWord(scAt(3, h)), score: scAt(3, h), desc: "Отношение межзрачкового расстояния к высоте центральной зоны" },
+        { name: "Гармония профиля (Maxilla & E-Line)", val: statusWord(scAt(4, h)), score: scAt(4, h), desc: "Выдвижение верхней челюсти вперёд и положение губ" }
       ];
 
       const angularityList = [
-        { name: "1. Jaw Angularity (Чёткость челюсти)", ...pick("jaw", "Контур челюсти", a), desc: "Острота гониального угла и рельеф тела нижней челюсти" },
-        { name: "2. Cheekbone Height & Projection", ...pick("cheek_h", "Посадка скул", a), desc: "Высота расположения и латеральный выступ скуловой дуги" },
-        { name: "3. Ramus Visibility (Ветвь челюсти)", ...pick("ramus", "Высота рамуса", a), desc: "Длина и вертикальная опора ветви нижней челюсти" },
-        { name: "4. Cheek Hollowness (Впалость щёк)", ...pick("hollow", "Рельеф щёк", a), desc: "Наличие полых щёк (Hollow Cheeks) и низкий процент жира" }
+        { name: "1. Jaw Angularity (Чёткость челюсти)", val: statusWord(scAt(5, a)), score: scAt(5, a), desc: "Острота гониального угла и рельеф тела нижней челюсти" },
+        { name: "2. Cheekbone Height & Projection", val: statusWord(scAt(6, a)), score: scAt(6, a), desc: "Высота расположения и латеральный выступ скуловой дуги" },
+        { name: "3. Ramus Visibility (Ветвь челюсти)", val: statusWord(scAt(7, a)), score: scAt(7, a), desc: "Длина и вертикальная опора ветви нижней челюсти" },
+        { name: "4. Cheek Hollowness (Впалость щёк)", val: statusWord(scAt(8, a)), score: scAt(8, a), desc: "Наличие полых щёк (Hollow Cheeks) и низкий процент жира" }
       ];
 
       const dimorphismList = [
-        { name: "Костная масса (Overall Bone Mass)", ...pick("bone", "Массивность каркаса", dm), desc: "Общая робастность скулового и челюстного скелета" },
-        { name: "Надбровье и посадка бровей (Hooding)", ...pick("brow", "Супраорбитальная дуга", dm), desc: "Низкая посадка бровей и плотность верхнего века" },
-        { name: "Проекция и ширина подбородка", ...pick("chin", "Симфиз подбородка", dm), desc: "Выступ подбородка и бигониальная ширина челюсти" }
+        { name: "Костная масса (Overall Bone Mass)", val: statusWord(scAt(9, dm)), score: scAt(9, dm), desc: "Общая робастность скулового и челюстного скелета" },
+        { name: "Надбровье и посадка бровей (Hooding)", val: statusWord(scAt(10, dm)), score: scAt(10, dm), desc: "Низкая посадка бровей и плотность верхнего века" },
+        { name: "Проекция и ширина подбородка", val: statusWord(scAt(11, dm)), score: scAt(11, dm), desc: "Выступ подбородка и бигониальная ширина челюсти" }
       ];
 
       const featuresList = [
-        { name: "Eye Area & Canthal Tilt (45.5% веса)", ...pick("eyes", "Кантус и разрез глаз", f), desc: "Кантальный наклон, форма век и отсутствие видимой склеры снизу" },
-        { name: "Густота и геометрия бровей", ...pick("brows_f", "Контраст и наклон", f), desc: "Плотность, форма и вектор надбровных дуг" },
-        { name: "Нос и ротовая зона (Губы)", ...pick("nose_lips", "Спинка носа и губы", f), desc: "Прямизна носа, компактность кончика и полнота губ" },
-        { name: "Симметрия и качество кожи", ...pick("sym_skin", "Соосность и тон", f), desc: "Билатеральная симметрия лица и чистота кожного покрова" }
+        { name: "Eye Area & Canthal Tilt (45.5% веса)", val: statusWord(scAt(12, f)), score: scAt(12, f), desc: "Кантальный наклон, форма век и отсутствие видимой склеры снизу" },
+        { name: "Густота и геометрия бровей", val: statusWord(scAt(13, f)), score: scAt(13, f), desc: "Плотность, форма и вектор надбровных дуг" },
+        { name: "Нос и ротовая зона (Губы)", val: statusWord(scAt(14, f)), score: scAt(14, f), desc: "Прямизна носа, компактность кончика и полнота губ" },
+        { name: "Симметрия и качество кожи", val: statusWord(scAt(15, f)), score: scAt(15, f), desc: "Билатеральная симметрия лица и чистота кожного покрова" }
       ];
 
       document.getElementById('listHarmony').innerHTML = renderMetricsList(harmonyList);
