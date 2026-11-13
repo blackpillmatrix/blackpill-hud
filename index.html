@@ -13,7 +13,7 @@
       --bg: #06080c; --card: #0d1219; --border: #1c2736;
       --text: #eef5ff; --muted: #7088a3; --green: #00ff66;
       --green-bg: rgba(0, 255, 102, 0.12); --cyan: #00f0ff;
-      --gold: #ffaa00; --red: #ff2a5f;
+      --gold: #ffaa00; --red: #ff2a5f; --crimson: #b800ff;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: var(--bg); color: var(--text); padding-bottom: 36px; overflow-x: hidden; }
@@ -142,13 +142,15 @@
 
       <div class="card" style="margin-top: 16px;">
         <div class="card-header">Эталонная шкала (Mean = 5.0, SD = 0.6)</div>
-        <div style="font-size: 12px; color: var(--muted); line-height: 1.6;">
-          • <b style="color:var(--green)">8.1 – 9.2 (Gigachad / Top Model):</b> Джордан Барретт, Шон О'Прай, Мэтт Бомер, Эрнан Драго<br>
-          • <b style="color:var(--green)">7.4 – 8.05 (Chad / Stacy):</b> Чико Лачовски, Лоренцо Зурзоло, Элиас де Пут, Даутцен Крус<br>
-          • <b style="color:var(--cyan)">6.7 – 7.3 (Chadlite / Stacylite):</b> Тимоти Шаламе, Зейн Малик, Орландо Блум, Роналду, Кира<br>
-          • <b style="color:var(--cyan)">5.85 – 6.5 (HTN):</b> Заметно привлекательнее среднего (Топ 5%, 1 из 20)<br>
-          • <b style="color:var(--gold)">4.75 – 5.65 (MTN):</b> Обычное среднестатистическое лицо (1 из 2)<br>
-          • <b style="color:var(--red)">1.50 – 4.30 (LTN / Sub-5):</b> Выраженные дебаффы, блоут, плохие зубы, рецессия челюсти, аномалии
+        <div style="font-size: 12px; color: var(--muted); line-height: 1.65;">
+          • <b style="color:var(--green)">8.10 – 9.20 (Gigachad / Top Model):</b> Эталонный костный каркас и гармония (Топ 0.0001%)<br>
+          • <b style="color:var(--green)">7.40 – 8.05 (Chad / Stacy):</b> Выдающаяся модельная эстетика и рельеф (Топ 0.0088%)<br>
+          • <b style="color:var(--cyan)">6.70 – 7.35 (Chadlite / Stacylite):</b> Высокая привлекательность и чёткие углы (Топ 0.15%)<br>
+          • <b style="color:var(--cyan)">5.85 – 6.65 (HTN):</b> Заметно привлекательнее среднего уровня (Топ 5%, 1 из 20)<br>
+          • <b style="color:var(--gold)">4.75 – 5.80 (MTN):</b> Обычное среднестатистическое лицо (Медиана 50%, 1 из 2)<br>
+          • <b style="color:var(--red)">3.20 – 4.70 (LTN):</b> Ниже среднего, одутловатость (блоут), слабый каркас (Нижние 15%)<br>
+          • <b style="color:var(--red)">1.50 – 3.15 (Sub-5 / Subhuman):</b> Выраженные краниофациальные дебаффы и рецессия (Нижние 1%)<br>
+          • <b style="color:var(--crimson)">0.10 – 1.45 (Sub-0 / Defective):</b> Критические дефекты, уродства и тяжёлые патологии (Вне шкалы)
         </div>
       </div>
     </div>
@@ -229,6 +231,38 @@
     let profilePreviewUrl = null;
     let frontImgObj = null;
     let profileImgObj = null;
+    const memoryScanCache = new Map();
+
+    // Детерминированный хэш снимков: гарантирует 100% одинаковую оценку при повторных сканах тех же фото
+    function computePhotoHash(str) {
+      let h = 2166136261 >>> 0;
+      const step = Math.max(1, Math.floor(str.length / 4000));
+      for (let i = 0; i < str.length; i += step) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return "bp_" + (h >>> 0).toString(16) + "_" + str.length;
+    }
+
+    function getCachedResult(hashKey) {
+      if (memoryScanCache.has(hashKey)) return memoryScanCache.get(hashKey);
+      try {
+        const raw = localStorage.getItem(hashKey);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          memoryScanCache.set(hashKey, parsed);
+          return parsed;
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    function saveCachedResult(hashKey, data) {
+      memoryScanCache.set(hashKey, data);
+      try {
+        localStorage.setItem(hashKey, JSON.stringify(data));
+      } catch (e) {}
+    }
 
     function loadImgFromFile(file, maxSide = 600, q = 0.82) {
       return new Promise((resolve) => {
@@ -315,22 +349,28 @@
 Если на фото НЕТ чётко видимого, открытого живого человеческого лица (например, одежда, футболка, предмет, пейзаж, лицо закрыто руками), верни ТОЛЬКО:
 {"front_ok":false,"profile_ok":true,"face":false,"reason":"На снимке предмет, одежда или лицо закрыто."}`;
 
-      return `Ты — строгий эксперт краниофациальной эстетики и модельный скаут системы BLACKPILL VISION (методология Chronic K / FaceIQ, нормальное распределение: среднее = 5.0, SD = 0.6).
+      return `Ты — строгий, бескомпромиссный эксперт краниофациальной эстетики системы BLACKPILL VISION (методология Chronic K / FaceIQ, нормальное распределение: среднее = 5.0, SD = 0.6).
 
 ${dualSlotRule}
 
-2. ЖЁСТКАЯ КАЛИБРОВКА ПО УРОВНЯМ (ТОЛЬКО ЕСЛИ ОБА СЛОТА ПРОШЛИ ПРОВЕРКУ — front_ok:true и profile_ok:true):
-Оценивай лицо строго по 4 блокам (Harmony 40%, Angularity 25%, Dimorphism 20%, Features 15%):
-- 8.3 – 9.1 (Gigachad / Top Model): элитные супермодели с идеальным костным каркасом, hunter eyes, полыми щеками и мощным профилем (Jordan Barrett = 8.7–8.9, Sean O'Pry = 8.8, Hernan Drago = 8.7, Matt Bomer = 8.6). Все 4 блока (h, a, d, f) у них должны быть от 8.3 до 9.2!
-- 7.5 – 8.2 (Chad / High-Fashion Model): топ-модели подиума и красивейшие актёры с выдающейся челюстью, скулами и зоной глаз (Chico Lachowski = 8.1–8.3, Lorenzo Zurzolo = 7.7–8.0, Elias de Poot и подиумные модели с впалыми щеками = 7.6–8.1, Tom Welling = 7.9, Doutzen Kroes = 8.1).
-- 6.7 – 7.35 (Chadlite / Stacylite): очень красивые и эстетичные лица с отличным рельефом, но лёгкими индивидуальными отклонениями (Timothee Chalamet = 6.9–7.2 из-за чуть близкой посадки глаз, Zayn Malik = 7.2, Cristiano Ronaldo = 7.0, Kira = 6.9).
-- 5.85 – 6.5 (HTN): заметно привлекательнее среднего, чистые пропорции и хорошая челюсть.
-- 4.75 – 5.6 (MTN): обычный среднестатистический человек (например, обычный мужчина в машине с бородой и мягкими чертами = 4.9–5.3).
-- 3.4 – 4.5 (LTN): лицо ниже среднего, выраженная одутловатость щёк (facial bloat), слабый подбородок, отрицательный кантальный наклон, непропорциональные трети (например, Иван Золо с круглой челюстью и сонным взглядом = 3.5–3.9, Гитлер с узкими губами и дисбалансом средней зоны = 3.6–4.1).
-- 1.5 – 3.1 (Sub-5 / Subhuman): тяжёлые деформации черепа, микроцефалия (Шлитци = 1.6–2.0), гнилые/разрушенные зубы (мужчина с разрушенными зубами = 1.9–2.3), сильные уродливые гримасы с разинутым ртом (= 2.1–2.6).
+2. СТРОГАЯ И ЕДИНАЯ КАЛИБРОВКА ПО УРОВНЯМ (НЕ ЗАВЫШАЙ ОБЫЧНЫХ ПАРНЕЙ С ХОРОШЕЙ ЧЕЛЮСТЬЮ ДО CHADLITE/CHAD!):
+Оценивай лицо строго по 4 блокам: Harmony (40% веса) + Angularity (25%) + Dimorphism (20%) + Features (15%).
+ВАЖНОЕ ПРАВИЛО ПРОТИВ ЗАВЫШЕНИЯ (ANTI-INFLATION RULE):
+- Чтобы получить 6.70+ (Chadlite) или 7.40+ (Chad), лицо ОБЯЗАНО иметь элитную гармонию В АНФАС: компактную среднюю треть, безупречную зону глаз (плотный hooding, отсутствие усталости, мешков и открытого верхнего века) и идеальный баланс третей.
+- Если у парня на фото сухая/острая линия челюсти и хороший профиль (высокий Angularity), НО в анфас видна слегка вытянутая средняя зона, утомлённая периорбитальная область (круги под глазами, открытое веко, мягкий взгляд), лёгкая асимметрия или домашнее селфи-освещение — его оценка СТРОГО в коридоре HTN: 6.05 – 6.35 (Harmony ~6.1, Angularity ~6.6, Dimorphism ~6.1, Features ~5.9)! Категорически запрещено ставить таким лицам 6.8–7.4!
+
+ШКАЛА ТИРОВ:
+- 8.10 – 9.20 (Gigachad / Top Model): безупречный костный каркас, эталонная гармония анфаса и профиля, hunter eyes, полые щёки. Все 4 блока от 8.2 до 9.2.
+- 7.40 – 8.05 (Chad / Stacy): выдающаяся модельная внешность и в анфас, и в профиль без слабых зон.
+- 6.70 – 7.35 (Chadlite / Stacylite): высокая модельная эстетика и в анфас, и в профиль с минимальным отклонением.
+- 5.85 – 6.65 (HTN): заметно привлекательнее среднего. Сюда относятся парни с хорошей челюстью, скулами и угловатым профилем, у которых в анфас есть усталость глазной зоны, удлинённая средняя треть или обычная гармония (оценка строго 6.05 – 6.35).
+- 4.75 – 5.80 (MTN): обычный среднестатистический человек (4.85 – 5.40).
+- 3.20 – 4.70 (LTN): лицо ниже среднего, заметный лицевой блоут (одутловатость щёк), слабый подбородок, отрицательный кантус, диспропорции третей (3.40 – 4.30).
+- 1.50 – 3.15 (Sub-5 / Subhuman): сильные краниофациальные дебаффы, выраженная рецессия челюстей, тяжёлая асимметрия.
+- 0.10 – 1.45 (Sub-0 / Defective): критические генетические дефекты черепа (микроцефалия и т.п.), гнилые/разрушенные зубы, экстремальные уродства, на которые тяжело смотреть (ставь 0.35 – 1.25).
 
 Верни ТОЛЬКО 1 строку валидного JSON без markdown (все тексты на русском):
-{"front_ok":true,"profile_ok":true,"face":true,"sex":"m","score":0.00,"h":0.0,"a":0.0,"d":0.0,"f":0.0,"sum":"Точный профессиональный разбор именно этого человека на фото (3 предложения): костная структура, глазная зона, скулы, челюсть и профиль.","halos":["Конкретная сильная сторона этого лица 1","Сильная сторона 2","Сильная сторона 3"],"failos":["Конкретный недостаток / точка роста 1","Недостаток 2"],"m":{"esr":["оценка посадки глаз (эталон 45.5-47.7%)",0.0],"fwhr":["оценка FWHR (эталон 1.90-2.05)",0.0],"thirds":["баланс верхней, средней и нижней трети",0.0],"midface":["компактность средней зоны",0.0],"profile":["проекция максиллы и профиля",0.0],"jaw":["чёткость углов нижней челюсти",0.0],"cheek_h":["высота и выступ скул",0.0],"ramus":["высота ветви челюсти",0.0],"hollow":["Hollow Cheeks / Lean / Facial Bloat",0.0],"bone":["общая массивность костного каркаса",0.0],"brow":["посадка бровей и надбровье (Hooding)",0.0],"chin":["проекция и форма подбородка",0.0],"eyes":["кантальный наклон и разрез глаз",0.0],"brows_f":["густота и форма бровей",0.0],"nose_lips":["форма носа, полнота губ и зубы",0.0],"sym_skin":["симметрия лица и состояние кожи",0.0]}}`;
+{"front_ok":true,"profile_ok":true,"face":true,"sex":"m","score":0.00,"h":0.0,"a":0.0,"d":0.0,"f":0.0,"sum":"Точный профессиональный разбор именно этого человека на фото (3 предложения): гармония анфаса, глазная зона, скулы, челюсть и профиль.","halos":["Конкретная сильная сторона 1","Сильная сторона 2"],"failos":["Конкретный недостаток / дебафф 1","Недостаток 2"],"m":{"esr":["оценка посадки глаз (эталон 45.5-47.7%)",0.0],"fwhr":["оценка FWHR (эталон 1.90-2.05)",0.0],"thirds":["баланс верхней, средней и нижней трети",0.0],"midface":["компактность средней зоны",0.0],"profile":["проекция максиллы и профиля",0.0],"jaw":["чёткость углов нижней челюсти",0.0],"cheek_h":["высота и выступ скул",0.0],"ramus":["высота ветви челюсти",0.0],"hollow":["Hollow Cheeks / Lean / Facial Bloat",0.0],"bone":["общая массивность костного каркаса",0.0],"brow":["посадка бровей и надбровье (Hooding)",0.0],"chin":["проекция и форма подбородка",0.0],"eyes":["кантальный наклон и разрез глаз",0.0],"brows_f":["густота и форма бровей",0.0],"nose_lips":["форма носа, полнота губ и зубы",0.0],"sym_skin":["симметрия лица и состояние кожи",0.0]}}`;
     }
 
     const SAFETY_OFF = [
@@ -391,7 +431,11 @@ ${dualSlotRule}
         body: JSON.stringify({
           contents: [{ parts }],
           safetySettings: SAFETY_OFF,
-          generationConfig: { temperature: 0.15 }
+          generationConfig: {
+            temperature: 0.0,
+            topP: 0.1,
+            topK: 1
+          }
         })
       }), timeoutMs);
 
@@ -408,27 +452,25 @@ ${dualSlotRule}
       return parsed;
     }
 
+    // Строгий последовательный опрос основного детерминированного узла (чтобы разные модели не давали разброс)
     async function askBlackpillVisionCluster(frontB64, profileB64, setStatus) {
-      setStatus("Сканирование пропорций в BLACKPILL VISION...");
-      try {
-        return await Promise.any([
-          callVisionNode("gemini-2.5-flash-lite", frontB64, profileB64, 9500),
-          callVisionNode("gemini-flash-lite-latest", frontB64, profileB64, 9500)
-        ]);
-      } catch (e1) {}
+      const orderedNodes = [
+        { name: "gemini-2.5-flash-lite", timeout: 9500 },
+        { name: "gemini-flash-lite-latest", timeout: 9500 },
+        { name: "gemini-3.8-flash", timeout: 22000 }
+      ];
 
-      setStatus("Расчёт индексов Harmony, Angularity и Dimorphism...");
-      await sleep(1500);
-      try {
-        return await Promise.any([
-          callVisionNode("gemini-2.5-flash-lite", frontB64, profileB64, 12000),
-          callVisionNode("gemini-3.8-flash", frontB64, profileB64, 24000)
-        ]);
-      } catch (e2) {}
+      for (let i = 0; i < orderedNodes.length; i++) {
+        const node = orderedNodes[i];
+        setStatus(i === 0 ? "Сканирование пропорций в BLACKPILL VISION..." : "Расчёт индексов Harmony, Angularity и Dimorphism...");
+        try {
+          return await callVisionNode(node.name, frontB64, profileB64, node.timeout);
+        } catch (e) {
+          await sleep(800);
+        }
+      }
 
-      setStatus("Формирование итогового вердикта BLACKPILL VISION...");
-      await sleep(1500);
-      return await callVisionNode("gemini-flash-lite-latest", frontB64, profileB64, 14000);
+      throw new Error("Server busy");
     }
 
     async function runBlackpillAnalysis() {
@@ -442,8 +484,32 @@ ${dualSlotRule}
       const profileB64 = profileImgObj ? encodeSingleSlotB64(profileImgObj) : null;
       const hasProfile = Boolean(profileB64);
 
+      const scanHash = computePhotoHash(frontB64 + "|" + (profileB64 || "single"));
+      const cached = getCachedResult(scanHash);
+
+      if (cached) {
+        setStatus("Сканирование краниофациальных пропорций...");
+        await sleep(1200);
+        if (
+          cached.face === false ||
+          cached.is_human_face === false ||
+          cached.front_ok === false ||
+          (hasProfile && cached.profile_ok === false)
+        ) {
+          document.getElementById('rejectTitleText').innerText = "🚫 ОТКЛОНЕНО BLACKPILL VISION";
+          document.getElementById('rejectReasonText').innerText =
+            cached.reason || "На снимке не обнаружено открытое человеческое лицо.";
+          showScreen('scrReject');
+          return;
+        }
+        renderReport(cached);
+        showScreen('scrResult');
+        return;
+      }
+
       try {
         const res = await askBlackpillVisionCluster(frontB64, profileB64, setStatus);
+        saveCachedResult(scanHash, res);
 
         if (
           res.face === false ||
@@ -471,40 +537,44 @@ ${dualSlotRule}
     }
 
     function getScoreColor(v) {
-      if (v >= 6.65) return "var(--green)";
-      if (v >= 5.75) return "var(--cyan)";
-      if (v >= 4.65) return "var(--gold)";
-      return "var(--red)";
+      if (v >= 6.70) return "var(--green)";
+      if (v >= 5.80) return "var(--cyan)";
+      if (v >= 4.70) return "var(--gold)";
+      if (v >= 1.50) return "var(--red)";
+      return "var(--crimson)";
     }
 
     function getTierAndRarity(score) {
       if (score >= 8.10) {
         return { tier: "Gigachad / Top Model", psl: "7.5–8.5 PSL", rarity: "Топ 0.0001% (1 из 1 000 000+ · эталон)" };
       }
-      if (score >= 7.35) {
+      if (score >= 7.40) {
         return { tier: "Chad / Stacy (Model)", psl: "6.5–7.5 PSL", rarity: "Топ 0.0088% (1 из 11 394 · модельный уровень)" };
       }
-      if (score >= 6.65) {
+      if (score >= 6.70) {
         return { tier: "Chadlite / Stacylite", psl: "5.5–6.2 PSL", rarity: "Топ 0.15% (1 из 650 · редкая эстетика)" };
       }
       if (score >= 5.85) {
         return { tier: "HTN (High-Tier Normie)", psl: "4.5–5.2 PSL", rarity: "Топ 5.0% (1 из 20 · заметно выше среднего)" };
       }
-      if (score >= 4.70) {
+      if (score >= 4.75) {
         return { tier: "MTN (Mid-Tier Normie)", psl: "3.5–4.2 PSL", rarity: "Медиана 50.0% (1 из 2 · обычное лицо)" };
       }
-      if (score >= 3.45) {
+      if (score >= 3.20) {
         return { tier: "LTN (Low-Tier Normie)", psl: "2.2–3.0 PSL", rarity: "Нижние 15% (1 из 7 · ниже среднего)" };
       }
-      return { tier: "Sub-5 / Subhuman", psl: "1.0–1.8 PSL", rarity: "Нижние 1%–5% (выраженные дебаффы)" };
+      if (score >= 1.50) {
+        return { tier: "Sub-5 / Subhuman", psl: "1.0–1.8 PSL", rarity: "Нижние 1% (выраженные дебаффы)" };
+      }
+      return { tier: "Sub-0 / Defective", psl: "0.0–0.8 PSL", rarity: "Вне шкалы (< 0.01% · критические дефекты)" };
     }
 
     function renderMetricsList(arr) {
       if (!Array.isArray(arr)) return "";
       return arr.map(it => {
-        const sc = clamp(parseFloat(it.score) || 5.0, 1.0, 9.8);
+        const sc = clamp(parseFloat(it.score) || 5.0, 0.1, 9.8);
         const col = getScoreColor(sc);
-        const pct = Math.max(6, Math.min(100, Math.round(sc * 10)));
+        const pct = Math.max(4, Math.min(100, Math.round(sc * 10)));
         return `
           <div class="m-row">
             <div class="m-top">
@@ -527,11 +597,28 @@ ${dualSlotRule}
 
       document.getElementById('engineLabel').innerText = "ВЕРДИКТ BLACKPILL VISION";
 
-      const rawScore = parseFloat(d.score) || 5.0;
-      const h = clamp(parseFloat(d.h) || rawScore, 1.2, 9.6);
-      const a = clamp(parseFloat(d.a) || rawScore, 1.2, 9.6);
-      const dm = clamp(parseFloat(d.d) || rawScore, 1.2, 9.6);
-      const f = clamp(parseFloat(d.f) || rawScore, 1.2, 9.6);
+      const rawScore = parseFloat(d.score) ?? 5.0;
+      let h = clamp(parseFloat(d.h) ?? rawScore, 0.1, 9.6);
+      let a = clamp(parseFloat(d.a) ?? rawScore, 0.1, 9.6);
+      let dm = clamp(parseFloat(d.d) ?? rawScore, 0.1, 9.6);
+      let f = clamp(parseFloat(d.f) ?? rawScore, 0.1, 9.6);
+
+      // Защита от завышения за счёт запрокинутого профиля при уставшей глазной зоне или вытянутой средней трети
+      const sumLower = String(d.sum || '').toLowerCase();
+      const hasFrontFatigueOrLongMid =
+        sumLower.includes("устал") ||
+        sumLower.includes("утомл") ||
+        sumLower.includes("круги") ||
+        sumLower.includes("вытянут") ||
+        sumLower.includes("удлинен") ||
+        sumLower.includes("удлинён");
+
+      if (hasFrontFatigueOrLongMid && rawScore > 6.45 && rawScore < 7.65) {
+        h = Math.min(h, 6.2);
+        a = Math.min(a, 6.5);
+        dm = Math.min(dm, 6.2);
+        f = Math.min(f, 6.0);
+      }
 
       const isFem = String(d.sex || '').toLowerCase().startsWith('f');
       document.getElementById('fHarmonyLbl').innerText = isFem ? "Harmony (32%)" : "Harmony (40%)";
@@ -541,7 +628,11 @@ ${dualSlotRule}
         ? (h * 0.32 + f * 0.28 + dm * 0.20 + a * 0.20)
         : (h * 0.40 + a * 0.25 + dm * 0.20 + f * 0.15);
 
-      const finalVal = clamp(rawScore * 0.65 + weighted * 0.35, 1.4, 9.5);
+      const baseVal = hasFrontFatigueOrLongMid && rawScore > 6.45 && rawScore < 7.65
+        ? weighted
+        : (rawScore * 0.55 + weighted * 0.45);
+
+      const finalVal = clamp(baseVal, 0.10, 9.50);
       const info = getTierAndRarity(finalVal);
 
       const col = getScoreColor(finalVal);
@@ -567,7 +658,7 @@ ${dualSlotRule}
       const pick = (key, defVal, defScore) => {
         const arr = m[key];
         if (Array.isArray(arr)) {
-          return { val: String(arr[0] || defVal), score: parseFloat(arr[1]) || defScore };
+          return { val: String(arr[0] || defVal), score: parseFloat(arr[1]) ?? defScore };
         }
         return { val: defVal, score: defScore };
       };
